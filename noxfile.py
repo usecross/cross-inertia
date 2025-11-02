@@ -12,15 +12,15 @@ PYTHON_VERSIONS = ["3.10", "3.11", "3.12", "3.13", "3.14"]
 @nox.session(python=PYTHON_VERSIONS, name="tests", tags=["tests"])
 def tests(session: nox.Session) -> None:
     """Run unit tests."""
-    session.install(".")
     session.install("pytest", "pytest-cov", "fastapi", "httpx", "jinja2")
+    # Install in editable mode so coverage can track the source
+    session.install("-e", ".")
     session.run(
         "pytest",
         "tests/",
         "--ignore=tests/e2e/",
         "-v",
-        "--cov=src",
-        "--cov-append",
+        "--cov=src/inertia",
         "--cov-report=xml",
         "--cov-report=term",
     )
@@ -29,7 +29,7 @@ def tests(session: nox.Session) -> None:
 @nox.session(python=["3.14"], name="e2e")
 def e2e_tests(session: nox.Session) -> None:
     """Run E2E tests with Playwright (requires frontend build).
-    
+
     To build the frontend first:
         cd examples/fastapi && bun install && bun run build
     """
@@ -46,7 +46,7 @@ def e2e_tests(session: nox.Session) -> None:
             "\nOr with npm:\n"
             "  npm install && npm run build"
         )
-    
+
     session.install(".")
     session.install(
         "pytest",
@@ -58,7 +58,7 @@ def e2e_tests(session: nox.Session) -> None:
         "itsdangerous",
         "jinja2",
     )
-    
+
     # Install Playwright browsers
     session.run("playwright", "install", "--with-deps", "chromium")
     session.run(
