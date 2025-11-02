@@ -1,3 +1,6 @@
+[tool.uv.workspace]
+members = ["examples/*"]
+
 [project]
 name = "cross-inertia"
 version = "0.1.0"
@@ -22,4 +25,18 @@ packages = ["src/inertia"]
 dev = [
     "fastapi>=0.116.1",
     "pytest>=8.4.2",
+    "pytest-playwright>=0.6.2",
+    "playwright>=1.48.0",
+    "httpx>=0.28.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --strict-markers"
+markers = [
+    "e2e: End-to-end tests (slow, requires browser)",
+    "unit: Unit tests (fast)",
 ]

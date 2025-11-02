@@ -75,6 +75,24 @@ dmypy.json
 
 # Node modules (for examples with frontend)
 node_modules/
+bun.lockb
+
+# Vite / Frontend build outputs
+examples/*/static/build/
+examples/*/.vite/
+dist/
+
+# Playwright
+playwright-report/
+test-results/
 
 # Build outputs
 *.pyc
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+Thumbs.db

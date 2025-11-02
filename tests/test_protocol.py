@@ -104,17 +104,22 @@ class TestValidationErrors:
         )
         data = response.json()
 
-        assert response.status_code == 422
+        # Inertia always returns 200, errors are communicated via props
+        assert response.status_code == 200
         assert "errors" in data["props"]
         assert data["props"]["errors"]["field"] == "This field is required"
 
-    def test_errors_status_code_422(self, client: TestClient):
-        """Test that validation errors return 422 status code."""
+    def test_errors_status_code_200(self, client: TestClient):
+        """Test that validation errors return 200 status code (Inertia protocol)."""
         response = client.get(
             "/with-errors",
             headers={"X-Inertia": "true"},
         )
-        assert response.status_code == 422
+        # Per Inertia protocol, errors are communicated via props, not status codes
+        assert response.status_code == 200
+        # Verify errors are present in props
+        data = response.json()
+        assert "errors" in data["props"]
 
     def test_errors_in_html_response(self, client: TestClient):
         """Test that errors are included in HTML data-page for initial loads."""

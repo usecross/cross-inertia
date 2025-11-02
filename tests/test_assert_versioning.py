@@ -36,7 +36,6 @@ class TestAssetVersioning:
                 assert version != "dev"
                 assert isinstance(version, str)
 
-    @pytest.mark.skip(reason="Asset version mismatch handling not yet implemented")
     def test_version_mismatch_returns_409(self, client: TestClient):
         """Test that version mismatch returns 409 Conflict."""
         # Make initial request to get current version
@@ -56,7 +55,6 @@ class TestAssetVersioning:
         assert response.status_code == 409
         assert "X-Inertia-Location" in response.headers
 
-    @pytest.mark.skip(reason="Asset version mismatch handling not yet implemented")
     def test_version_match_proceeds_normally(self, client: TestClient):
         """Test that matching version proceeds with normal response."""
         # Make initial request to get current version

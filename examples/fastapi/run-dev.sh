@@ -39,7 +39,7 @@ $PKG_MANAGER run dev &
 sleep 2
 
 # Start FastAPI server (let Python find the package from parent venv)
-python main.py
+uv run fastapi dev main.py
 
 # Wait for all background processes
 wait

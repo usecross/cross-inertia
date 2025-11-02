@@ -9,8 +9,8 @@ from typing import Annotated, Any
 import httpx
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from starlette.responses import Response
 from fastapi.templating import Jinja2Templates
-from lia import StarletteRequestAdapter
 from lia import StarletteRequestAdapter
 
 # Configure logging with basic config if not already configured
@@ -57,19 +57,29 @@ class Inertia:
         self.request = request
         self.adapter = adapter
         self.response = response
+        self._encrypt_history = False
+        self._clear_history = False
 
     def render(
         self,
         component: str,
         props: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
-    ) -> JSONResponse | HTMLResponse:
+    ) -> JSONResponse | HTMLResponse | Response:
         """Render an Inertia response without needing to pass request"""
         if props is None:
             props = {}
-        return self.response.render(self.request, self.adapter, component, props, errors)
+        return self.response.render(
+            self.request, 
+            self.adapter, 
+            component, 
+            props, 
+            errors,
+            encrypt_history=self._encrypt_history,
+            clear_history=self._clear_history,
+        )
 
-    def back(self, errors: dict[str, str] | None = None) -> JSONResponse | HTMLResponse:
+    def back(self, errors: dict[str, str] | None = None) -> JSONResponse | HTMLResponse | Response:
         """Redirect back with errors (for form validation)"""
         # Get the referring component from the request headers or props
         # For simplicity, we'll just re-render with errors
@@ -80,7 +90,121 @@ class Inertia:
             self.adapter.headers.get("X-Inertia-Component", "Home"),
             {},
             errors,
+            encrypt_history=self._encrypt_history,
+            clear_history=self._clear_history,
         )
+
+    def location(self, url: str) -> Response:
+        """
+        Perform an external redirect (full page navigation).
+        
+        This is used when you need to redirect to:
+        - External websites (OAuth providers, payment gateways)
+        - Non-Inertia pages within your app
+        - Third-party services (Google Maps, file downloads, etc.)
+        
+        Returns a 409 Conflict response with X-Inertia-Location header.
+        The Inertia client will automatically perform a window.location = url visit.
+        
+        Args:
+            url: The URL to redirect to (can be absolute or relative)
+        
+        Returns:
+            Response with 409 status code and X-Inertia-Location header
+        
+        Example:
+            # Redirect to OAuth provider
+            return inertia.location("https://github.com/login/oauth/authorize?...")
+            
+            # Redirect to Google Maps
+            return inertia.location(f"https://maps.google.com/?q={address}")
+            
+            # Redirect to payment gateway
+            return inertia.location(stripe_checkout_url)
+        
+        Reference:
+            https://inertiajs.com/redirects#external-redirects
+        """
+        logger.info(f"External redirect to: {url}")
+        return Response(
+            status_code=409,
+            headers={
+                "X-Inertia-Location": url,
+            },
+        )
+
+    def encrypt_history(self, encrypt: bool = True) -> "Inertia":
+        """
+        Enable or disable history encryption for the current page.
+        
+        When enabled, the Inertia client will encrypt the page data before
+        storing it in the browser's history state. The encryption key is stored
+        in sessionStorage. This protects sensitive data from being visible when
+        users navigate back to the page after logging out.
+        
+        The encryption uses the browser's Web Crypto API (AES-GCM) and only
+        works in secure contexts (HTTPS, except localhost).
+        
+        Args:
+            encrypt: Whether to encrypt the history (default: True)
+        
+        Returns:
+            Self for method chaining
+        
+        Example:
+            # Banking page with sensitive data
+            @app.get("/account")
+            async def account(inertia: InertiaDep):
+                inertia.encrypt_history()  # Enable encryption
+                return inertia.render("Account", {
+                    "balance": user.balance,
+                    "transactions": user.transactions
+                })
+            
+            # Or disable if needed
+            inertia.encrypt_history(False)
+        
+        Reference:
+            https://inertiajs.com/history-encryption
+        """
+        self._encrypt_history = encrypt
+        if encrypt:
+            logger.info("History encryption enabled for this page")
+        return self
+
+    def clear_history(self, clear: bool = True) -> "Inertia":
+        """
+        Clear encrypted history state by rotating the encryption key.
+        
+        When enabled, the Inertia client will delete the current encryption key
+        from sessionStorage and generate a new one. This makes all previously
+        encrypted history states unreadable, effectively clearing sensitive data
+        from the browser's history.
+        
+        This is typically used on logout to ensure users cannot navigate back
+        to pages with sensitive data.
+        
+        Args:
+            clear: Whether to clear the history (default: True)
+        
+        Returns:
+            Self for method chaining
+        
+        Example:
+            # Logout endpoint
+            @app.post("/logout")
+            async def logout(inertia: InertiaDep):
+                clear_session()
+                inertia.clear_history()  # Clear all encrypted history
+                return inertia.render("Login", {})
+        
+        Reference:
+            https://inertiajs.com/history-encryption#clearing-history
+        """
+        self._clear_history = clear
+        if clear:
+            logger.info("History will be cleared (encryption keys rotated)")
+        return self
 
 
 class InertiaResponse:
@@ -98,6 +222,7 @@ class InertiaResponse:
         self.manifest_path = manifest_path
         self._is_dev = None
         self._manifest = None
+        self._shared_data: dict[str, Any] = {}  # Store shared data
 
         # Auto-detect vite entry from config if not provided
         if vite_entry is None:
@@ -245,33 +370,102 @@ class InertiaResponse:
         component: str,
         props: dict[str, Any],
         errors: dict[str, str] | None = None,
-    ) -> JSONResponse | HTMLResponse:
+        encrypt_history: bool = False,
+        clear_history: bool = False,
+    ) -> JSONResponse | HTMLResponse | Response:
         """
         Render an Inertia response.
         Returns JSON for Inertia requests, HTML for initial page loads.
         """
         # Extract path from full URL (lia returns full URL like http://testserver/test)
         from urllib.parse import urlparse
+        from starlette.responses import Response
 
         parsed_url = urlparse(adapter.url)
         url_path = parsed_url.path
+        
+        # Check for asset version mismatch (only for Inertia requests)
+        if self.is_inertia_request(adapter):
+            client_version = adapter.headers.get("X-Inertia-Version")
+            server_version = self.get_asset_version()
+            
+            # If client sent a version and it doesn't match, force a full page reload
+            if client_version and client_version != server_version:
+                logger.info(
+                    f"Asset version mismatch: client={client_version}, server={server_version}. "
+                    f"Returning 409 to force reload."
+                )
+                # Return 409 Conflict with the current URL to trigger a full page reload
+                # The client will perform a full page reload to get the new assets
+                return Response(
+                    status_code=409,
+                    headers={
+                        "X-Inertia-Location": adapter.url,
+                    },
+                )
+
+        # Merge shared data from middleware (if available)
+        # Shared data is set by InertiaMiddleware in request.state.inertia_shared
+        shared_data = getattr(request.state, "inertia_shared", {})
+        
+        # Handle partial reloads - filter props if requested
+        # Only apply if component matches (partial reloads only work for same component)
+        partial_component = adapter.headers.get("X-Inertia-Partial-Component")
+        partial_data = adapter.headers.get("X-Inertia-Partial-Data")
+        partial_except = adapter.headers.get("X-Inertia-Partial-Except")
+        
+        if partial_component == component and (partial_data or partial_except):
+            if partial_data:
+                # Only include requested props, but ALWAYS include shared data
+                requested_keys = [key.strip() for key in partial_data.split(",")]
+                # Filter to requested page props only
+                filtered_props = {key: props[key] for key in requested_keys if key in props}
+                # Merge: shared data first, then filtered page props (page props override)
+                props = {**shared_data, **filtered_props}
+                logger.info(
+                    f"Partial reload: requested props {requested_keys} + shared data {list(shared_data.keys())} for {component}"
+                )
+            elif partial_except:
+                # Exclude specified props, but NEVER exclude shared data
+                except_keys = [key.strip() for key in partial_except.split(",")]
+                shared_data_keys = set(shared_data.keys())
+                # Keep props that are NOT in except list OR are shared data
+                filtered_props = {key: val for key, val in props.items() 
+                                if key not in except_keys or key in shared_data_keys}
+                # Merge: shared data first, then filtered page props
+                props = {**shared_data, **filtered_props}
+                logger.info(
+                    f"Partial reload: excluding props {except_keys} (preserving shared data) for {component}"
+                )
+        else:
+            # No partial reload - merge all shared data with page props
+            if shared_data:
+                # Page props override shared data
+                props = {**shared_data, **props}
+                logger.debug(
+                    f"Merged shared data keys {list(shared_data.keys())} with page props"
+                )
 
         page_data = {
             "component": component,
             "props": props,
             "url": url_path,
             "version": self.get_asset_version(),
+            "encryptHistory": encrypt_history,
+            "clearHistory": clear_history,
         }
 
-        # Add errors to page data if present
+        # Add errors to props (Inertia checks page.props.errors for validation errors)
         if errors:
             page_data["props"]["errors"] = errors
-            logger.debug(
+            logger.info(
                 f"Rendering {component} with validation errors: {list(errors.keys())}"
             )
 
         if self.is_inertia_request(adapter):
             # Return JSON response for Inertia XHR requests
+            # Always return 200 OK for Inertia requests, even with validation errors
+            # Errors are communicated via props.errors, not HTTP status codes
             logger.info(f"→ Inertia XHR: {component} (props: {list(props.keys())})")
             return JSONResponse(
                 content=page_data,
@@ -279,7 +473,7 @@ class InertiaResponse:
                     "X-Inertia": "true",
                     "Vary": "X-Inertia",
                 },
-                status_code=422 if errors else 200,
+                status_code=200,
             )
         else:
             # Return HTML response for initial page load

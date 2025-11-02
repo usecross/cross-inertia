@@ -10,6 +10,10 @@ import UsersIndex from './pages/Users/Index'
 import UsersShow from './pages/Users/Show'
 import Form from './pages/Form'
 import Error from './pages/Error'
+import Browse from './pages/Browse'
+import CatProfile from './pages/CatProfile'
+import Favorites from './pages/Favorites'
+import ApplicationForm from './pages/ApplicationForm'
 
 const pages: Record<string, React.ComponentType<any>> = {
   Home,
@@ -18,6 +22,10 @@ const pages: Record<string, React.ComponentType<any>> = {
   'Users/Show': UsersShow,
   Form,
   Error,
+  Browse,
+  CatProfile,
+  Favorites,
+  ApplicationForm,
 }
 
 createInertiaApp({

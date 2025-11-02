@@ -61,6 +61,19 @@ def app(inertia_response):
         inertia = get_test_inertia(request)
         return inertia.render("TestComponent", {"message": "Hello, World!"})
 
+    @app.get("/multi-props")
+    def multi_props_route(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {
+                "message": "Hello",
+                "user": {"name": "John", "email": "john@example.com"},
+                "count": 42,
+                "items": ["a", "b", "c"],
+            },
+        )
+
     @app.get("/with-errors")
     def test_errors(request: Request):
         inertia = get_test_inertia(request)
@@ -74,6 +87,72 @@ def app(inertia_response):
     def test_submit(request: Request):
         inertia = get_test_inertia(request)
         return inertia.render("Success", {"submitted": True})
+
+    # External redirect test routes
+    @app.get("/test-external-redirect")
+    def test_external_redirect(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.location("https://github.com/login")
+
+    @app.get("/test-relative-redirect")
+    def test_relative_redirect(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.location("/legacy/admin")
+
+    @app.get("/test-oauth-redirect")
+    def test_oauth_redirect(request: Request):
+        inertia = get_test_inertia(request)
+        oauth_url = (
+            "https://github.com/login/oauth/authorize"
+            "?client_id=abc123"
+            "&redirect_uri=https://example.com/callback"
+        )
+        return inertia.location(oauth_url)
+
+    @app.get("/test-maps-redirect")
+    def test_maps_redirect(request: Request):
+        inertia = get_test_inertia(request)
+        address = "123 Main St, San Francisco, CA"
+        return inertia.location(f"https://maps.google.com/?q={address}")
+
+    # History encryption test routes
+    @app.get("/test-encrypt-history")
+    def test_encrypt_history(request: Request):
+        inertia = get_test_inertia(request)
+        inertia.encrypt_history()
+        return inertia.render("TestComponent", {"message": "Encrypted page"})
+
+    @app.get("/test-clear-history")
+    def test_clear_history(request: Request):
+        inertia = get_test_inertia(request)
+        inertia.clear_history()
+        return inertia.render("TestComponent", {"message": "Clearing history"})
+
+    @app.get("/test-encrypt-and-clear")
+    def test_encrypt_and_clear(request: Request):
+        inertia = get_test_inertia(request)
+        inertia.encrypt_history()
+        inertia.clear_history()
+        return inertia.render("TestComponent", {"message": "Both enabled"})
+
+    @app.get("/test-method-chaining")
+    def test_method_chaining(request: Request):
+        inertia = get_test_inertia(request)
+        # Test that methods return self for chaining
+        inertia.encrypt_history().clear_history()
+        return inertia.render("TestComponent", {"message": "Chained"})
+
+    @app.get("/test-encrypt-false")
+    def test_encrypt_false(request: Request):
+        inertia = get_test_inertia(request)
+        inertia.encrypt_history(False)
+        return inertia.render("TestComponent", {"message": "Not encrypted"})
+
+    @app.get("/test-clear-false")
+    def test_clear_false(request: Request):
+        inertia = get_test_inertia(request)
+        inertia.clear_history(False)
+        return inertia.render("TestComponent", {"message": "Not clearing"})
 
     return app
 

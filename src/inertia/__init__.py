@@ -12,10 +12,12 @@ from ._core import (
     get_inertia_response,
     read_vite_entry_from_config,
 )
+from .middleware import InertiaMiddleware
 
 __all__ = [
     "Inertia",
     "InertiaResponse",
+    "InertiaMiddleware",
     "InertiaDep",
     "get_inertia",
     "get_inertia_response",

@@ -9,6 +9,9 @@ A Python adapter for using [Inertia.js](https://inertiajs.com/) with FastAPI.
 - ✅ Auto-detection of Vite entry point from vite.config.ts/js
 - ✅ Asset versioning for cache busting
 - ✅ Validation error handling (422 responses)
+- ✅ History encryption for sensitive data
+- ✅ External redirects (OAuth, payments, etc.)
+- ✅ Partial reloads & shared data
 - ✅ TypeScript support
 
 ## Installation
@@ -154,6 +157,57 @@ async def create_user(inertia: InertiaDep):
     return inertia.render("Users/Show", {"user": new_user})
 ```
 
+## External Redirects
+
+Use `inertia.location()` to redirect to external websites or non-Inertia pages:
+
+```python
+@app.get("/auth/github")
+async def github_oauth(inertia: InertiaDep):
+    """Redirect to GitHub OAuth"""
+    oauth_url = f"https://github.com/login/oauth/authorize?client_id={CLIENT_ID}"
+    return inertia.location(oauth_url)
+
+@app.get("/shelter/{id}/directions")
+async def get_directions(id: int, inertia: InertiaDep):
+    """Redirect to Google Maps"""
+    shelter = get_shelter(id)
+    maps_url = f"https://maps.google.com/?q={shelter.address}"
+    return inertia.location(maps_url)
+```
+
+This returns a `409 Conflict` response with `X-Inertia-Location` header, which the client automatically follows with a full page navigation.
+
+## History Encryption
+
+Protect sensitive data in browser history by encrypting page state. This prevents users from viewing sensitive information after logging out by pressing the back button.
+
+```python
+# Encrypt sensitive pages
+@app.get("/account/transactions")
+async def transactions(inertia: InertiaDep):
+    inertia.encrypt_history()  # Enable encryption
+    return inertia.render("Transactions", {
+        "balance": user.balance,
+        "transactions": user.get_transactions()
+    })
+
+# Clear encrypted history on logout
+@app.post("/logout")
+async def logout(inertia: InertiaDep):
+    clear_user_session()
+    inertia.clear_history()  # Rotate encryption keys
+    return inertia.render("Login", {})
+```
+
+**How it works:**
+- Uses browser's Web Crypto API (AES-GCM encryption)
+- Encryption keys stored in sessionStorage
+- `clear_history()` rotates keys, making old history unreadable
+- Only works over HTTPS (except localhost)
+
+**Use cases:** Banking apps, healthcare (HIPAA), admin panels, any sensitive data
+
 ## Development vs Production
 
 The adapter automatically detects whether Vite dev server is running:
@@ -173,16 +227,16 @@ No configuration changes needed - it just works!
 | Dev/Prod mode detection | ✅ | ✅ | - |
 | Validation errors (422) | ✅ | ✅ | - |
 | Asset versioning (basic) | ✅ | ✅ | - |
-| **Asset version mismatch (409)** | ✅ | ⏳ Planned | 🔴 High |
-| **Partial reloads** | ✅ | ⏳ Planned | 🔴 High |
-| **Shared data** | ✅ | ⏳ Planned | 🟡 Medium |
-| **External redirects** | ✅ | ⏳ Planned | 🟡 Medium |
+| **Asset version mismatch (409)** | ✅ | ✅ | - |
+| **Partial reloads** | ✅ | ✅ | - |
+| **Shared data** | ✅ | ✅ | - |
+| **External redirects** | ✅ | ✅ | - |
+| **History encryption** | ✅ | ✅ | - |
 | Lazy props | ✅ | ⏳ Planned | 🟡 Medium |
 | Deferred props | ✅ | ⏳ Planned | 🟡 Medium |
 | Merging props | ✅ | ⏳ Planned | 🟡 Medium |
 | Error bags | ✅ | ⏳ Planned | 🟢 Low |
 | Prefetching | ✅ | ⏳ Planned | 🟢 Low |
-| History encryption | ✅ | ⏳ Planned | 🟢 Low |
 | SSR | ✅ | ❌ Not planned | - |
 
 **See [ROADMAP.md](./ROADMAP.md) for detailed implementation plans and progress tracking.**
