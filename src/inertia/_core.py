@@ -491,11 +491,13 @@ class InertiaResponse:
             logger.info(
                 f"→ Initial page load: {component} (props: {list(props.keys())})"
             )
+            # Escape single quotes in JSON for safe embedding in HTML attributes
+            page_json = json.dumps(page_data).replace("'", "&#39;")
             return self.templates.TemplateResponse(
                 "app.html",
                 {
                     "request": request,
-                    "page": json.dumps(page_data),
+                    "page": page_json,
                     "vite_tags": self.get_vite_tags(),  # Backward compatibility
                     # Note: vite() function is also available globally
                 },
