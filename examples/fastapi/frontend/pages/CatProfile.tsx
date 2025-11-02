@@ -35,12 +35,34 @@ export default function CatProfile({ title, cat, shelter, similar_cats = [] }: C
         <div className="lg:col-span-2 space-y-6">
           {/* Hero Image */}
           <Card className="overflow-hidden">
-            <div className="aspect-video bg-gray-100">
+            <div className="aspect-video bg-gray-100 relative">
               <img
                 src={cat.photo}
                 alt={cat.name}
                 className="w-full h-full object-cover"
               />
+              {cat.photographer && (
+                <div className="absolute bottom-0 right-0 bg-black/50 text-white text-xs px-2 py-1 rounded-tl">
+                  Photo by{' '}
+                  <a
+                    href={cat.photographer_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-gray-200"
+                  >
+                    {cat.photographer}
+                  </a>
+                  {' '}on{' '}
+                  <a
+                    href="https://unsplash.com?utm_source=cross-inertia&utm_medium=referral"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-gray-200"
+                  >
+                    Unsplash
+                  </a>
+                </div>
+              )}
             </div>
           </Card>
 

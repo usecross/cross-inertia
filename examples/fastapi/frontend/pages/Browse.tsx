@@ -15,12 +15,27 @@ interface CatCardProps {
 function CatCard({ cat, onToggleFavorite }: CatCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="aspect-square overflow-hidden bg-gray-100">
+      <div className="aspect-square overflow-hidden bg-gray-100 relative group">
         <img
           src={cat.photo}
           alt={cat.name}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
         />
+        {cat.photographer && (
+          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            Photo by{' '}
+            <a
+              href={cat.photographer_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-gray-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {cat.photographer}
+            </a>
+            {' '}on Unsplash
+          </div>
+        )}
       </div>
       <CardHeader>
         <div className="flex items-start justify-between">

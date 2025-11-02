@@ -20,6 +20,9 @@ export interface Cat {
   shelter_city: string
   available_since: string
   is_favorited: boolean
+  photographer?: string
+  photographer_url?: string
+  photo_id?: string
 }
 
 export interface Shelter {
