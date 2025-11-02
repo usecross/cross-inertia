@@ -114,7 +114,7 @@ You can test the release process locally:
 
 ```bash
 # Install autopub
-pip install autopub
+uv pip install autopub
 
 # Check if RELEASE.md is valid
 autopub check

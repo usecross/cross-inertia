@@ -19,11 +19,14 @@ A Python adapter for using [Inertia.js](https://inertiajs.com/) with FastAPI.
 ## Installation
 
 ```bash
-# This package (when published)
-pip install inertia-fastapi
+# Install from PyPI using uv (recommended)
+uv pip install cross-inertia
+
+# Or using pip
+pip install cross-inertia
 
 # Or install from source
-pip install -e .
+uv pip install -e .
 ```
 
 ## Quick Start
