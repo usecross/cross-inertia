@@ -27,6 +27,3 @@ Thumbs.db
 
 # Logs
 *.log
-
-# Generated cat data (includes Unsplash photos)
-cats_data.json

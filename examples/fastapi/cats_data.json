@@ -1,0 +1,129 @@
+{
+  "cats": [
+    {
+      "id": 1,
+      "name": "Whiskers",
+      "breed": "Tabby",
+      "age": 3,
+      "shelter": "Happy Tails Shelter",
+      "description": "Friendly and playful",
+      "image": "https://placekitten.com/300/300"
+    },
+    {
+      "id": 2,
+      "name": "Shadow",
+      "breed": "Black Cat",
+      "age": 2,
+      "shelter": "Paws & Claws Rescue",
+      "description": "Quiet and calm",
+      "image": "https://placekitten.com/301/301"
+    },
+    {
+      "id": 3,
+      "name": "Mittens",
+      "breed": "Calico",
+      "age": 4,
+      "shelter": "Happy Tails Shelter",
+      "description": "Loves to cuddle",
+      "image": "https://placekitten.com/302/302"
+    },
+    {
+      "id": 4,
+      "name": "Tiger",
+      "breed": "Orange Tabby",
+      "age": 1,
+      "shelter": "Furry Friends Sanctuary",
+      "description": "Energetic kitten",
+      "image": "https://placekitten.com/303/303"
+    },
+    {
+      "id": 5,
+      "name": "Luna",
+      "breed": "Siamese",
+      "age": 5,
+      "shelter": "Paws & Claws Rescue",
+      "description": "Elegant and graceful",
+      "image": "https://placekitten.com/304/304"
+    },
+    {
+      "id": 6,
+      "name": "Boots",
+      "breed": "Tuxedo",
+      "age": 2,
+      "shelter": "Happy Tails Shelter",
+      "description": "Loves to play",
+      "image": "https://placekitten.com/305/305"
+    },
+    {
+      "id": 7,
+      "name": "Smokey",
+      "breed": "Russian Blue",
+      "age": 6,
+      "shelter": "Furry Friends Sanctuary",
+      "description": "Very affectionate",
+      "image": "https://placekitten.com/306/306"
+    },
+    {
+      "id": 8,
+      "name": "Ginger",
+      "breed": "Orange Cat",
+      "age": 3,
+      "shelter": "Paws & Claws Rescue",
+      "description": "Friendly with everyone",
+      "image": "https://placekitten.com/307/307"
+    },
+    {
+      "id": 9,
+      "name": "Oreo",
+      "breed": "Black and White",
+      "age": 4,
+      "shelter": "Happy Tails Shelter",
+      "description": "Playful and curious",
+      "image": "https://placekitten.com/308/308"
+    },
+    {
+      "id": 10,
+      "name": "Princess",
+      "breed": "Persian",
+      "age": 7,
+      "shelter": "Furry Friends Sanctuary",
+      "description": "Regal and calm",
+      "image": "https://placekitten.com/309/309"
+    },
+    {
+      "id": 11,
+      "name": "Felix",
+      "breed": "Domestic Shorthair",
+      "age": 2,
+      "shelter": "Paws & Claws Rescue",
+      "description": "Loves attention",
+      "image": "https://placekitten.com/310/310"
+    },
+    {
+      "id": 12,
+      "name": "Snowball",
+      "breed": "White Cat",
+      "age": 1,
+      "shelter": "Happy Tails Shelter",
+      "description": "Sweet and gentle",
+      "image": "https://placekitten.com/311/311"
+    }
+  ],
+  "shelters": [
+    {
+      "name": "Happy Tails Shelter",
+      "location": "Springfield",
+      "contact": "555-0100"
+    },
+    {
+      "name": "Paws & Claws Rescue",
+      "location": "Riverside",
+      "contact": "555-0200"
+    },
+    {
+      "name": "Furry Friends Sanctuary",
+      "location": "Hillside",
+      "contact": "555-0300"
+    }
+  ]
+}
