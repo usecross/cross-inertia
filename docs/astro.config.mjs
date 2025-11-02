@@ -8,9 +8,13 @@ export default defineConfig({
 		starlight({
 			title: 'Cross-Inertia',
 			description: 'Inertia.js adapter for Python web frameworks',
-			social: {
-				github: 'https://github.com/patrick91/cross-inertia',
-			},
+			social: [
+				{
+					label: 'GitHub',
+					icon: 'github',
+					href: 'https://github.com/patrick91/cross-inertia',
+				},
+			],
 			sidebar: [
 				{
 					label: 'Getting Started',
