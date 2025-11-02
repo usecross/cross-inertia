@@ -27,9 +27,13 @@ class Cat(TypedDict):
 class Shelter(TypedDict):
     """Shelter information."""
 
+    id: int
     name: str
-    location: str
-    contact: str
+    address: str
+    city: str
+    state: str
+    phone: str
+    email: str
 
 
 # Raw cat data
@@ -218,19 +222,31 @@ _RAW_CATS: list[Cat] = [
 
 SHELTERS: list[Shelter] = [
     {
+        "id": 1,
         "name": "Happy Tails Shelter",
-        "location": "Springfield",
-        "contact": "555-0100",
+        "address": "123 Adoption Lane",
+        "city": "Springfield",
+        "state": "IL",
+        "phone": "(555) 123-4567",
+        "email": "info@happytails.org",
     },
     {
+        "id": 2,
         "name": "Paws & Claws Rescue",
-        "location": "Riverside",
-        "contact": "555-0200",
+        "address": "456 Rescue Road",
+        "city": "Riverside",
+        "state": "CA",
+        "phone": "(555) 234-5678",
+        "email": "contact@pawsandclaws.org",
     },
     {
+        "id": 3,
         "name": "Furry Friends Sanctuary",
-        "location": "Hillside",
-        "contact": "555-0300",
+        "address": "789 Care Circle",
+        "city": "Hillside",
+        "state": "NY",
+        "phone": "(555) 345-6789",
+        "email": "hello@furryfriends.org",
     },
 ]
 
@@ -257,7 +273,7 @@ for cat in _RAW_CATS:
         "good_with_cats": cat.get("good_with_cats", True),  # type: ignore
         "adoption_fee": cat.get("adoption_fee", 150),  # type: ignore
         "shelter_name": cat.get("shelter", "Happy Tails Shelter"),
-        "shelter_city": SHELTERS[0]["location"] if SHELTERS else "Springfield",
+        "shelter_city": SHELTERS[0]["city"] if SHELTERS else "Springfield",
         "available_since": "2024-01-01",
         "adoption_status": cat.get("adoption_status", "available"),
     }
@@ -279,7 +295,7 @@ def get_cat_by_id(cat_id: int) -> dict | None:
     return None
 
 
-def get_shelter_by_name(shelter_name: str) -> dict | None:
+def get_shelter_by_name(shelter_name: str) -> Shelter | None:
     """Get shelter info by name"""
     for shelter in SHELTERS:
         if shelter["name"] == shelter_name:
