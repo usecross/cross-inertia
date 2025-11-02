@@ -1,0 +1,25 @@
+[project]
+name = "cross-inertia"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Patrick Arminio", email = "patrick.arminio@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "lia-web>=0.2.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/inertia"]
+
+[dependency-groups]
+dev = [
+    "fastapi>=0.116.1",
+    "pytest>=8.4.2",
+]
