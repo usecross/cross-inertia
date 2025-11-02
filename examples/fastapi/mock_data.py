@@ -16,6 +16,12 @@ try:
     # Transform cats data to match frontend expectations
     CATS = []
     for cat in _data["cats"]:
+        # Handle personality - convert string to array if needed
+        personality = cat.get("personality", "Friendly")
+        if isinstance(personality, str):
+            # Convert string to array of traits
+            personality = [trait.strip() for trait in personality.split(",")]
+        
         # Map JSON fields to frontend-expected fields
         transformed_cat = {
             "id": cat["id"],
@@ -30,7 +36,7 @@ try:
             "photographer_url": cat.get("photographer_url"),
             "short_description": cat.get("description", ""),
             "full_story": cat.get("description", "A wonderful cat looking for a loving home."),
-            "personality": cat.get("personality", ["Friendly"]),
+            "personality": personality,
             "good_with_kids": cat.get("good_with_kids", True),
             "good_with_dogs": cat.get("good_with_dogs", True),
             "good_with_cats": cat.get("good_with_cats", True),
