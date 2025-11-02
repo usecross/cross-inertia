@@ -64,7 +64,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
       
-      - run: uv pip install nox
+      - run: uv pip install --system nox
       
       - run: nox -r -t tests -s "${{ matrix.session.session }}"
       

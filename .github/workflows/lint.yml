@@ -23,7 +23,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
       
       - name: Install nox
-        run: uv pip install nox
+        run: uv pip install --system nox
       
       - name: Run linting
         run: nox -s lint
