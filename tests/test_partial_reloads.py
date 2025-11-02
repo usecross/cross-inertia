@@ -1,6 +1,5 @@
 """Tests for partial reload functionality (not yet implemented)."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 

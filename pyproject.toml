@@ -29,6 +29,9 @@ dev = [
     "pytest-playwright>=0.6.2",
     "playwright>=1.48.0",
     "httpx>=0.28.0",
+    "nox>=2024.4.15",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
 ]
 
 [tool.pytest.ini_options]

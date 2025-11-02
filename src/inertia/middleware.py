@@ -14,20 +14,20 @@ logger = logging.getLogger(__name__)
 class InertiaMiddleware(BaseHTTPMiddleware):
     """
     Middleware that adds shared data to all Inertia requests.
-    
+
     Shared data is computed per-request and stored in request.state.inertia_shared,
     where it can be accessed by the Inertia.render() method.
-    
+
     Example usage:
         ```python
         from inertia.middleware import InertiaMiddleware
-        
+
         def share_data(request: Request) -> dict:
             return {
                 "auth": {"user": get_current_user(request)},
                 "flash": request.session.get("flash", {}),
             }
-        
+
         app.add_middleware(InertiaMiddleware, share=share_data)
         ```
     """
@@ -40,7 +40,7 @@ class InertiaMiddleware(BaseHTTPMiddleware):
     ):
         """
         Initialize the middleware with a share function.
-        
+
         Args:
             app: The ASGI application
             share: A function that takes a Request and returns a dict of shared data.
@@ -53,17 +53,17 @@ class InertiaMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         """
         Process the request and inject shared data into request.state.
-        
+
         Args:
             request: The incoming request
             call_next: The next middleware or route handler
-            
+
         Returns:
             The response from the next handler
         """
         # Resolve shared data (support both sync and async functions)
         shared_data: dict[str, Any] = {}
-        
+
         try:
             if self._is_async:
                 shared_data = await self.share_func(request)  # type: ignore

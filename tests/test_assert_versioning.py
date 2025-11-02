@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -38,11 +37,7 @@ class TestAssetVersioning:
 
     def test_version_mismatch_returns_409(self, client: TestClient):
         """Test that version mismatch returns 409 Conflict."""
-        # Make initial request to get current version
-        response = client.get("/test", headers={"X-Inertia": "true"})
-        current_version = response.json()["version"]
-
-        # Make request with different version
+        # Make request with different version (will mismatch with server version)
         response = client.get(
             "/test",
             headers={

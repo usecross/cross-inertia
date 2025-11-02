@@ -63,10 +63,10 @@ def share_data(request: Request) -> dict:
         "name": "John Doe",
         "email": "john@example.com",
     }
-    
+
     # Get favorites count dynamically
     favorites_count = len(mock_data.get_favorited_cats())
-    
+
     # Get flash messages from session (if available)
     # IMPORTANT: Only pop flash on GET requests or non-Inertia requests
     # For POST/PUT/DELETE, the flash should be preserved until the redirect
@@ -76,7 +76,7 @@ def share_data(request: Request) -> dict:
             # Check if this is a GET request or a non-Inertia request
             is_get = request.method == "GET"
             is_inertia = request.headers.get("X-Inertia") == "true"
-            
+
             # Only pop flash on GET requests (after redirects)
             if is_get and is_inertia:
                 flash_data = request.session.pop("flash")  # Get and clear
@@ -86,7 +86,7 @@ def share_data(request: Request) -> dict:
     except (KeyError, AssertionError):
         # Session not available, that's okay
         pass
-    
+
     return {
         "auth": {
             "user": user_data,
@@ -106,7 +106,7 @@ app.add_middleware(SessionMiddleware, secret_key="your-secret-key-change-in-prod
 def flash(request: Request, message: str, category: str = "success"):
     """
     Flash a message to be displayed on the next request.
-    
+
     Args:
         request: The current request
         message: The message to display
@@ -124,6 +124,7 @@ async def home(inertia: InertiaDep):
     # For now, redirect to browse page
     # Later we can create a proper home page
     from fastapi.responses import RedirectResponse
+
     return RedirectResponse(url="/browse")
 
 
@@ -135,17 +136,17 @@ async def browse_cats(
     age_range: str | None = None,
 ):
     """Browse cats page with filtering and pagination"""
-    
+
     # Apply filters
     filtered_cats = mock_data.filter_cats(breed=breed, age_range=age_range)
-    
+
     # Apply pagination
     paginated = mock_data.paginate_cats(filtered_cats, page=page, per_page=12)
-    
+
     # Mark favorites
     for cat in paginated["cats"]:
         cat["is_favorited"] = mock_data.is_favorited(cat["id"])
-    
+
     return inertia.render(
         "Browse",
         {
@@ -166,24 +167,24 @@ async def browse_cats(
 async def show_cat(cat_id: int, inertia: InertiaDep):
     """Show individual cat profile"""
     cat = mock_data.get_cat_by_id(cat_id)
-    
+
     if not cat:
         return inertia.render(
             "Error",
             {"title": "Not Found", "message": f"Cat {cat_id} not found"},
         )
-    
+
     # Get shelter info
     shelter = mock_data.get_shelter_by_name(cat["shelter_name"])
-    
+
     # Get similar cats
     similar_cats = mock_data.get_similar_cats(cat_id, limit=6)
-    
+
     # Mark favorite status
     cat["is_favorited"] = mock_data.is_favorited(cat_id)
     for similar_cat in similar_cats:
         similar_cat["is_favorited"] = mock_data.is_favorited(similar_cat["id"])
-    
+
     return inertia.render(
         "CatProfile",
         {
@@ -199,11 +200,11 @@ async def show_cat(cat_id: int, inertia: InertiaDep):
 async def favorites(inertia: InertiaDep):
     """Show user's favorite cats"""
     favorited_cats = mock_data.get_favorited_cats()
-    
+
     # Mark all as favorited
     for cat in favorited_cats:
         cat["is_favorited"] = True
-    
+
     return inertia.render(
         "Favorites",
         {
@@ -219,20 +220,22 @@ async def toggle_favorite(cat_id: int, inertia: InertiaDep):
     """Toggle favorite status for a cat"""
     cat = mock_data.get_cat_by_id(cat_id)
     is_now_favorited = mock_data.toggle_favorite(cat_id)
-    
+
     # Flash message based on action
     if is_now_favorited:
         flash(inertia.request, f"Added {cat['name']} to your favorites!", "success")
     else:
         flash(inertia.request, f"Removed {cat['name']} from favorites", "info")
-    
+
     # Redirect back to the referring page (or /browse as fallback)
     from fastapi.responses import RedirectResponse
+
     referer = inertia.request.headers.get("referer", "/browse")
     # Extract the path from the referer URL
     from urllib.parse import urlparse
+
     redirect_path = urlparse(referer).path if referer else "/browse"
-    
+
     return RedirectResponse(url=redirect_path, status_code=303)
 
 
@@ -241,11 +244,12 @@ async def remove_favorite(cat_id: int, inertia: InertiaDep):
     """Remove a cat from favorites (from favorites page)"""
     cat = mock_data.get_cat_by_id(cat_id)
     mock_data.toggle_favorite(cat_id)
-    
+
     flash(inertia.request, f"Removed {cat['name']} from favorites", "info")
-    
+
     # Redirect back to favorites page
     from fastapi.responses import RedirectResponse
+
     return RedirectResponse(url="/favorites", status_code=303)
 
 
@@ -253,24 +257,24 @@ async def remove_favorite(cat_id: int, inertia: InertiaDep):
 async def get_shelter_directions(shelter_name: str, inertia: InertiaDep):
     """
     External redirect to Google Maps for shelter directions.
-    
+
     This demonstrates the external redirect feature using inertia.location().
     The client will receive a 409 response with X-Inertia-Location header
     and automatically perform a full page navigation to Google Maps.
     """
     shelter = mock_data.get_shelter_by_name(shelter_name)
-    
+
     if not shelter:
         return inertia.render(
             "Error",
             {"title": "Not Found", "message": f"Shelter '{shelter_name}' not found"},
         )
-    
+
     # Construct Google Maps URL with the shelter's address
     # Using + for spaces is more URL-friendly than %20
     address = shelter["address"].replace(" ", "+")
     maps_url = f"https://maps.google.com/?q={address}"
-    
+
     # Use inertia.location() for external redirect
     # This returns 409 Conflict with X-Inertia-Location header
     return inertia.location(maps_url)
@@ -280,13 +284,13 @@ async def get_shelter_directions(shelter_name: str, inertia: InertiaDep):
 async def show_application_form(cat_id: int, inertia: InertiaDep):
     """Show adoption application form"""
     cat = mock_data.get_cat_by_id(cat_id)
-    
+
     if not cat:
         return inertia.render(
             "Error",
             {"title": "Not Found", "message": f"Cat {cat_id} not found"},
         )
-    
+
     return inertia.render(
         "ApplicationForm",
         {
@@ -301,36 +305,38 @@ async def submit_application(cat_id: int, inertia: InertiaDep):
     """Handle adoption application submission with validation"""
     from fastapi import Request
     from fastapi.responses import RedirectResponse
-    
+
     # Get form data (Inertia sends JSON, not form data)
     request: Request = inertia.request
     form_data = await request.json()
-    
+
     # Validation
     errors = {}
-    
+
     full_name = str(form_data.get("full_name", ""))
     email = str(form_data.get("email", ""))
     phone = str(form_data.get("phone", ""))
     address = str(form_data.get("address", ""))
     why_adopt = str(form_data.get("why_adopt", ""))
-    
+
     # Validate required fields
     if not full_name or len(full_name) < 2:
         errors["full_name"] = "Full name is required (minimum 2 characters)"
-    
+
     if not email or "@" not in email:
         errors["email"] = "A valid email address is required"
-    
+
     if not phone or len(phone) < 10:
         errors["phone"] = "A valid phone number is required"
-    
+
     if not address or len(address) < 10:
         errors["address"] = "A complete address is required"
-    
+
     if not why_adopt or len(why_adopt) < 50:
-        errors["why_adopt"] = "Please tell us more about why you want to adopt (minimum 50 characters)"
-    
+        errors["why_adopt"] = (
+            "Please tell us more about why you want to adopt (minimum 50 characters)"
+        )
+
     # If there are errors, re-render the form with validation errors
     if errors:
         return inertia.render(
@@ -341,15 +347,15 @@ async def submit_application(cat_id: int, inertia: InertiaDep):
             },
             errors=errors,
         )
-    
+
     # Success - in a real app, you'd save to database and send confirmation email
     cat = mock_data.get_cat_by_id(cat_id)
     flash(
         inertia.request,
         f"Application submitted successfully! We'll review your application for {cat['name']} and contact you at {email} soon.",
-        "success"
+        "success",
     )
-    
+
     # Redirect back to the cat profile
     return RedirectResponse(url=f"/cats/{cat_id}", status_code=303)
 
@@ -359,10 +365,34 @@ async def users_show(user_id: int, inertia: InertiaDep):
     """Show individual user."""
     # In a real app, you'd fetch from database
     users_data = {
-        1: {"id": 1, "name": "Alice Johnson", "email": "alice@example.com", "role": "Admin", "joined": "2023-01-15"},
-        2: {"id": 2, "name": "Bob Smith", "email": "bob@example.com", "role": "User", "joined": "2023-03-22"},
-        3: {"id": 3, "name": "Carol White", "email": "carol@example.com", "role": "User", "joined": "2023-05-10"},
-        4: {"id": 4, "name": "David Brown", "email": "david@example.com", "role": "Moderator", "joined": "2023-07-08"},
+        1: {
+            "id": 1,
+            "name": "Alice Johnson",
+            "email": "alice@example.com",
+            "role": "Admin",
+            "joined": "2023-01-15",
+        },
+        2: {
+            "id": 2,
+            "name": "Bob Smith",
+            "email": "bob@example.com",
+            "role": "User",
+            "joined": "2023-03-22",
+        },
+        3: {
+            "id": 3,
+            "name": "Carol White",
+            "email": "carol@example.com",
+            "role": "User",
+            "joined": "2023-05-10",
+        },
+        4: {
+            "id": 4,
+            "name": "David Brown",
+            "email": "david@example.com",
+            "role": "Moderator",
+            "joined": "2023-07-08",
+        },
     }
 
     user = users_data.get(user_id)

@@ -18,13 +18,13 @@ def fastapi_server() -> Generator[str, None, None]:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    
+
     # Wait for server to be ready
     time.sleep(3)
-    
+
     # Yield the base URL
     yield "http://127.0.0.1:8888"
-    
+
     # Cleanup
     process.terminate()
     process.wait(timeout=5)

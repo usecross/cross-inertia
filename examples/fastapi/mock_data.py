@@ -49,10 +49,10 @@ def filter_cats(
 ) -> list[dict]:
     """Filter cats by criteria"""
     filtered = CATS.copy()
-    
+
     if breed:
         filtered = [cat for cat in filtered if cat["breed"] == breed]
-    
+
     if age_range:
         if age_range == "kitten":
             filtered = [cat for cat in filtered if cat["age"] <= 1]
@@ -62,13 +62,12 @@ def filter_cats(
             filtered = [cat for cat in filtered if 3 < cat["age"] <= 7]
         elif age_range == "senior":
             filtered = [cat for cat in filtered if cat["age"] > 7]
-    
+
     if personality:
         filtered = [
-            cat for cat in filtered
-            if any(p in cat["personality"] for p in personality)
+            cat for cat in filtered if any(p in cat["personality"] for p in personality)
         ]
-    
+
     return filtered
 
 
@@ -77,16 +76,17 @@ def get_similar_cats(cat_id: int, limit: int = 6) -> list[dict]:
     cat = get_cat_by_id(cat_id)
     if not cat:
         return []
-    
+
     import random
-    
+
     # Find cats with same breed or similar age
     similar = [
-        c for c in CATS
+        c
+        for c in CATS
         if c["id"] != cat_id
         and (c["breed"] == cat["breed"] or abs(c["age"] - cat["age"]) <= 2)
     ]
-    
+
     # Return random selection
     return random.sample(similar, min(limit, len(similar)))
 
@@ -96,7 +96,7 @@ def paginate_cats(cats: list[dict], page: int = 1, per_page: int = 12) -> dict:
     total = len(cats)
     start = (page - 1) * per_page
     end = start + per_page
-    
+
     return {
         "cats": cats[start:end],
         "total": total,

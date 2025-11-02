@@ -14,7 +14,7 @@ class TestHistoryEncryption:
             "/test",
             headers={"X-Inertia": "true"},
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["encryptHistory"] is False
@@ -23,18 +23,19 @@ class TestHistoryEncryption:
     def test_encrypt_history_enabled(self, client: TestClient):
         """Test that encrypt_history() sets encryptHistory to True."""
         response = client.get("/test-encrypt-history")
-        
+
         assert response.status_code == 200
         # For HTML responses, parse the data-page attribute
-        assert 'data-page=' in response.text
-        
+        assert "data-page=" in response.text
+
         # Extract and parse the page data
         import re
+
         match = re.search(r"data-page='([^']+)'", response.text)
         assert match is not None
         page_data_json = match.group(1).replace("&apos;", "'")
         page_data = json.loads(page_data_json)
-        
+
         assert page_data["encryptHistory"] is True
         assert page_data["clearHistory"] is False
 
@@ -44,7 +45,7 @@ class TestHistoryEncryption:
             "/test-encrypt-history",
             headers={"X-Inertia": "true"},
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["encryptHistory"] is True
@@ -56,7 +57,7 @@ class TestHistoryEncryption:
             "/test-clear-history",
             headers={"X-Inertia": "true"},
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["encryptHistory"] is False
@@ -68,7 +69,7 @@ class TestHistoryEncryption:
             "/test-encrypt-and-clear",
             headers={"X-Inertia": "true"},
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["encryptHistory"] is True
@@ -80,7 +81,7 @@ class TestHistoryEncryption:
             "/test-method-chaining",
             headers={"X-Inertia": "true"},
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["encryptHistory"] is True
@@ -92,7 +93,7 @@ class TestHistoryEncryption:
             "/test-encrypt-false",
             headers={"X-Inertia": "true"},
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["encryptHistory"] is False
@@ -103,7 +104,7 @@ class TestHistoryEncryption:
             "/test-clear-false",
             headers={"X-Inertia": "true"},
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["clearHistory"] is False
@@ -114,10 +115,10 @@ class TestHistoryEncryption:
             "/test-encrypt-history",
             headers={"X-Inertia": "true"},
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # Verify all required page object fields are present
         assert "component" in data
         assert "props" in data
@@ -125,7 +126,7 @@ class TestHistoryEncryption:
         assert "version" in data
         assert "encryptHistory" in data
         assert "clearHistory" in data
-        
+
         # Verify correct values
         assert data["component"] == "TestComponent"
         assert data["encryptHistory"] is True
