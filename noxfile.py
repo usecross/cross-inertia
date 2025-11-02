@@ -30,7 +30,16 @@ def tests(session: nox.Session) -> None:
 def e2e_tests(session: nox.Session) -> None:
     """Run E2E tests with Playwright."""
     session.install(".")
-    session.install("pytest", "pytest-playwright", "playwright", "fastapi", "httpx")
+    session.install(
+        "pytest",
+        "pytest-playwright",
+        "playwright",
+        "fastapi",
+        "httpx",
+        "uvicorn",
+        "itsdangerous",
+        "jinja2",
+    )
     # Install Playwright browsers
     session.run("playwright", "install", "--with-deps", "chromium")
     session.run(
