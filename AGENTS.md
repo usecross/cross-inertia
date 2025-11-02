@@ -1,6 +1,8 @@
 # Cross-Inertia Development Guidelines
 
-This file contains guidelines and conventions for working on the Cross-Inertia project.
+This file contains guidelines and conventions for AI coding agents working on the Cross-Inertia project.
+
+For human developers, see the main [README.md](./README.md) and [documentation](https://inertia.patrick.wtf).
 
 ## Release Process
 
@@ -70,9 +72,10 @@ Use conventional commit style:
 
 ## Documentation
 
+- **Live site**: https://inertia.patrick.wtf
 - Update docs in `docs/src/content/docs/` for new features
-- Run `cd docs && bun run dev` to preview locally
-- Documentation deploys via Cloudflare Pages
+- Run `cd docs && bun run dev` to preview locally at http://localhost:4321
+- Documentation deploys automatically via Cloudflare Pages on push to main
 
 ## CI/CD
 
@@ -107,9 +110,16 @@ nox -s typecheck         # Check types
 nox -s format            # Auto-format code
 
 # Documentation
-cd docs && bun run dev   # Start docs server
+cd docs && bun run dev   # Start docs server at http://localhost:4321
 
 # E2E (requires frontend build)
 cd examples/fastapi && bun run build
 nox -s e2e-3.14
 ```
+
+## Important Links
+
+- **Documentation**: https://inertia.patrick.wtf
+- **PyPI**: https://pypi.org/project/cross-inertia/
+- **GitHub**: https://github.com/patrick91/cross-inertia
+- **Issues**: https://github.com/patrick91/cross-inertia/issues
