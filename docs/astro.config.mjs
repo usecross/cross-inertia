@@ -6,6 +6,7 @@ import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://inertia.patrick.wtf',
   integrations: [
       starlight({
           title: 'Cross-Inertia',

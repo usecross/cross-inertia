@@ -4,7 +4,7 @@ members = ["examples/*"]
 [project]
 name = "cross-inertia"
 version = "0.1.0"
-description = "Add your description here"
+description = "Inertia.js adapter for Python web frameworks"
 readme = "README.md"
 authors = [
     { name = "Patrick Arminio", email = "patrick.arminio@gmail.com" }
@@ -13,6 +13,12 @@ requires-python = ">=3.10"
 dependencies = [
     "lia-web>=0.2.3",
 ]
+
+[project.urls]
+Homepage = "https://github.com/patrick91/cross-inertia"
+Documentation = "https://inertia.patrick.wtf"
+Repository = "https://github.com/patrick91/cross-inertia"
+Issues = "https://github.com/patrick91/cross-inertia/issues"
 
 [build-system]
 requires = ["hatchling"]

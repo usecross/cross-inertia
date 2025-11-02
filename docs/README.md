@@ -18,6 +18,8 @@ npm run dev
 
 The docs will be available at `http://localhost:4321`
 
+**Production site**: https://inertia.patrick.wtf
+
 ## Building
 
 Build the static site:

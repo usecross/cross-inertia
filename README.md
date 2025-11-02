@@ -2,7 +2,7 @@
 
 A Python adapter for using [Inertia.js](https://inertiajs.com/) with FastAPI.
 
-**[📚 Documentation](./docs)** | **[🚀 Quick Start](#quick-start)** | **[🗺️ Roadmap](./ROADMAP.md)**
+**[📚 Documentation](https://inertia.patrick.wtf)** | **[🚀 Quick Start](#quick-start)** | **[🗺️ Roadmap](./ROADMAP.md)**
 
 ## Features
 
