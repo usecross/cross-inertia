@@ -11,18 +11,24 @@ description: How to install Cross-Inertia in your project
 
 ## Install Cross-Inertia
 
-Currently, Cross-Inertia is not yet published to PyPI. Install from source:
+Install from PyPI using uv (recommended):
 
 ```bash
-pip install git+https://github.com/patrick91/cross-inertia.git
+uv pip install cross-inertia
 ```
 
-Or for development:
+Or using pip:
+
+```bash
+pip install cross-inertia
+```
+
+For development from source:
 
 ```bash
 git clone https://github.com/patrick91/cross-inertia.git
 cd cross-inertia
-pip install -e .
+uv pip install -e .
 ```
 
 ## Install Frontend Dependencies
