@@ -1,0 +1,55 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ruff:
+    name: Ruff (Format & Lint)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      
+      - name: Install ruff
+        run: uv tool install ruff
+      
+      - name: Check formatting
+        run: uvx ruff format --check .
+      
+      - name: Run linter
+        run: uvx ruff check .
+  
+  mypy:
+    name: Type Check (mypy)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      
+      - name: Install dependencies
+        run: |
+          uv sync
+          uv tool install mypy
+      
+      - name: Run mypy
+        run: uvx mypy src/ --ignore-missing-imports

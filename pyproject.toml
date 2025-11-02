@@ -9,7 +9,7 @@ readme = "README.md"
 authors = [
     { name = "Patrick Arminio", email = "patrick.arminio@gmail.com" }
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "lia-web>=0.2.3",
 ]
@@ -25,6 +25,7 @@ packages = ["src/inertia"]
 dev = [
     "fastapi>=0.116.1",
     "pytest>=8.4.2",
+    "pytest-cov>=6.0.0",
     "pytest-playwright>=0.6.2",
     "playwright>=1.48.0",
     "httpx>=0.28.0",
