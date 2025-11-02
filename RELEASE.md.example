@@ -7,7 +7,9 @@ This is an example of how to create a RELEASE.md file for publishing to PyPI.
 ## Format
 
 ```markdown
-Release type: patch | minor | major
+---
+release type: patch | minor | major
+---
 
 Description of the changes in this release.
 Can be multiple lines and paragraphs.
@@ -27,7 +29,9 @@ Can be multiple lines and paragraphs.
 ### Patch Release (Bug Fix)
 
 ```markdown
-Release type: patch
+---
+release type: patch
+---
 
 Fix asset version comparison for None values
 
@@ -39,7 +43,9 @@ Fix asset version comparison for None values
 ### Minor Release (New Feature)
 
 ```markdown
-Release type: minor
+---
+release type: minor
+---
 
 Add support for lazy props evaluation
 
@@ -55,7 +61,9 @@ to be deferred until they're actually needed.
 ### Major Release (Breaking Change)
 
 ```markdown
-Release type: major
+---
+release type: major
+---
 
 Refactor to use inertia.fastapi namespace
 

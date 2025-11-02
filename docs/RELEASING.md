@@ -11,10 +11,12 @@ This guide explains how to release a new version of Cross-Inertia to PyPI.
 
 ## RELEASE.md Format
 
-Create a `RELEASE.md` file in your PR:
+Create a `RELEASE.md` file in your PR with YAML frontmatter:
 
 ```markdown
-Release type: patch
+---
+release type: patch
+---
 
 Brief description of what changed.
 
@@ -45,7 +47,9 @@ When your PR is merged to main, autopub will:
 ### Bug Fix Release (Patch)
 
 ```markdown
-Release type: patch
+---
+release type: patch
+---
 
 Fix asset version handling for None values
 
@@ -57,7 +61,9 @@ Fix asset version handling for None values
 ### New Feature (Minor)
 
 ```markdown
-Release type: minor
+---
+release type: minor
+---
 
 Add lazy props evaluation
 
@@ -75,7 +81,9 @@ See #2 for details.
 ### Breaking Change (Major)
 
 ```markdown
-Release type: major
+---
+release type: major
+---
 
 Refactor imports to inertia.fastapi namespace
 
