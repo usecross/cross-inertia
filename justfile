@@ -53,8 +53,23 @@ _run-servers:
         exit 1
     fi
     
-    # Trap to kill all background jobs on exit
-    trap 'kill 0' SIGINT SIGTERM EXIT
+    # Function to cleanup processes
+    cleanup() {
+        echo ""
+        echo "🛑 Stopping servers..."
+        if [ ! -z "${VITE_PID:-}" ]; then
+            kill $VITE_PID 2>/dev/null || true
+        fi
+        if [ ! -z "${API_PID:-}" ]; then
+            kill $API_PID 2>/dev/null || true
+        fi
+        # Kill any remaining child processes
+        pkill -P $$ 2>/dev/null || true
+        exit 0
+    }
+    
+    # Trap to cleanup on exit
+    trap cleanup SIGINT SIGTERM EXIT
     
     # Start Vite dev server
     bun run dev &
