@@ -96,3 +96,7 @@ test-results/
 
 # OS files
 Thumbs.db
+-e 
+# Documentation
+docs/dist/
+docs/.astro/

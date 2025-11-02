@@ -1,0 +1,75 @@
+---
+title: Cross-Inertia
+description: Modern Inertia.js adapter for Python web frameworks
+template: splash
+hero:
+  tagline: Build modern single-page apps with Python backends and React/Vue/Svelte frontends
+  image:
+    alt: Cross-Inertia
+    file: ../../assets/houston.webp
+  actions:
+    - text: Get Started
+      link: /getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/patrick91/cross-inertia
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why Cross-Inertia?
+
+<CardGrid stagger>
+  <Card title="🚀 Production Ready" icon="rocket">
+    Full implementation of the Inertia.js protocol including asset versioning, partial reloads, and history encryption.
+  </Card>
+  <Card title="⚡ Modern Stack" icon="approve-check">
+    Works seamlessly with Vite, React, Vue, or Svelte. Hot module replacement in development, optimized builds for production.
+  </Card>
+  <Card title="🐍 Python Native" icon="puzzle">
+    Built for FastAPI with plans for Flask, Django, and more. Type-safe API with full IDE support.
+  </Card>
+  <Card title="🧪 Well Tested" icon="seti:test">
+    71% test coverage with 37 unit tests and 15 E2E tests. Tested on Python 3.10-3.14.
+  </Card>
+</CardGrid>
+
+## Features
+
+- ✅ Full Inertia.js protocol support
+- ✅ Vite integration (dev & production)
+- ✅ Asset versioning for cache busting
+- ✅ Partial reloads & shared data
+- ✅ History encryption for sensitive data
+- ✅ External redirects (OAuth, payments, etc.)
+- ✅ TypeScript support
+
+## Quick Example
+
+```python
+from fastapi import FastAPI
+from inertia import InertiaDep
+
+app = FastAPI()
+
+@app.get("/")
+async def home(inertia: InertiaDep):
+    return inertia.render("Home", {
+        "message": "Hello from Inertia!"
+    })
+```
+
+## Framework Support
+
+| Framework | Status |
+|-----------|--------|
+| FastAPI / Starlette | ✅ Supported |
+| Flask | 🔜 Planned |
+| Django | 🔜 Planned |
+
+## Getting Started
+
+Ready to build your next app with Cross-Inertia? Check out our [installation guide](/getting-started/installation/) to get started!
