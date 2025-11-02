@@ -1,0 +1,90 @@
+# Release Template
+
+This is an example of how to create a RELEASE.md file for publishing to PyPI.
+
+**Important**: Only add RELEASE.md in your PR when you want to trigger a release.
+
+## Format
+
+```markdown
+Release type: patch | minor | major
+
+Description of the changes in this release.
+Can be multiple lines and paragraphs.
+
+- Bullet points work too
+- List your changes clearly
+```
+
+## Release Types
+
+- **patch** (0.1.0 → 0.1.1): Bug fixes, small improvements
+- **minor** (0.1.0 → 0.2.0): New features, backwards compatible
+- **major** (0.1.0 → 1.0.0): Breaking changes
+
+## Examples
+
+### Patch Release (Bug Fix)
+
+```markdown
+Release type: patch
+
+Fix asset version comparison for None values
+
+- Handle None values correctly in version comparison
+- Add test coverage for edge cases
+- Update documentation
+```
+
+### Minor Release (New Feature)
+
+```markdown
+Release type: minor
+
+Add support for lazy props evaluation
+
+This release adds lazy props, allowing expensive computations
+to be deferred until they're actually needed.
+
+- Implement lazy prop wrapper
+- Only evaluate when requested in partial reloads
+- Add documentation and examples
+- 100% test coverage
+```
+
+### Major Release (Breaking Change)
+
+```markdown
+Release type: major
+
+Refactor to use inertia.fastapi namespace
+
+**BREAKING CHANGE**: Imports have changed from `inertia` to `inertia.fastapi`
+
+Migration guide:
+- Old: `from inertia import InertiaDep`
+- New: `from inertia.fastapi import InertiaDep`
+
+This change allows us to support multiple frameworks cleanly.
+```
+
+## How to Release
+
+1. Create your PR with changes
+2. Add a `RELEASE.md` file with the format above
+3. The PR check workflow will validate it
+4. When merged to main, autopub will:
+   - Update version in pyproject.toml
+   - Create a GitHub release with notes
+   - Build the package
+   - Publish to PyPI
+   - Update CHANGELOG.md
+
+## What Happens Automatically
+
+- ✅ Version bump in pyproject.toml
+- ✅ Git tag created
+- ✅ GitHub Release created with notes
+- ✅ Package built and published to PyPI
+- ✅ CHANGELOG.md updated
+- ✅ RELEASE.md removed after publishing

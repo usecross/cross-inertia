@@ -100,3 +100,6 @@ Thumbs.db
 # Documentation
 docs/dist/
 docs/.astro/
+-e 
+# Release management (only added in PRs)
+RELEASE.md
