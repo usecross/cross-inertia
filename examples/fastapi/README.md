@@ -52,13 +52,14 @@ examples/fastapi/
 
 ### 1. Install Python Dependencies
 
+From the **project root**, run:
+
 ```bash
-# Install all Python dependencies (FastAPI, uvicorn, lia-web, etc.)
-uv pip install -r requirements.txt
-# or: pip install -r requirements.txt
+# Install all Python dependencies using uv workspace
+uv sync
 ```
 
-The example will automatically find the cross-inertia package from `../../src`.
+This installs the cross-inertia package and all demo dependencies in one command.
 
 ### 2. Install Frontend Dependencies
 

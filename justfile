@@ -7,10 +7,13 @@ default:
 
 # Install FastAPI demo dependencies
 demo-install:
-    @echo "📦 Installing FastAPI demo dependencies..."
-    @cd examples/fastapi && uv pip install -r requirements.txt
-    @cd examples/fastapi && bun install
-    @echo "✅ Demo dependencies installed!"
+    @echo "📦 Installing Python dependencies with uv..."
+    uv sync
+    @echo ""
+    @echo "📦 Installing frontend dependencies..."
+    cd examples/fastapi && bun install
+    @echo ""
+    @echo "✅ All demo dependencies installed!"
 
 # Run the FastAPI demo (both servers)
 demo-fastapi:
@@ -22,24 +25,26 @@ demo-fastapi:
     @echo ""
     @echo "Press Ctrl+C to stop both servers"
     @echo ""
-    @cd examples/fastapi && just _run-servers
+    @just _run-servers
 
 # Build the FastAPI demo for production
 demo-build:
     @echo "🏗️  Building FastAPI demo for production..."
-    @cd examples/fastapi && bun run build
+    cd examples/fastapi && bun run build
     @echo "✅ Build complete!"
 
 # Clean demo build artifacts
 demo-clean:
     @echo "🧹 Cleaning demo build artifacts..."
-    @cd examples/fastapi && rm -rf static/build .vite node_modules bun.lockb
+    cd examples/fastapi && rm -rf static/build .vite node_modules bun.lockb
     @echo "✅ Clean complete!"
 
 # Internal recipe for running servers
 _run-servers:
     #!/usr/bin/env bash
     set -euo pipefail
+    
+    cd examples/fastapi
     
     # Check if dependencies are installed
     if [ ! -d "node_modules" ]; then
@@ -58,8 +63,9 @@ _run-servers:
     # Wait for Vite to start
     sleep 2
     
-    # Start FastAPI server
-    uv run fastapi dev main.py &
+    # Start FastAPI server (run from root so uv finds workspace)
+    cd ../..
+    uv run --directory examples/fastapi fastapi dev examples/fastapi/main.py &
     API_PID=$!
     
     # Wait for both processes
