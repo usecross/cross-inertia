@@ -26,9 +26,9 @@ def tests(session: nox.Session) -> None:
     )
 
 
-@nox.session(python=["3.14"], name="e2e", tags=["tests"])
+@nox.session(python=["3.14"], name="e2e")
 def e2e_tests(session: nox.Session) -> None:
-    """Run E2E tests with Playwright."""
+    """Run E2E tests with Playwright (local only - requires frontend build)."""
     session.install(".")
     session.install(
         "pytest",
