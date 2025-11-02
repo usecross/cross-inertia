@@ -12,11 +12,42 @@ _data_file = Path(__file__).parent / "cats_data.json"
 try:
     with open(_data_file) as f:
         _data = json.load(f)
-    CATS = _data["cats"]
+    
+    # Transform cats data to match frontend expectations
+    CATS = []
+    for cat in _data["cats"]:
+        # Map JSON fields to frontend-expected fields
+        transformed_cat = {
+            "id": cat["id"],
+            "name": cat["name"],
+            "age": cat["age"],
+            "breed": cat["breed"],
+            "color": cat.get("color", "Mixed"),
+            "gender": cat.get("gender", "female"),
+            "photo": cat.get("image", ""),
+            "photo_id": cat.get("photo_id"),
+            "photographer": cat.get("photographer"),
+            "photographer_url": cat.get("photographer_url"),
+            "short_description": cat.get("description", ""),
+            "full_story": cat.get("description", "A wonderful cat looking for a loving home."),
+            "personality": cat.get("personality", ["Friendly"]),
+            "good_with_kids": cat.get("good_with_kids", True),
+            "good_with_dogs": cat.get("good_with_dogs", True),
+            "good_with_cats": cat.get("good_with_cats", True),
+            "adoption_fee": cat.get("adoption_fee", 150),
+            "shelter_name": cat.get("shelter", "Happy Tails Shelter"),
+            "shelter_city": _data["shelters"][0]["location"] if _data["shelters"] else "Springfield",
+            "available_since": "2024-01-01",
+            "adoption_status": cat.get("adoption_status", "available"),
+        }
+        CATS.append(transformed_cat)
+    
     SHELTERS = _data["shelters"]
     print(f"✓ Loaded {len(CATS)} cats and {len(SHELTERS)} shelters from cats_data.json")
 except Exception as e:
     print(f"✗ Failed to load cats_data.json: {e}")
+    import traceback
+    traceback.print_exc()
     CATS = []
     SHELTERS = []
 

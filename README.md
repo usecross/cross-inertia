@@ -35,6 +35,23 @@ pip install cross-inertia
 uv pip install -e .
 ```
 
+## Try the Demo
+
+We have a full-featured cat adoption demo app in `examples/fastapi/`:
+
+```bash
+# Using just (recommended)
+just demo-install   # Install dependencies
+just demo-fastapi   # Run the demo
+
+# Or manually
+cd examples/fastapi
+bun install
+./run-dev.sh
+```
+
+Visit http://127.0.0.1:8000 to see Inertia.js + FastAPI in action!
+
 ## Quick Start
 
 ### 1. Basic Setup

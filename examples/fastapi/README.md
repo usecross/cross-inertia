@@ -81,7 +81,21 @@ This will install:
 
 You'll need to run both the backend and frontend dev servers.
 
-### Option 1: Quick Start (Recommended)
+### Option 1: Using Just (Recommended)
+
+If you have [just](https://github.com/casey/just) installed, run from the **project root**:
+
+```bash
+# Install all dependencies
+just demo-install
+
+# Start both dev servers
+just demo-fastapi
+```
+
+See all available commands with `just --list` from the project root.
+
+### Option 2: Quick Start Script
 
 ```bash
 # Make sure dependencies are installed first (only needed once)
@@ -98,7 +112,7 @@ This will:
 
 Then visit http://127.0.0.1:8000 in your browser.
 
-### Option 2: Manual Start
+### Option 3: Manual Start
 
 If you prefer to run servers separately:
 
@@ -181,7 +195,16 @@ The `{{ vite() }}` function in `templates/app.html` automatically:
 
 ## Production Build
 
-### 1. Build Frontend Assets
+### Using Just (from project root)
+
+```bash
+# Build the demo for production
+just demo-build
+```
+
+### Manual Build
+
+#### 1. Build Frontend Assets
 
 ```bash
 bun run build
@@ -190,7 +213,7 @@ bun run build
 
 This creates optimized production assets in `static/build/`.
 
-### 2. Run Production Server
+#### 2. Run Production Server
 
 ```bash
 # Using uvicorn
@@ -201,6 +224,18 @@ gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
 ```
 
 The app will automatically detect that Vite dev server is not running and serve built assets instead.
+
+## Available Just Commands
+
+If you have [just](https://github.com/casey/just) installed, run these from the **project root**:
+
+```bash
+just                # List all commands
+just demo-install   # Install all demo dependencies
+just demo-fastapi   # Run the FastAPI demo (both servers)
+just demo-build     # Build demo for production
+just demo-clean     # Clean demo build artifacts
+```
 
 ## Example Pages
 
