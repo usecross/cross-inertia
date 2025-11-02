@@ -28,7 +28,25 @@ def tests(session: nox.Session) -> None:
 
 @nox.session(python=["3.14"], name="e2e")
 def e2e_tests(session: nox.Session) -> None:
-    """Run E2E tests with Playwright (local only - requires frontend build)."""
+    """Run E2E tests with Playwright (requires frontend build).
+    
+    To build the frontend first:
+        cd examples/fastapi && bun install && bun run build
+    """
+    from pathlib import Path
+
+    # Check if frontend is built
+    build_dir = Path("examples/fastapi/static/build")
+    if not build_dir.exists() or not list(build_dir.glob("*")):
+        session.error(
+            "Frontend not built! Please build it first:\n"
+            "  cd examples/fastapi\n"
+            "  bun install\n"
+            "  bun run build\n"
+            "\nOr with npm:\n"
+            "  npm install && npm run build"
+        )
+    
     session.install(".")
     session.install(
         "pytest",
@@ -40,6 +58,7 @@ def e2e_tests(session: nox.Session) -> None:
         "itsdangerous",
         "jinja2",
     )
+    
     # Install Playwright browsers
     session.run("playwright", "install", "--with-deps", "chromium")
     session.run(
