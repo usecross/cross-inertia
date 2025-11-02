@@ -243,20 +243,25 @@ No configuration changes needed - it just works!
 
 ## Current Status
 
-**Version:** 0.1.0 (Alpha)
+**Version:** v0.2.0 "Production Ready"
 
-This adapter implements ~60% of core Inertia features and is **suitable for simple applications**.
+This adapter implements all production-critical Inertia features and is **ready for production use**.
 
-**Production-ready for:**
+**Production-ready features:**
 - ✅ Basic page rendering
 - ✅ Form submissions with validation
 - ✅ Navigation between pages
 - ✅ Development with Vite HMR
+- ✅ Asset version mismatch handling (409 Conflict)
+- ✅ Partial reloads for performance
+- ✅ Shared data (auth, flash messages)
+- ✅ External redirects (OAuth, payments)
+- ✅ History encryption (sensitive data protection)
 
-**Not yet ready for:**
-- ❌ Production deployments with rolling updates (no asset version mismatch handling)
-- ❌ High-performance data tables (no partial reloads)
-- ❌ Complex applications with shared data requirements
+**Coming soon:**
+- ⏳ Lazy props evaluation
+- ⏳ Deferred props
+- ⏳ Merging props (infinite scroll)
 
 ## Contributing
 
@@ -264,17 +269,14 @@ Contributions are very welcome! This adapter aims to match the Laravel adapter's
 
 **How to contribute:**
 
-1. Check [ROADMAP.md](./ROADMAP.md) for planned features
-2. Pick a feature (high priority ones marked with 🔴)
+1. Check [GitHub Issues](https://github.com/patrick91/cross-inertia/issues) for open tasks
+2. Pick a feature (look for `good first issue` or `high-priority` labels)
 3. Read the linked Inertia.js documentation
 4. Implement following existing patterns
 5. Write tests and update documentation
 6. Submit a PR!
 
-**Priority areas:**
-- 🔴 Asset version mismatch (409 Conflict) - Critical for production
-- 🔴 Partial reloads - Major performance feature
-- 🟡 Shared data middleware - Essential for auth/flash messages
+**See [ROADMAP.md](./ROADMAP.md) for the full project roadmap and milestone planning.**
 
 ## License
 
