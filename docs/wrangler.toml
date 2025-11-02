@@ -1,7 +1,7 @@
 # Wrangler configuration for Cloudflare Pages deployment
 # https://developers.cloudflare.com/pages/platform/build-configuration/
 
-name = "cross-inertia-docs"
+name = 'zany-zenith'
 compatibility_date = "2024-11-02"
 
 # This is configured for Pages, not Workers
