@@ -65,7 +65,7 @@ _run-servers:
     
     # Start FastAPI server (run from root so uv finds workspace)
     cd ../..
-    uv run --directory examples/fastapi fastapi dev examples/fastapi/main.py &
+    uv run --directory examples/fastapi fastapi dev main.py &
     API_PID=$!
     
     # Wait for both processes
