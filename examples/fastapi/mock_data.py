@@ -266,7 +266,9 @@ for cat in _RAW_CATS:
         "photographer": cat.get("photographer"),
         "photographer_url": cat.get("photographer_url"),
         "short_description": cat.get("description", ""),
-        "full_story": cat.get("description", "A wonderful cat looking for a loving home."),
+        "full_story": cat.get(
+            "description", "A wonderful cat looking for a loving home."
+        ),
         "personality": cat.get("personality", ["friendly"]),
         "good_with_kids": cat.get("good_with_kids", True),  # type: ignore
         "good_with_dogs": cat.get("good_with_dogs", True),  # type: ignore
