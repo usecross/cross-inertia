@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link, router } from '@inertiajs/react'
 import Layout from '../components/Layout'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'

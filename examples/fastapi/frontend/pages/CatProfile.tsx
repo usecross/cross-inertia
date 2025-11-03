@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link, Head, router } from '@inertiajs/react'
 import Layout from '../components/Layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Heart, MapPin, Calendar, DollarSign, Home, Dog, Users } from 'lucide-react'
 import type { CatProfilePageProps } from '../types'
 
-export default function CatProfile({ title, cat, shelter, similar_cats = [] }: CatProfilePageProps) {
+export default function CatProfile({ cat, shelter, similar_cats = [] }: CatProfilePageProps) {
   const handleToggleFavorite = () => {
     // Use partial reload to only update the cat data (including is_favorited status)
     // No need to reload similar_cats since they haven't changed

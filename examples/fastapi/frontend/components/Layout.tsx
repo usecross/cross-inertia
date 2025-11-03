@@ -20,6 +20,7 @@ interface SharedProps {
     message?: string
     category?: 'success' | 'error' | 'warning' | 'info'
   }
+  [key: string]: unknown
 }
 
 export default function Layout({ children, title }: LayoutProps) {

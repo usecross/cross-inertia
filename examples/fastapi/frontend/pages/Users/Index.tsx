@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link } from '@inertiajs/react'
 import Layout from '../../components/Layout'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'

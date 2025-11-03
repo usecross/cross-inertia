@@ -9,7 +9,7 @@ import About from './pages/About'
 import UsersIndex from './pages/Users/Index'
 import UsersShow from './pages/Users/Show'
 import Form from './pages/Form'
-import Error from './pages/Error'
+import ErrorPage from './pages/Error'
 import Browse from './pages/Browse'
 import CatProfile from './pages/CatProfile'
 import Favorites from './pages/Favorites'
@@ -21,7 +21,7 @@ const pages: Record<string, React.ComponentType<any>> = {
   'Users/Index': UsersIndex,
   'Users/Show': UsersShow,
   Form,
-  Error,
+  Error: ErrorPage,
   Browse,
   CatProfile,
   Favorites,

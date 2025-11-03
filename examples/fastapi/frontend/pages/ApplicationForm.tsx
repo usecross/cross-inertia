@@ -1,4 +1,3 @@
-import React from 'react'
 import { useForm, Head, usePage } from '@inertiajs/react'
 import Layout from '../components/Layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import type { ApplicationFormPageProps } from '../types'
 
-export default function ApplicationForm({ title, cat }: ApplicationFormPageProps) {
+export default function ApplicationForm({ cat }: ApplicationFormPageProps) {
   const page = usePage<any>()
   const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
     full_name: '',
