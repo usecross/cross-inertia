@@ -154,6 +154,53 @@ def app(inertia_response):
         inertia.clear_history(False)
         return inertia.render("TestComponent", {"message": "Not clearing"})
 
+    # Merge props test routes
+    @app.get("/test-merge-props")
+    def test_merge_props(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {"items": ["item1", "item2"]},
+            merge_props=["items"],
+        )
+
+    @app.get("/test-prepend-props")
+    def test_prepend_props(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {"notifications": ["new1", "new2"]},
+            prepend_props=["notifications"],
+        )
+
+    @app.get("/test-deep-merge-props")
+    def test_deep_merge_props(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {"settings": {"theme": "dark"}},
+            deep_merge_props=["settings"],
+        )
+
+    @app.get("/test-match-props-on")
+    def test_match_props_on(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {"items": [{"id": 1, "name": "Item"}]},
+            match_props_on=["id"],
+        )
+
+    @app.get("/test-all-merge-props")
+    def test_all_merge_props(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {"items": [{"id": 1, "name": "Item"}]},
+            merge_props=["items"],
+            match_props_on=["id"],
+        )
+
     return app
 
 

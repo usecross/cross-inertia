@@ -85,11 +85,7 @@ function CatCard({ cat, onToggleFavorite }: CatCardProps) {
   )
 }
 
-export default function Browse({ title, cats, total, page, perPage }: BrowsePageProps) {
-  const totalPages = Math.ceil(total / perPage)
-  const hasNextPage = page < totalPages
-  const hasPrevPage = page > 1
-
+export default function Browse({ title, cats, total, page, has_more }: BrowsePageProps) {
   const handleToggleFavorite = (catId: number) => {
     // Use partial reloads to only update the cats list
     // This prevents a full page reload and feels instant!
@@ -97,6 +93,15 @@ export default function Browse({ title, cats, total, page, perPage }: BrowsePage
       method: 'post',
       preserveScroll: true,
       only: ['cats'],
+    })
+  }
+
+  const handleLoadMore = () => {
+    // Load more cats using infinite scroll
+    // The backend will merge new cats with existing ones
+    router.visit(`/browse?page=${page + 1}`, {
+      preserveScroll: true,
+      preserveState: true,
     })
   }
 
@@ -115,37 +120,16 @@ export default function Browse({ title, cats, total, page, perPage }: BrowsePage
         ))}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
+      {/* Load More Button (Infinite Scroll) */}
+      {has_more && (
+        <div className="flex justify-center">
           <Button
             variant="outline"
-            disabled={!hasPrevPage}
-            asChild={hasPrevPage}
+            size="lg"
+            onClick={handleLoadMore}
+            className="min-w-[200px]"
           >
-            {hasPrevPage ? (
-              <Link href={`/browse?page=${page - 1}`}>Previous</Link>
-            ) : (
-              <span>Previous</span>
-            )}
-          </Button>
-          
-          <div className="flex items-center gap-2 px-4">
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-          </div>
-
-          <Button
-            variant="outline"
-            disabled={!hasNextPage}
-            asChild={hasNextPage}
-          >
-            {hasNextPage ? (
-              <Link href={`/browse?page=${page + 1}`}>Next</Link>
-            ) : (
-              <span>Next</span>
-            )}
+            Load More Cats
           </Button>
         </div>
       )}

@@ -50,6 +50,7 @@ export interface BrowsePageProps {
   total: number
   page: number
   perPage: number
+  has_more: boolean
   filters: {
     breed?: string
     age?: string
