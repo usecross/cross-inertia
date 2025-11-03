@@ -1,8 +1,8 @@
 ---
-release type: major
+release type: minor
 ---
 
-**BREAKING CHANGE**: Move framework-specific exports to submodules
+Move framework-specific exports to submodules
 
 This release introduces framework-specific import paths to prepare for future Flask and Django support.
 
