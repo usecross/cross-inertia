@@ -40,6 +40,9 @@ dev = [
     "mypy>=1.13.0",
 ]
 
+[tool.autopub]
+plugins = ["autopub.plugins.github", "autopub.plugins.uv"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
