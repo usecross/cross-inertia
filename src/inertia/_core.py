@@ -68,6 +68,10 @@ class Inertia:
         component: str,
         props: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
+        merge_props: list[str] | None = None,
+        prepend_props: list[str] | None = None,
+        deep_merge_props: list[str] | None = None,
+        match_props_on: list[str] | None = None,
     ) -> JSONResponse | HTMLResponse | Response:
         """Render an Inertia response without needing to pass request"""
         if props is None:
@@ -80,6 +84,10 @@ class Inertia:
             errors,
             encrypt_history=self._encrypt_history,
             clear_history=self._clear_history,
+            merge_props=merge_props,
+            prepend_props=prepend_props,
+            deep_merge_props=deep_merge_props,
+            match_props_on=match_props_on,
         )
 
     def back(
@@ -378,6 +386,10 @@ class InertiaResponse:
         errors: dict[str, str] | None = None,
         encrypt_history: bool = False,
         clear_history: bool = False,
+        merge_props: list[str] | None = None,
+        prepend_props: list[str] | None = None,
+        deep_merge_props: list[str] | None = None,
+        match_props_on: list[str] | None = None,
     ) -> JSONResponse | HTMLResponse | Response:
         """
         Render an Inertia response.
@@ -472,6 +484,16 @@ class InertiaResponse:
             "encryptHistory": encrypt_history,
             "clearHistory": clear_history,
         }
+
+        # Add optional merge/prepend props for infinite scroll support
+        if merge_props:
+            page_data["mergeProps"] = merge_props
+        if prepend_props:
+            page_data["prependProps"] = prepend_props
+        if deep_merge_props:
+            page_data["deepMergeProps"] = deep_merge_props
+        if match_props_on:
+            page_data["matchPropsOn"] = match_props_on
 
         if self.is_inertia_request(adapter):
             # Return JSON response for Inertia XHR requests

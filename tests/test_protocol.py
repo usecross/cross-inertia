@@ -134,3 +134,83 @@ class TestValidationErrors:
 
         assert "errors" in page_data["props"]
         assert page_data["props"]["errors"]["field"] == "This field is required"
+
+
+class TestPageObjectFields:
+    """Test the advanced page object fields for infinite scroll and prop merging."""
+
+    def test_merge_props_in_json_response(self, client: TestClient):
+        """Test that mergeProps field is included when specified."""
+        response = client.get(
+            "/test-merge-props",
+            headers={"X-Inertia": "true"},
+        )
+        data = response.json()
+
+        assert response.status_code == 200
+        assert "mergeProps" in data
+        assert data["mergeProps"] == ["items"]
+
+    def test_prepend_props_in_json_response(self, client: TestClient):
+        """Test that prependProps field is included when specified."""
+        response = client.get(
+            "/test-prepend-props",
+            headers={"X-Inertia": "true"},
+        )
+        data = response.json()
+
+        assert response.status_code == 200
+        assert "prependProps" in data
+        assert data["prependProps"] == ["notifications"]
+
+    def test_deep_merge_props_in_json_response(self, client: TestClient):
+        """Test that deepMergeProps field is included when specified."""
+        response = client.get(
+            "/test-deep-merge-props",
+            headers={"X-Inertia": "true"},
+        )
+        data = response.json()
+
+        assert response.status_code == 200
+        assert "deepMergeProps" in data
+        assert data["deepMergeProps"] == ["settings"]
+
+    def test_match_props_on_in_json_response(self, client: TestClient):
+        """Test that matchPropsOn field is included when specified."""
+        response = client.get(
+            "/test-match-props-on",
+            headers={"X-Inertia": "true"},
+        )
+        data = response.json()
+
+        assert response.status_code == 200
+        assert "matchPropsOn" in data
+        assert data["matchPropsOn"] == ["id"]
+
+    def test_multiple_merge_fields_together(self, client: TestClient):
+        """Test that multiple merge fields can be used together."""
+        response = client.get(
+            "/test-all-merge-props",
+            headers={"X-Inertia": "true"},
+        )
+        data = response.json()
+
+        assert response.status_code == 200
+        assert "mergeProps" in data
+        assert "matchPropsOn" in data
+        assert data["mergeProps"] == ["items"]
+        assert data["matchPropsOn"] == ["id"]
+
+    def test_merge_props_not_included_when_not_specified(self, client: TestClient):
+        """Test that merge fields are not included when not specified."""
+        response = client.get(
+            "/test",
+            headers={"X-Inertia": "true"},
+        )
+        data = response.json()
+
+        assert response.status_code == 200
+        assert "mergeProps" not in data
+        assert "prependProps" not in data
+        assert "deepMergeProps" not in data
+        assert "matchPropsOn" not in data

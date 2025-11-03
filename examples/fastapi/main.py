@@ -135,13 +135,13 @@ async def browse_cats(
     breed: str | None = None,
     age_range: str | None = None,
 ):
-    """Browse cats page with filtering and pagination"""
+    """Browse cats page with infinite scroll (6 cats per page)"""
 
     # Apply filters
     filtered_cats = mock_data.filter_cats(breed=breed, age_range=age_range)
 
-    # Apply pagination
-    paginated = mock_data.paginate_cats(filtered_cats, page=page, per_page=12)
+    # Apply pagination with 6 cats per page for infinite scroll demo
+    paginated = mock_data.paginate_cats(filtered_cats, page=page, per_page=6)
 
     # Mark favorites
     for cat in paginated["cats"]:
@@ -155,11 +155,15 @@ async def browse_cats(
             "total": paginated["total"],
             "page": paginated["page"],
             "per_page": paginated["per_page"],
+            "has_more": page < paginated["total_pages"],
             "filters": {
                 "breed": breed,
                 "age_range": age_range,
             },
         },
+        # Enable infinite scroll: merge cats array and match on ID to prevent duplicates
+        merge_props=["cats"],
+        match_props_on=["id"],
     )
 
 
