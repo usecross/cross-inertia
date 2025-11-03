@@ -1,27 +1,12 @@
 """
-Inertia.js adapter for FastAPI.
+Inertia.js adapter for Python web frameworks.
 
-This package provides a server-side adapter for Inertia.js when using FastAPI.
+This package provides server-side adapters for Inertia.js.
+
+Framework-specific imports:
+    from inertia.fastapi import InertiaDep, InertiaMiddleware
 """
 
-from ._core import (
-    Inertia,
-    InertiaDep,
-    InertiaResponse,
-    get_inertia,
-    get_inertia_response,
-    read_vite_entry_from_config,
-)
-from .middleware import InertiaMiddleware
+from importlib.metadata import version
 
-__all__ = [
-    "Inertia",
-    "InertiaResponse",
-    "InertiaMiddleware",
-    "InertiaDep",
-    "get_inertia",
-    "get_inertia_response",
-    "read_vite_entry_from_config",
-]
-
-__version__ = "0.1.0"
+__version__ = version("cross-inertia")

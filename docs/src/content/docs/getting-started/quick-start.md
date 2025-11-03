@@ -9,7 +9,7 @@ This guide will walk you through creating a simple Inertia.js app with FastAPI a
 
 ```python
 from fastapi import FastAPI
-from inertia import InertiaDep
+from inertia.fastapi import InertiaDep
 
 app = FastAPI()
 
