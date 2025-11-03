@@ -58,7 +58,7 @@ Visit http://127.0.0.1:8000 to see Inertia.js + FastAPI in action!
 
 ```python
 from fastapi import FastAPI
-from inertia import InertiaDep
+from inertia.fastapi import InertiaDep
 
 app = FastAPI()
 
@@ -77,8 +77,8 @@ async def home(inertia: InertiaDep):
 If you need to customize the Inertia configuration (e.g., different template directory or Vite settings):
 
 ```python
-from fastapi import FastAPI, Request
-from inertia import InertiaResponse, Inertia
+from fastapi import FastAPI, Request, Depends
+from inertia.fastapi import InertiaResponse, Inertia
 
 # Create custom InertiaResponse instance
 inertia_response = InertiaResponse(
@@ -92,7 +92,9 @@ inertia_response = InertiaResponse(
 app = FastAPI()
 
 def get_custom_inertia(request: Request) -> Inertia:
-    return Inertia(request, inertia_response)
+    from lia import StarletteRequestAdapter
+    adapter = StarletteRequestAdapter(request)
+    return Inertia(request, adapter, inertia_response)
 
 @app.get("/")
 async def home(inertia: Inertia = Depends(get_custom_inertia)):
