@@ -22,6 +22,9 @@ def render(
     prepend_props: list[str] | None = None,
     deep_merge_props: list[str] | None = None,
     match_props_on: list[str] | None = None,
+    scroll_props: dict[str, Any] | None = None,
+    url: str | None = None,
+    view_data: dict[str, Any] | None = None,
 ) -> JSONResponse | HTMLResponse | Response
 ```
 
@@ -34,6 +37,9 @@ def render(
 - `prepend_props` (list, optional): Props to prepend instead of replace
 - `deep_merge_props` (list, optional): Props to deep merge
 - `match_props_on` (list, optional): Keys to match on when merging (e.g., `["id"]`)
+- `scroll_props` (dict, optional): Configuration for infinite scroll prop merging
+- `url` (str, optional): Override the URL for this response
+- `view_data` (dict, optional): Extra data to pass to the template (not included in page props)
 
 **Returns:** Response object (JSON for Inertia requests, HTML for initial visits)
 
@@ -60,6 +66,22 @@ async def create_user(inertia: InertiaDep):
     if errors:
         return inertia.render("Users/Create", {}, errors=errors)
     # ...
+```
+
+**With view data:**
+
+```python
+@app.get("/products/{id}")
+async def product_page(id: int, inertia: InertiaDep):
+    product = get_product(id)
+    return inertia.render(
+        "Product",
+        {"product": product},
+        view_data={
+            "page_title": f"{product.name} - Our Store",
+            "meta_description": product.description[:160],
+        }
+    )
 ```
 
 ### `inertia.location()`
@@ -162,6 +184,62 @@ async def logout(inertia: InertiaDep):
 - Typically called on logout
 
 **Reference:** [History Encryption Guide](/guides/history-encryption/)
+
+### `inertia.with_view_data()`
+
+Set additional data to pass to the template (not included in page props).
+
+```python
+def with_view_data(view_data: dict[str, Any]) -> Inertia
+```
+
+**Parameters:**
+
+- `view_data` (dict): Data to pass to the template
+
+**Returns:** Self for method chaining
+
+**Example:**
+
+```python
+@app.get("/products/{id}")
+async def product_page(id: int, inertia: InertiaDep):
+    product = get_product(id)
+    
+    inertia.with_view_data({
+        "page_title": f"{product.name} - Our Store",
+        "meta_description": product.description[:160],
+        "og_meta": {
+            "title": product.name,
+            "description": product.description,
+            "image": product.image_url,
+        }
+    })
+    
+    return inertia.render("Product", {"product": product})
+
+# Method chaining
+return (
+    inertia
+    .with_view_data({"page_title": "Secure Page"})
+    .encrypt_history()
+    .render("SecurePage", {"data": data})
+)
+```
+
+**Use cases:**
+- Dynamic page titles
+- SEO meta tags
+- Open Graph tags for social media
+- Twitter Card meta tags
+- Any server-side template data not needed in page props
+
+**Important:**
+- View data is NOT included in page props
+- Only available during initial page loads (HTML responses)
+- Not included in Inertia XHR requests
+
+**Reference:** [View Data Guide](/guides/view-data/)
 
 ### `inertia.back()`
 

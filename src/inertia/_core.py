@@ -62,6 +62,7 @@ class Inertia:
         self.response = response
         self._encrypt_history = False
         self._clear_history = False
+        self._view_data: dict[str, Any] = {}
 
     def render(
         self,
@@ -74,6 +75,7 @@ class Inertia:
         match_props_on: list[str] | None = None,
         scroll_props: dict[str, Any] | None = None,
         url: str | None = None,
+        view_data: dict[str, Any] | None = None,
     ) -> JSONResponse | HTMLResponse | Response:
         """Render an Inertia response without needing to pass request
 
@@ -81,9 +83,15 @@ class Inertia:
             url: Optional URL to use instead of the current request URL.
                  Useful for rendering a component with a different URL than the endpoint.
             scroll_props: Configuration for infinite scroll prop merging behavior.
+            view_data: Optional extra data to pass to the template (not included in page props).
+                      Useful for server-side meta tags, page titles, etc.
         """
         if props is None:
             props = {}
+        # Merge view_data from both with_view_data() and render() parameter
+        merged_view_data = {**self._view_data}
+        if view_data:
+            merged_view_data.update(view_data)
         return self.response.render(
             self.request,
             self.adapter,
@@ -98,6 +106,7 @@ class Inertia:
             match_props_on=match_props_on,
             scroll_props=scroll_props,
             url=url,
+            view_data=merged_view_data if merged_view_data else None,
         )
 
     def back(
@@ -227,6 +236,48 @@ class Inertia:
         self._clear_history = clear
         if clear:
             logger.info("History will be cleared (encryption keys rotated)")
+        return self
+
+    def with_view_data(self, view_data: dict[str, Any]) -> "Inertia":
+        """
+        Set additional data to pass to the template (not included in page props).
+
+        View data is only available in the root template during initial page loads,
+        not in Inertia XHR requests. This is useful for server-side meta tags,
+        page titles, Open Graph tags, and other SEO-related data that needs to be
+        in the initial HTML response.
+
+        Args:
+            view_data: Dictionary of data to pass to the template
+
+        Returns:
+            Self for method chaining
+
+        Example:
+            # Set Open Graph meta tags for SEO
+            @app.get("/product/{id}")
+            async def product(id: int, inertia: InertiaDep):
+                product = get_product(id)
+                inertia.with_view_data({
+                    "title": product.name,
+                    "og_meta": {
+                        "title": product.name,
+                        "description": product.description,
+                        "image": product.image_url,
+                    }
+                })
+                return inertia.render("Product", {"product": product})
+
+            # In template (app.html):
+            # <title>{{ title }}</title>
+            # <meta property="og:title" content="{{ og_meta.title }}">
+
+        Reference:
+            Similar to Laravel Inertia's viewData:
+            https://inertiajs.com/server-side-rendering#view-data
+        """
+        self._view_data.update(view_data)
+        logger.debug(f"Added view_data: {list(view_data.keys())}")
         return self
 
 
@@ -405,6 +456,7 @@ class InertiaResponse:
         match_props_on: list[str] | None = None,
         scroll_props: dict[str, Any] | None = None,
         url: str | None = None,
+        view_data: dict[str, Any] | None = None,
     ) -> JSONResponse | HTMLResponse | Response:
         """
         Render an Inertia response.
@@ -413,6 +465,8 @@ class InertiaResponse:
         Args:
             url: Optional URL to use instead of the current request URL.
                  Useful for rendering a component with a different URL than the endpoint.
+            view_data: Optional extra data to pass to the template (not included in page props).
+                      Useful for server-side meta tags, page titles, etc.
         """
         # Extract path from full URL (lia returns full URL like http://testserver/test)
         from urllib.parse import urlparse
@@ -536,14 +590,19 @@ class InertiaResponse:
             )
             # Escape single quotes in JSON for safe embedding in HTML attributes
             page_json = json.dumps(page_data).replace("'", "&#39;")
+            template_context = {
+                "request": request,
+                "page": page_json,
+                "vite_tags": self.get_vite_tags(),  # Backward compatibility
+                # Note: vite() function is also available globally
+            }
+            # Add view_data to template context if provided
+            if view_data:
+                template_context.update(view_data)
+                logger.debug(f"Adding view_data to template: {list(view_data.keys())}")
             return self.templates.TemplateResponse(
                 "app.html",
-                {
-                    "request": request,
-                    "page": page_json,
-                    "vite_tags": self.get_vite_tags(),  # Backward compatibility
-                    # Note: vite() function is also available globally
-                },
+                template_context,
             )
 
 
