@@ -54,52 +54,32 @@ def app_with_view_data(temp_template_dir_with_view_data):
         adapter = StarletteRequestAdapter(request)
         return Inertia(request, adapter, inertia_response)
 
-    @app.get("/test-with-view-data")
-    def test_with_view_data_route(request: Request):
+    @app.get("/test-view-data")
+    def test_view_data_route(request: Request):
         inertia = get_test_inertia(request)
-        inertia.with_view_data(
-            {
+        return inertia.render(
+            "TestComponent",
+            {"message": "Hello"},
+            view_data={
                 "page_title": "Test Page",
                 "og_meta": {
                     "title": "Test OG Title",
                     "description": "Test OG Description",
                 },
-            }
-        )
-        return inertia.render("TestComponent", {"message": "Hello"})
-
-    @app.get("/test-render-view-data")
-    def test_render_view_data_route(request: Request):
-        inertia = get_test_inertia(request)
-        return inertia.render(
-            "TestComponent",
-            {"message": "Hello"},
-            view_data={
-                "page_title": "Direct Title",
-                "og_meta": {
-                    "title": "Direct OG",
-                    "description": "Direct Description",
-                },
             },
         )
 
-    @app.get("/test-merge-view-data")
-    def test_merge_view_data_route(request: Request):
+    @app.get("/test-view-data-complex")
+    def test_view_data_complex_route(request: Request):
         inertia = get_test_inertia(request)
-        inertia.with_view_data(
-            {
-                "page_title": "Title from with_view_data",
-                "author": "John Doe",
-            }
-        )
         return inertia.render(
             "TestComponent",
             {"message": "Hello"},
             view_data={
-                "page_title": "Title from render",
+                "page_title": "Complex Page",
                 "og_meta": {
-                    "title": "Override Title",
-                    "description": "Override Description",
+                    "title": "Complex OG",
+                    "description": "Complex Description",
                 },
             },
         )
@@ -107,10 +87,10 @@ def app_with_view_data(temp_template_dir_with_view_data):
     @app.get("/test-chaining")
     def test_chaining_route(request: Request):
         inertia = get_test_inertia(request)
-        return (
-            inertia.with_view_data({"page_title": "Chained Title"})
-            .encrypt_history()
-            .render("TestComponent", {"message": "Hello"})
+        return inertia.encrypt_history().render(
+            "TestComponent",
+            {"message": "Hello"},
+            view_data={"page_title": "Chained Title"},
         )
 
     return app
@@ -125,9 +105,9 @@ def view_data_client(app_with_view_data):
 class TestViewData:
     """Test the view data feature for passing extra data to templates."""
 
-    def test_with_view_data_in_html_template(self, view_data_client: TestClient):
-        """Test that with_view_data() adds data to template context."""
-        response = view_data_client.get("/test-with-view-data")
+    def test_view_data_in_html_template(self, view_data_client: TestClient):
+        """Test that view_data adds data to template context."""
+        response = view_data_client.get("/test-view-data")
         assert response.status_code == 200
         assert "text/html" in response.headers.get("Content-Type")
 
@@ -139,7 +119,7 @@ class TestViewData:
 
     def test_view_data_not_in_page_props(self, view_data_client: TestClient):
         """Test that view_data is NOT included in page props."""
-        response = view_data_client.get("/test-with-view-data")
+        response = view_data_client.get("/test-view-data")
         assert response.status_code == 200
 
         html = response.text
@@ -158,7 +138,7 @@ class TestViewData:
     def test_view_data_not_in_xhr_response(self, view_data_client: TestClient):
         """Test that view_data is NOT included in Inertia XHR requests."""
         response = view_data_client.get(
-            "/test-with-view-data",
+            "/test-view-data",
             headers={"X-Inertia": "true"},
         )
         data = response.json()
@@ -168,16 +148,15 @@ class TestViewData:
         assert "og_meta" not in data["props"]
         assert data["props"]["message"] == "Hello"
 
-    def test_view_data_via_render_parameter(self, view_data_client: TestClient):
-        """Test passing view_data directly to render() method."""
-        response = view_data_client.get("/test-render-view-data")
+    def test_view_data_with_complex_structure(self, view_data_client: TestClient):
+        """Test view_data with complex nested structures."""
+        response = view_data_client.get("/test-view-data-complex")
         assert response.status_code == 200
-        assert "text/html" in response.headers.get("Content-Type")
 
         html = response.text
         # Check that view_data variables are in the HTML
-        assert "<title>Direct Title</title>" in html
-        assert '<meta property="og:title" content="Direct OG">' in html
+        assert "<title>Complex Page</title>" in html
+        assert '<meta property="og:title" content="Complex OG">' in html
 
         # Verify view_data is not in page props
         start = html.find("data-page='") + len("data-page='")
@@ -189,31 +168,8 @@ class TestViewData:
         assert "og_meta" not in page_data["props"]
         assert page_data["props"]["message"] == "Hello"
 
-    def test_view_data_merges_both_sources(self, view_data_client: TestClient):
-        """Test that view_data from with_view_data() and render() merge correctly."""
-        response = view_data_client.get("/test-merge-view-data")
-        assert response.status_code == 200
-
-        html = response.text
-        # render() parameter should override with_view_data()
-        assert "<title>Title from render</title>" in html
-        assert '<meta property="og:title" content="Override Title">' in html
-
-        # Verify view_data is not in page props
-        start = html.find("data-page='") + len("data-page='")
-        end = html.find("'", start)
-        page_json = html[start:end]
-        page_data = json.loads(page_json)
-
-        # None of the view_data keys should be in page props
-        assert "page_title" not in page_data["props"]
-        assert "author" not in page_data["props"]
-        assert page_data["props"]["message"] == "Hello"
-
-    def test_with_view_data_returns_self_for_chaining(
-        self, view_data_client: TestClient
-    ):
-        """Test that with_view_data() returns self for method chaining."""
+    def test_view_data_with_method_chaining(self, view_data_client: TestClient):
+        """Test that view_data works with method chaining."""
         response = view_data_client.get("/test-chaining")
         assert response.status_code == 200
 

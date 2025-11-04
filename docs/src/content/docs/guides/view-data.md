@@ -15,38 +15,13 @@ When building SEO-friendly applications, you need to set meta tags (like Open Gr
 
 View data is only available during initial page loads (HTML responses), not in Inertia XHR requests, since these elements are only needed in the initial HTML.
 
-## Using with_view_data()
+## Usage
 
-The most common way to set view data is using the `with_view_data()` method, which supports method chaining:
+Pass view data directly to the `render()` method using the `view_data` parameter:
 
 ```python
 from inertia.fastapi import InertiaDep
 
-@app.get("/products/{id}")
-async def product_page(id: int, inertia: InertiaDep):
-    product = get_product(id)
-    
-    # Set view data for server-side rendering
-    inertia.with_view_data({
-        "page_title": f"{product.name} - Our Store",
-        "meta_description": product.description[:160],
-        "og_meta": {
-            "title": product.name,
-            "description": product.description,
-            "image": product.image_url,
-        }
-    })
-    
-    return inertia.render("Product", {
-        "product": product
-    })
-```
-
-## Passing View Data to render()
-
-You can also pass view data directly to the `render()` method:
-
-```python
 @app.get("/products/{id}")
 async def product_page(id: int, inertia: InertiaDep):
     product = get_product(id)
@@ -57,32 +32,11 @@ async def product_page(id: int, inertia: InertiaDep):
         view_data={
             "page_title": f"{product.name} - Our Store",
             "meta_description": product.description[:160],
-        }
-    )
-```
-
-## Combining Both Methods
-
-If you use both `with_view_data()` and the `view_data` parameter, they will be merged, with the `view_data` parameter taking precedence:
-
-```python
-@app.get("/products/{id}")
-async def product_page(id: int, inertia: InertiaDep):
-    product = get_product(id)
-    
-    # Set base view data
-    inertia.with_view_data({
-        "page_title": "Default Title",
-        "site_name": "Our Store",
-    })
-    
-    # Override page_title but keep site_name
-    return inertia.render(
-        "Product",
-        {"product": product},
-        view_data={
-            "page_title": f"{product.name} - Our Store",  # Overrides
-            "meta_description": product.description,  # Adds new
+            "og_meta": {
+                "title": product.name,
+                "description": product.description,
+                "image": product.image_url,
+            }
         }
     )
 ```
@@ -124,11 +78,13 @@ View data variables are available directly in your root template (typically `app
 async def user_profile(user_id: int, inertia: InertiaDep):
     user = get_user(user_id)
     
-    inertia.with_view_data({
-        "page_title": f"{user.name}'s Profile - MySite"
-    })
-    
-    return inertia.render("UserProfile", {"user": user})
+    return inertia.render(
+        "UserProfile",
+        {"user": user},
+        view_data={
+            "page_title": f"{user.name}'s Profile - MySite"
+        }
+    )
 ```
 
 ### Open Graph Tags for Social Sharing
@@ -138,17 +94,30 @@ async def user_profile(user_id: int, inertia: InertiaDep):
 async def blog_post(post_id: int, inertia: InertiaDep):
     post = get_blog_post(post_id)
     
-    inertia.with_view_data({
-        "page_title": f"{post.title} - My Blog",
-        "og_meta": {
-            "title": post.title,
-            "description": post.excerpt,
-            "image": post.cover_image_url,
-            "type": "article",
+    return inertia.render(
+        "BlogPost",
+        {"post": post},
+        view_data={
+            "page_title": f"{post.title} - My Blog",
+            "og_meta": {
+                "title": post.title,
+                "description": post.excerpt,
+                "image": post.cover_image_url,
+                "type": "article",
+            }
         }
-    })
-    
-    return inertia.render("BlogPost", {"post": post})
+    )
+```
+
+Then in your template:
+
+```html
+{% if og_meta %}
+<meta property="og:title" content="{{ og_meta.title }}">
+<meta property="og:description" content="{{ og_meta.description }}">
+<meta property="og:image" content="{{ og_meta.image }}">
+<meta property="og:type" content="{{ og_meta.type }}">
+{% endif %}
 ```
 
 ### Twitter Card Meta Tags
@@ -158,17 +127,19 @@ async def blog_post(post_id: int, inertia: InertiaDep):
 async def product_page(id: int, inertia: InertiaDep):
     product = get_product(id)
     
-    inertia.with_view_data({
-        "page_title": f"{product.name} - Shop Now",
-        "twitter_card": {
-            "card": "summary_large_image",
-            "title": product.name,
-            "description": product.description,
-            "image": product.image_url,
+    return inertia.render(
+        "Product",
+        {"product": product},
+        view_data={
+            "page_title": f"{product.name} - Shop Now",
+            "twitter_card": {
+                "card": "summary_large_image",
+                "title": product.name,
+                "description": product.description,
+                "image": product.image_url,
+            }
         }
-    })
-    
-    return inertia.render("Product", {"product": product})
+    )
 ```
 
 Then in your template:
@@ -182,30 +153,48 @@ Then in your template:
 {% endif %}
 ```
 
-## Method Chaining
+## Framework Support
 
-The `with_view_data()` method returns `self`, so you can chain it with other methods:
+View data works with any Python web framework:
+
+### FastAPI
 
 ```python
-@app.get("/secure-page")
-async def secure_page(inertia: InertiaDep):
-    return (
-        inertia
-        .with_view_data({"page_title": "Secure Page"})
-        .encrypt_history()
-        .render("SecurePage", {"data": sensitive_data})
+from inertia.fastapi import InertiaDep
+
+@app.get("/page")
+async def page(inertia: InertiaDep):
+    return inertia.render(
+        "Page",
+        {"data": data},
+        view_data={"page_title": "Title"}
+    )
+```
+
+### Django (without dependency injection)
+
+```python
+from inertia import inertia
+
+def page_view(request):
+    return inertia.render(
+        request,
+        "Page",
+        {"data": data},
+        view_data={"page_title": "Title"}
     )
 ```
 
 ## Important Notes
 
 - **View data is not included in page props**: View data is only available in the template, not in your frontend components via `usePage().props`
-- **XHR requests don't include view data**: View data is only rendered during initial page loads (HTML responses), not during Inertia XHR requests
+- **XHR requests don't include view_data**: View data is only rendered during initial page loads (HTML responses), not during Inertia XHR requests
 - **Use for server-side only data**: View data is perfect for meta tags, page titles, and other SEO elements that don't need to be reactive in your frontend
+- **Simple and explicit**: All view data is passed in one place, making it easy to understand and maintain
 
 ## Comparison with Laravel Inertia
 
-This feature is similar to Laravel Inertia's `viewData` feature:
+This feature is similar to Laravel Inertia's `viewData` feature, but simplified:
 
 ```php
 // Laravel Inertia
@@ -221,6 +210,12 @@ return inertia.render(
     view_data={'page_title': 'Product Page'}
 )
 ```
+
+The key difference is that Cross-Inertia uses a simple parameter instead of method chaining, making it:
+- More explicit and easier to understand
+- Works consistently across all Python frameworks
+- No hidden state or lifecycle concerns
+- All render data in one place
 
 ## See Also
 

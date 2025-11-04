@@ -62,7 +62,6 @@ class Inertia:
         self.response = response
         self._encrypt_history = False
         self._clear_history = False
-        self._view_data: dict[str, Any] = {}
 
     def render(
         self,
@@ -88,10 +87,6 @@ class Inertia:
         """
         if props is None:
             props = {}
-        # Merge view_data from both with_view_data() and render() parameter
-        merged_view_data = {**self._view_data}
-        if view_data:
-            merged_view_data.update(view_data)
         return self.response.render(
             self.request,
             self.adapter,
@@ -106,7 +101,7 @@ class Inertia:
             match_props_on=match_props_on,
             scroll_props=scroll_props,
             url=url,
-            view_data=merged_view_data if merged_view_data else None,
+            view_data=view_data,
         )
 
     def back(
@@ -236,48 +231,6 @@ class Inertia:
         self._clear_history = clear
         if clear:
             logger.info("History will be cleared (encryption keys rotated)")
-        return self
-
-    def with_view_data(self, view_data: dict[str, Any]) -> "Inertia":
-        """
-        Set additional data to pass to the template (not included in page props).
-
-        View data is only available in the root template during initial page loads,
-        not in Inertia XHR requests. This is useful for server-side meta tags,
-        page titles, Open Graph tags, and other SEO-related data that needs to be
-        in the initial HTML response.
-
-        Args:
-            view_data: Dictionary of data to pass to the template
-
-        Returns:
-            Self for method chaining
-
-        Example:
-            # Set Open Graph meta tags for SEO
-            @app.get("/product/{id}")
-            async def product(id: int, inertia: InertiaDep):
-                product = get_product(id)
-                inertia.with_view_data({
-                    "title": product.name,
-                    "og_meta": {
-                        "title": product.name,
-                        "description": product.description,
-                        "image": product.image_url,
-                    }
-                })
-                return inertia.render("Product", {"product": product})
-
-            # In template (app.html):
-            # <title>{{ title }}</title>
-            # <meta property="og:title" content="{{ og_meta.title }}">
-
-        Reference:
-            Similar to Laravel Inertia's viewData:
-            https://inertiajs.com/server-side-rendering#view-data
-        """
-        self._view_data.update(view_data)
-        logger.debug(f"Added view_data: {list(view_data.keys())}")
         return self
 
 

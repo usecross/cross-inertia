@@ -185,62 +185,6 @@ async def logout(inertia: InertiaDep):
 
 **Reference:** [History Encryption Guide](/guides/history-encryption/)
 
-### `inertia.with_view_data()`
-
-Set additional data to pass to the template (not included in page props).
-
-```python
-def with_view_data(view_data: dict[str, Any]) -> Inertia
-```
-
-**Parameters:**
-
-- `view_data` (dict): Data to pass to the template
-
-**Returns:** Self for method chaining
-
-**Example:**
-
-```python
-@app.get("/products/{id}")
-async def product_page(id: int, inertia: InertiaDep):
-    product = get_product(id)
-    
-    inertia.with_view_data({
-        "page_title": f"{product.name} - Our Store",
-        "meta_description": product.description[:160],
-        "og_meta": {
-            "title": product.name,
-            "description": product.description,
-            "image": product.image_url,
-        }
-    })
-    
-    return inertia.render("Product", {"product": product})
-
-# Method chaining
-return (
-    inertia
-    .with_view_data({"page_title": "Secure Page"})
-    .encrypt_history()
-    .render("SecurePage", {"data": data})
-)
-```
-
-**Use cases:**
-- Dynamic page titles
-- SEO meta tags
-- Open Graph tags for social media
-- Twitter Card meta tags
-- Any server-side template data not needed in page props
-
-**Important:**
-- View data is NOT included in page props
-- Only available during initial page loads (HTML responses)
-- Not included in Inertia XHR requests
-
-**Reference:** [View Data Guide](/guides/view-data/)
-
 ### `inertia.back()`
 
 Redirect back with errors (for form validation).

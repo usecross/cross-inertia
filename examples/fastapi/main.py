@@ -151,14 +151,6 @@ async def browse_cats(
     previous_page = page - 1 if page > 1 else None
     next_page = page + 1 if page < paginated["total_pages"] else None
 
-    # Set page title for SEO
-    inertia.with_view_data(
-        {
-            "page_title": "Browse Adoptable Cats - PurrfectHome",
-            "meta_description": "Browse and find your perfect feline companion. Filter by breed, age, and more to find cats available for adoption.",
-        }
-    )
-
     return inertia.render(
         "Browse",
         {
@@ -186,6 +178,10 @@ async def browse_cats(
                 "currentPage": page,
             }
         },
+        view_data={
+            "page_title": "Browse Adoptable Cats - PurrfectHome",
+            "meta_description": "Browse and find your perfect feline companion. Filter by breed, age, and more to find cats available for adoption.",
+        },
     )
 
 
@@ -211,14 +207,6 @@ async def show_cat(cat_id: int, inertia: InertiaDep):
     for similar_cat in similar_cats:
         similar_cat["is_favorited"] = mock_data.is_favorited(similar_cat["id"])
 
-    # Set page title and meta tags for SEO
-    inertia.with_view_data(
-        {
-            "page_title": f"Meet {cat['name']} - {cat['breed']} Available for Adoption | PurrfectHome",
-            "meta_description": f"Meet {cat['name']}, a {cat['age_years']} year old {cat['breed']} looking for a loving home. {cat['description'][:150]}...",
-        }
-    )
-
     return inertia.render(
         "CatProfile",
         {
@@ -226,6 +214,10 @@ async def show_cat(cat_id: int, inertia: InertiaDep):
             "cat": cat,
             "shelter": shelter,
             "similar_cats": similar_cats,
+        },
+        view_data={
+            "page_title": f"Meet {cat['name']} - {cat['breed']} Available for Adoption | PurrfectHome",
+            "meta_description": f"Meet {cat['name']}, a {cat['age_years']} year old {cat['breed']} looking for a loving home. {cat['description'][:150]}...",
         },
     )
 
@@ -239,20 +231,16 @@ async def favorites(inertia: InertiaDep):
     for cat in favorited_cats:
         cat["is_favorited"] = True
 
-    # Set page title
-    inertia.with_view_data(
-        {
-            "page_title": f"My Favorites ({len(favorited_cats)}) - PurrfectHome",
-            "meta_description": "View your favorite cats and manage your adoption wishlist.",
-        }
-    )
-
     return inertia.render(
         "Favorites",
         {
             "title": "My Favorites",
             "cats": favorited_cats,
             "total": len(favorited_cats),
+        },
+        view_data={
+            "page_title": f"My Favorites ({len(favorited_cats)}) - PurrfectHome",
+            "meta_description": "View your favorite cats and manage your adoption wishlist.",
         },
     )
 
@@ -421,19 +409,15 @@ async def show_application_form(cat_id: int, inertia: InertiaDep):
             {"title": "Not Found", "message": f"Cat {cat_id} not found"},
         )
 
-    # Set page title
-    inertia.with_view_data(
-        {
-            "page_title": f"Apply to Adopt {cat['name']} - PurrfectHome",
-            "meta_description": f"Submit your application to adopt {cat['name']}, a loving {cat['breed']} looking for a forever home.",
-        }
-    )
-
     return inertia.render(
         "ApplicationForm",
         {
             "title": f"Apply to Adopt {cat['name']}",
             "cat": cat,
+        },
+        view_data={
+            "page_title": f"Apply to Adopt {cat['name']} - PurrfectHome",
+            "meta_description": f"Submit your application to adopt {cat['name']}, a loving {cat['breed']} looking for a forever home.",
         },
     )
 
