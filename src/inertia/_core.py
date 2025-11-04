@@ -72,8 +72,16 @@ class Inertia:
         prepend_props: list[str] | None = None,
         deep_merge_props: list[str] | None = None,
         match_props_on: list[str] | None = None,
+        scroll_props: dict[str, Any] | None = None,
+        url: str | None = None,
     ) -> JSONResponse | HTMLResponse | Response:
-        """Render an Inertia response without needing to pass request"""
+        """Render an Inertia response without needing to pass request
+
+        Args:
+            url: Optional URL to use instead of the current request URL.
+                 Useful for rendering a component with a different URL than the endpoint.
+            scroll_props: Configuration for infinite scroll prop merging behavior.
+        """
         if props is None:
             props = {}
         return self.response.render(
@@ -88,6 +96,8 @@ class Inertia:
             prepend_props=prepend_props,
             deep_merge_props=deep_merge_props,
             match_props_on=match_props_on,
+            scroll_props=scroll_props,
+            url=url,
         )
 
     def back(
@@ -310,8 +320,11 @@ class InertiaResponse:
             return "dev"
 
         manifest = self.get_manifest()
-        # Use hash of manifest as version
-        return str(hash(json.dumps(manifest, sort_keys=True)))
+        # Use MD5 hash of manifest as version for deterministic, positive values
+        import hashlib
+
+        manifest_str = json.dumps(manifest, sort_keys=True)
+        return hashlib.md5(manifest_str.encode()).hexdigest()
 
     def _vite_template_function(self, entry: str | None = None) -> str:
         """
@@ -390,17 +403,23 @@ class InertiaResponse:
         prepend_props: list[str] | None = None,
         deep_merge_props: list[str] | None = None,
         match_props_on: list[str] | None = None,
+        scroll_props: dict[str, Any] | None = None,
+        url: str | None = None,
     ) -> JSONResponse | HTMLResponse | Response:
         """
         Render an Inertia response.
         Returns JSON for Inertia requests, HTML for initial page loads.
+
+        Args:
+            url: Optional URL to use instead of the current request URL.
+                 Useful for rendering a component with a different URL than the endpoint.
         """
         # Extract path from full URL (lia returns full URL like http://testserver/test)
         from urllib.parse import urlparse
         from starlette.responses import Response
 
         parsed_url = urlparse(adapter.url)
-        url_path = parsed_url.path
+        url_path = url if url is not None else parsed_url.path
 
         # Check for asset version mismatch (only for Inertia requests)
         if self.is_inertia_request(adapter):
@@ -494,6 +513,8 @@ class InertiaResponse:
             page_data["deepMergeProps"] = deep_merge_props
         if match_props_on:
             page_data["matchPropsOn"] = match_props_on
+        if scroll_props:
+            page_data["scrollProps"] = scroll_props
 
         if self.is_inertia_request(adapter):
             # Return JSON response for Inertia XHR requests
@@ -505,6 +526,7 @@ class InertiaResponse:
                 headers={
                     "X-Inertia": "true",
                     "Vary": "X-Inertia",
+                    "X-Inertia-Scroll-Fix": "v2-url-param",
                 },
                 status_code=200,
             )

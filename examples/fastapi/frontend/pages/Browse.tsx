@@ -84,23 +84,36 @@ function CatCard({ cat, onToggleFavorite }: CatCardProps) {
   )
 }
 
-export default function Browse({ title, cats, total, page, has_more }: BrowsePageProps) {
+export default function Browse({ title, cats, total, page, has_more, filters }: BrowsePageProps) {
+  // Extract cats array from the data wrapper
+  const catsData = Array.isArray(cats) ? cats : cats.data
+  
   const handleToggleFavorite = (catId: number) => {
-    // Use partial reloads to only update the cats list
-    // This prevents a full page reload and feels instant!
-    router.visit(`/favorites/${catId}/toggle`, {
-      method: 'post',
+    // Build query string to preserve current page and filters
+    const params = new URLSearchParams()
+    params.set('page', page.toString())
+    if (filters.breed) params.set('breed', filters.breed)
+    if (filters.age) params.set('age_range', filters.age)
+    
+    // POST to toggle endpoint - server will redirect back to /browse
+    // Inertia will automatically follow the redirect
+    router.post(`/favorites/${catId}/toggle?${params.toString()}`, {}, {
       preserveScroll: true,
-      only: ['cats'],
     })
   }
 
   const handleLoadMore = () => {
     // Load more cats using infinite scroll
     // The backend will merge new cats with existing ones
-    router.visit(`/browse?page=${page + 1}`, {
+    const params = new URLSearchParams()
+    params.set('page', (page + 1).toString())
+    if (filters.breed) params.set('breed', filters.breed)
+    if (filters.age) params.set('age_range', filters.age)
+    
+    router.visit(`/browse?${params.toString()}`, {
       preserveScroll: true,
       preserveState: true,
+      only: ['cats', 'page', 'has_more'], // Only fetch these props for infinite scroll
     })
   }
 
@@ -108,13 +121,13 @@ export default function Browse({ title, cats, total, page, has_more }: BrowsePag
     <Layout title={title}>
       <div className="mb-6">
         <p className="text-muted-foreground">
-          Showing {cats.length} of {total} adorable cats available for adoption
+          Showing {catsData.length} of {total} adorable cats available for adoption
         </p>
       </div>
 
       {/* Cat Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {cats.map((cat) => (
+        {catsData.map((cat) => (
           <CatCard key={cat.id} cat={cat} onToggleFavorite={handleToggleFavorite} />
         ))}
       </div>
@@ -134,7 +147,7 @@ export default function Browse({ title, cats, total, page, has_more }: BrowsePag
       )}
 
       {/* Empty State */}
-      {cats.length === 0 && (
+      {catsData.length === 0 && (
         <div className="text-center py-12">
           <p className="text-lg text-muted-foreground">No cats found. Try adjusting your filters!</p>
         </div>

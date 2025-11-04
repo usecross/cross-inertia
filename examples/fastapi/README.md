@@ -401,7 +401,7 @@ shadcn/ui components are copied into your project, so you can customize them. To
 
 ## Learn More
 
-- [Inertia.js Documentation](https://inertiajs.com/)
+- [Inertia.js v2 Documentation](https://inertiajs.com/) (this example uses Inertia.js v2.0+)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [React Documentation](https://react.dev/)
 - [Vite Documentation](https://vitejs.dev/)

@@ -236,6 +236,7 @@ name = "cross-inertia"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [
+    { name = "itsdangerous" },
     { name = "lia-web" },
 ]
 
@@ -253,7 +254,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "lia-web", specifier = ">=0.2.3" }]
+requires-dist = [
+    { name = "itsdangerous", specifier = ">=2.2.0" },
+    { name = "lia-web", specifier = ">=0.2.3" },
+]
 
 [package.metadata.requires-dev]
 dev = [
