@@ -3,7 +3,7 @@ members = ["examples/*"]
 
 [project]
 name = "cross-inertia"
-version = "0.3.0"
+version = "0.4.0"
 description = "Inertia.js adapter for Python web frameworks"
 readme = "README.md"
 authors = [
