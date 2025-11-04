@@ -241,7 +241,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "fastapi" },
+    { name = "fastapi", extra = ["standard"] },
     { name = "httpx" },
     { name = "mypy" },
     { name = "nox" },
@@ -257,7 +257,7 @@ requires-dist = [{ name = "lia-web", specifier = ">=0.2.3" }]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "fastapi", specifier = ">=0.116.1" },
+    { name = "fastapi", extras = ["standard"], specifier = ">=0.116.1" },
     { name = "httpx", specifier = ">=0.28.0" },
     { name = "mypy", specifier = ">=1.13.0" },
     { name = "nox", specifier = ">=2024.4.15" },
