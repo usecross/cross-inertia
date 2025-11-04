@@ -526,7 +526,6 @@ class InertiaResponse:
                 headers={
                     "X-Inertia": "true",
                     "Vary": "X-Inertia",
-                    "X-Inertia-Scroll-Fix": "v2-url-param",
                 },
                 status_code=200,
             )
