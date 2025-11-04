@@ -1,35 +1,42 @@
 
 
-0.2.0 - 2025-11-03
+0.3.0 - 2025-11-04
 ------------------
 
-Move framework-specific exports to submodules
+Add Inertia.js v2 support and scrollProps for infinite scroll
 
-This release introduces framework-specific import paths to prepare for future Flask and Django support.
+## What's New
 
-**New import style:**
-```python
-from inertia.fastapi import InertiaDep, InertiaMiddleware
-```
+- **Inertia.js v2 Support**: Upgraded example to use Inertia.js v2.2.15 with new features
+- **scrollProps Support**: Added `scroll_props` parameter to enable infinite scroll prop merging
+- **Improved Pagination**: Enhanced Browse example with proper infinite scroll configuration
 
-**Changes:**
-- Add `inertia.fastapi` module with FastAPI-specific exports
-- Remove top-level exports from `inertia` package
-- Update all examples and documentation to use new import style
-- Cleaner namespace for multi-framework support
+## Changes
 
-**Migration Guide:**
+### Core Library
 
-Update your imports from:
-```python
-from inertia import InertiaDep, InertiaMiddleware
-```
+- Add `scroll_props` parameter to `Inertia.render()` and `InertiaResponse.render()` methods
+- Include `scrollProps` in page_data when provided for Inertia.js v2 compatibility
+- Add `url` parameter to render methods for custom URL handling
+- Fix asset version hash to use MD5 for deterministic values
 
-To:
-```python
-from inertia.fastapi import InertiaDep, InertiaMiddleware
-```
+### Example Application
 
-No other code changes are required - just update the import statements.
+- Upgrade `@inertiajs/react` from v1.x to v2.2.15
+- Restructure cats data to use `{ data: [...] }` format for scroll merging
+- Add `scrollProps` configuration with pagination metadata (pageName, previousPage, nextPage, currentPage)
+- Update `mergeProps` and `matchPropsOn` to use dot notation for nested properties
+- Improve toggle favorite functionality to preserve page state and filters
+- Update TypeScript types to support both array and wrapped data formats
 
-Closes #10
+### Documentation
+
+- Update AGENTS.md to note Inertia.js v2 requirement
+- Update example README to indicate v2 usage
+- Add dependency documentation for client-side adapters
+
+## Notes
+
+The `scrollProps` infrastructure is now in place for Inertia.js v2 infinite scroll support. The example demonstrates the proper data structure and configuration required by the Inertia.js v2 protocol, including `mergeProps`, `matchPropsOn`, and `scrollProps`.
+
+For full infinite scroll functionality, consider using the `<InfiniteScroll>` component from `@inertiajs/react` in addition to the server-side configuration.
