@@ -22,6 +22,9 @@ def render(
     prepend_props: list[str] | None = None,
     deep_merge_props: list[str] | None = None,
     match_props_on: list[str] | None = None,
+    scroll_props: dict[str, Any] | None = None,
+    url: str | None = None,
+    view_data: dict[str, Any] | None = None,
 ) -> JSONResponse | HTMLResponse | Response
 ```
 
@@ -34,6 +37,9 @@ def render(
 - `prepend_props` (list, optional): Props to prepend instead of replace
 - `deep_merge_props` (list, optional): Props to deep merge
 - `match_props_on` (list, optional): Keys to match on when merging (e.g., `["id"]`)
+- `scroll_props` (dict, optional): Configuration for infinite scroll prop merging
+- `url` (str, optional): Override the URL for this response
+- `view_data` (dict, optional): Extra data to pass to the template (not included in page props)
 
 **Returns:** Response object (JSON for Inertia requests, HTML for initial visits)
 
@@ -60,6 +66,22 @@ async def create_user(inertia: InertiaDep):
     if errors:
         return inertia.render("Users/Create", {}, errors=errors)
     # ...
+```
+
+**With view data:**
+
+```python
+@app.get("/products/{id}")
+async def product_page(id: int, inertia: InertiaDep):
+    product = get_product(id)
+    return inertia.render(
+        "Product",
+        {"product": product},
+        view_data={
+            "page_title": f"{product.name} - Our Store",
+            "meta_description": product.description[:160],
+        }
+    )
 ```
 
 ### `inertia.location()`

@@ -74,6 +74,7 @@ class Inertia:
         match_props_on: list[str] | None = None,
         scroll_props: dict[str, Any] | None = None,
         url: str | None = None,
+        view_data: dict[str, Any] | None = None,
     ) -> JSONResponse | HTMLResponse | Response:
         """Render an Inertia response without needing to pass request
 
@@ -81,6 +82,8 @@ class Inertia:
             url: Optional URL to use instead of the current request URL.
                  Useful for rendering a component with a different URL than the endpoint.
             scroll_props: Configuration for infinite scroll prop merging behavior.
+            view_data: Optional extra data to pass to the template (not included in page props).
+                      Useful for server-side meta tags, page titles, etc.
         """
         if props is None:
             props = {}
@@ -98,6 +101,7 @@ class Inertia:
             match_props_on=match_props_on,
             scroll_props=scroll_props,
             url=url,
+            view_data=view_data,
         )
 
     def back(
@@ -405,6 +409,7 @@ class InertiaResponse:
         match_props_on: list[str] | None = None,
         scroll_props: dict[str, Any] | None = None,
         url: str | None = None,
+        view_data: dict[str, Any] | None = None,
     ) -> JSONResponse | HTMLResponse | Response:
         """
         Render an Inertia response.
@@ -413,6 +418,8 @@ class InertiaResponse:
         Args:
             url: Optional URL to use instead of the current request URL.
                  Useful for rendering a component with a different URL than the endpoint.
+            view_data: Optional extra data to pass to the template (not included in page props).
+                      Useful for server-side meta tags, page titles, etc.
         """
         # Extract path from full URL (lia returns full URL like http://testserver/test)
         from urllib.parse import urlparse
@@ -536,14 +543,19 @@ class InertiaResponse:
             )
             # Escape single quotes in JSON for safe embedding in HTML attributes
             page_json = json.dumps(page_data).replace("'", "&#39;")
+            template_context = {
+                "request": request,
+                "page": page_json,
+                "vite_tags": self.get_vite_tags(),  # Backward compatibility
+                # Note: vite() function is also available globally
+            }
+            # Add view_data to template context if provided
+            if view_data:
+                template_context.update(view_data)
+                logger.debug(f"Adding view_data to template: {list(view_data.keys())}")
             return self.templates.TemplateResponse(
                 "app.html",
-                {
-                    "request": request,
-                    "page": page_json,
-                    "vite_tags": self.get_vite_tags(),  # Backward compatibility
-                    # Note: vite() function is also available globally
-                },
+                template_context,
             )
 
 

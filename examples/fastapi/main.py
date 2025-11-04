@@ -178,6 +178,10 @@ async def browse_cats(
                 "currentPage": page,
             }
         },
+        view_data={
+            "page_title": "Browse Adoptable Cats - PurrfectHome",
+            "meta_description": "Browse and find your perfect feline companion. Filter by breed, age, and more to find cats available for adoption.",
+        },
     )
 
 
@@ -211,6 +215,10 @@ async def show_cat(cat_id: int, inertia: InertiaDep):
             "shelter": shelter,
             "similar_cats": similar_cats,
         },
+        view_data={
+            "page_title": f"Meet {cat['name']} - {cat['breed']} Available for Adoption | PurrfectHome",
+            "meta_description": f"Meet {cat['name']}, a {cat['age_years']} year old {cat['breed']} looking for a loving home. {cat['description'][:150]}...",
+        },
     )
 
 
@@ -229,6 +237,10 @@ async def favorites(inertia: InertiaDep):
             "title": "My Favorites",
             "cats": favorited_cats,
             "total": len(favorited_cats),
+        },
+        view_data={
+            "page_title": f"My Favorites ({len(favorited_cats)}) - PurrfectHome",
+            "meta_description": "View your favorite cats and manage your adoption wishlist.",
         },
     )
 
@@ -402,6 +414,10 @@ async def show_application_form(cat_id: int, inertia: InertiaDep):
         {
             "title": f"Apply to Adopt {cat['name']}",
             "cat": cat,
+        },
+        view_data={
+            "page_title": f"Apply to Adopt {cat['name']} - PurrfectHome",
+            "meta_description": f"Submit your application to adopt {cat['name']}, a loving {cat['breed']} looking for a forever home.",
         },
     )
 
