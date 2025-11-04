@@ -8,12 +8,10 @@ import type { CatProfilePageProps } from '../types'
 
 export default function CatProfile({ cat, shelter, similar_cats = [] }: CatProfilePageProps) {
   const handleToggleFavorite = () => {
-    // Use partial reload to only update the cat data (including is_favorited status)
-    // No need to reload similar_cats since they haven't changed
-    router.visit(`/favorites/${cat.id}/toggle`, {
-      method: 'post',
+    // POST to toggle endpoint - server will redirect back to cat profile
+    // Inertia will automatically follow the redirect
+    router.post(`/favorites/${cat.id}/toggle`, {}, {
       preserveScroll: true,
-      only: ['cat'],
     })
   }
 

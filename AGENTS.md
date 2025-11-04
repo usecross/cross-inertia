@@ -99,6 +99,7 @@ docs/                # Starlight documentation
 - **FastAPI**: Primary framework support
 - **lia**: Framework abstraction layer
 - **Vite**: Frontend build tool
+- **Inertia.js**: v2.0+ (client-side adapters)
 
 ## Helpful Commands
 

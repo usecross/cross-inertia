@@ -68,18 +68,18 @@ def share_data(request: Request) -> dict:
     favorites_count = len(mock_data.get_favorited_cats())
 
     # Get flash messages from session (if available)
-    # IMPORTANT: Only pop flash on GET requests or non-Inertia requests
-    # For POST/PUT/DELETE, the flash should be preserved until the redirect
+    # Pop flash on:
+    # 1. GET requests (after redirects)
+    # 2. POST/PUT/PATCH/DELETE Inertia requests (direct renders without redirect)
+    # 3. Non-Inertia requests (initial page loads)
     flash_data = {}
     try:
         if "session" in request.scope and "flash" in request.session:
-            # Check if this is a GET request or a non-Inertia request
-            is_get = request.method == "GET"
             is_inertia = request.headers.get("X-Inertia") == "true"
 
-            # Only pop flash on GET requests (after redirects)
-            if is_get and is_inertia:
-                flash_data = request.session.pop("flash")  # Get and clear
+            if is_inertia:
+                # For Inertia requests, always pop flash (whether GET or POST)
+                flash_data = request.session.pop("flash", {})
             elif not is_inertia:
                 # For non-Inertia requests (initial page load), also pop
                 flash_data = request.session.pop("flash", {})
@@ -147,11 +147,17 @@ async def browse_cats(
     for cat in paginated["cats"]:
         cat["is_favorited"] = mock_data.is_favorited(cat["id"])
 
+    # Calculate previous and next pages for infinite scroll
+    previous_page = page - 1 if page > 1 else None
+    next_page = page + 1 if page < paginated["total_pages"] else None
+
     return inertia.render(
         "Browse",
         {
             "title": "Browse Cats",
-            "cats": paginated["cats"],
+            "cats": {
+                "data": paginated["cats"],
+            },
             "total": paginated["total"],
             "page": paginated["page"],
             "per_page": paginated["per_page"],
@@ -161,9 +167,17 @@ async def browse_cats(
                 "age_range": age_range,
             },
         },
-        # Enable infinite scroll: merge cats array and match on ID to prevent duplicates
-        merge_props=["cats"],
-        match_props_on=["id"],
+        # Enable infinite scroll: merge cats.data array and match on ID to prevent duplicates
+        merge_props=["cats.data"],
+        match_props_on=["cats.data.id"],
+        scroll_props={
+            "cats": {
+                "pageName": "page",
+                "previousPage": previous_page,
+                "nextPage": next_page,
+                "currentPage": page,
+            }
+        },
     )
 
 
@@ -220,7 +234,13 @@ async def favorites(inertia: InertiaDep):
 
 
 @app.post("/favorites/{cat_id}/toggle")
-async def toggle_favorite(cat_id: int, inertia: InertiaDep):
+async def toggle_favorite(
+    cat_id: int,
+    inertia: InertiaDep,
+    page: int = Query(1, ge=1),
+    breed: str | None = None,
+    age_range: str | None = None,
+):
     """Toggle favorite status for a cat"""
     cat = mock_data.get_cat_by_id(cat_id)
     is_now_favorited = mock_data.toggle_favorite(cat_id)
@@ -231,16 +251,98 @@ async def toggle_favorite(cat_id: int, inertia: InertiaDep):
     else:
         flash(inertia.request, f"Removed {cat['name']} from favorites", "info")
 
-    # Redirect back to the referring page (or /browse as fallback)
-    from fastapi.responses import RedirectResponse
+    # Determine which page to render based on the referer
+    # This allows toggling from both browse and cat profile pages
+    referer = inertia.request.headers.get("referer", "")
 
-    referer = inertia.request.headers.get("referer", "/browse")
-    # Extract the path from the referer URL
-    from urllib.parse import urlparse
+    if f"/cats/{cat_id}" in referer:
+        # Came from cat profile page - render cat profile with correct URL
+        # Get shelter info
+        shelter = mock_data.get_shelter_by_name(cat["shelter_name"])
 
-    redirect_path = urlparse(referer).path if referer else "/browse"
+        # Get similar cats
+        similar_cats = mock_data.get_similar_cats(cat_id, limit=6)
 
-    return RedirectResponse(url=redirect_path, status_code=303)
+        # Mark favorite status
+        cat["is_favorited"] = mock_data.is_favorited(cat_id)
+        for similar_cat in similar_cats:
+            similar_cat["is_favorited"] = mock_data.is_favorited(similar_cat["id"])
+
+        # Get the flash message that was just set and manually include it
+        flash_message = (
+            inertia.request.session.pop("flash", {})
+            if "session" in inertia.request.scope
+            else {}
+        )
+
+        return inertia.render(
+            "CatProfile",
+            {
+                "title": f"{cat['name']} - Adopt Me!",
+                "cat": cat,
+                "shelter": shelter,
+                "similar_cats": similar_cats,
+                "flash": flash_message,  # Manually include flash
+            },
+            url=f"/cats/{cat_id}",
+        )
+    else:
+        # Came from browse page - render browse with filters and correct URL
+        filtered_cats = mock_data.filter_cats(breed=breed, age_range=age_range)
+        paginated = mock_data.paginate_cats(filtered_cats, page=page, per_page=6)
+
+        # Mark favorites
+        for cat_item in paginated["cats"]:
+            cat_item["is_favorited"] = mock_data.is_favorited(cat_item["id"])
+
+        # Build the URL with query parameters
+        url = f"/browse?page={page}"
+        if breed:
+            url += f"&breed={breed}"
+        if age_range:
+            url += f"&age_range={age_range}"
+
+        # Get the flash message that was just set and manually include it
+        # This is needed because shared_data runs before the handler
+        flash_message = (
+            inertia.request.session.pop("flash", {})
+            if "session" in inertia.request.scope
+            else {}
+        )
+
+        # Calculate previous and next pages for infinite scroll
+        previous_page = page - 1 if page > 1 else None
+        next_page = page + 1 if page < paginated["total_pages"] else None
+
+        return inertia.render(
+            "Browse",
+            {
+                "title": "Browse Cats",
+                "cats": {
+                    "data": paginated["cats"],
+                },
+                "total": paginated["total"],
+                "page": paginated["page"],
+                "per_page": paginated["per_page"],
+                "has_more": page < paginated["total_pages"],
+                "filters": {
+                    "breed": breed,
+                    "age_range": age_range,
+                },
+                "flash": flash_message,  # Manually include flash
+            },
+            merge_props=["cats.data"],
+            match_props_on=["cats.data.id"],
+            scroll_props={
+                "cats": {
+                    "pageName": "page",
+                    "previousPage": previous_page,
+                    "nextPage": next_page,
+                    "currentPage": page,
+                }
+            },
+            url=url,
+        )
 
 
 @app.post("/favorites/{cat_id}/remove")

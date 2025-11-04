@@ -11,6 +11,7 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
+    "itsdangerous>=2.2.0",
     "lia-web>=0.2.3",
 ]
 
@@ -29,7 +30,7 @@ packages = ["src/inertia"]
 
 [dependency-groups]
 dev = [
-    "fastapi>=0.116.1",
+    "fastapi[standard]>=0.116.1",
     "pytest>=8.4.2",
     "pytest-cov>=6.0.0",
     "pytest-playwright>=0.6.2",

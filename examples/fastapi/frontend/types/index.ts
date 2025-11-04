@@ -46,7 +46,7 @@ export interface User {
 
 export interface BrowsePageProps {
   title: string
-  cats: Cat[]
+  cats: Cat[] | { data: Cat[] }  // Support both flat array and wrapped format for infinite scroll
   total: number
   page: number
   perPage: number

@@ -102,6 +102,7 @@ export default function Layout({ children, title }: LayoutProps) {
       <footer className="border-t mt-12">
         <div className="container mx-auto px-6 py-8 text-center text-sm text-muted-foreground">
           <p>PurrfectHome - A demo showcasing Inertia.js with FastAPI</p>
+          <p className="mt-2 text-xs text-zinc-400">Version: scroll-fix-v2</p>
         </div>
       </footer>
     </div>
