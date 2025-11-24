@@ -26,13 +26,109 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class LazyProp:
+    """
+    Wrapper for lazy props that are only evaluated when explicitly requested.
+
+    Lazy props are excluded from initial page loads and only included when
+    requested via partial reloads with `only: ['prop_name']`.
+
+    Works like functools.partial - you can pass args and kwargs to be applied
+    when the prop is evaluated.
+
+    Example:
+        return inertia.render("Dashboard", {
+            "user": get_user(),
+            "permissions": lazy(get_permissions, user_id),
+            "activity": lazy(get_activity, user_id=123, limit=50),
+        })
+
+    Frontend:
+        // Initial load: permissions is undefined
+        // To load it:
+        router.reload({ only: ['permissions'] })
+    """
+
+    def __init__(self, callback: Any, *args: Any, **kwargs: Any):
+        """
+        Create a lazy prop.
+
+        Args:
+            callback: A callable that returns the prop value when invoked.
+            *args: Positional arguments to pass to the callback.
+            **kwargs: Keyword arguments to pass to the callback.
+        """
+        if not callable(callback):
+            raise ValueError("LazyProp requires a callable")
+        self.callback = callback
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self) -> Any:
+        """Invoke the callback with stored args/kwargs to get the value."""
+        return self.callback(*self.args, **self.kwargs)
+
+
+def lazy(callback: Any, *args: Any, **kwargs: Any) -> LazyProp:
+    """
+    Mark a prop as lazy - only evaluated when explicitly requested.
+
+    Works like functools.partial - you can pass args and kwargs that will be
+    applied when the prop is evaluated.
+
+    Lazy props are excluded from initial page loads. They are only included
+    and evaluated when requested via partial reloads with `only: ['prop_name']`.
+
+    This is useful for expensive queries that users may not always need.
+
+    Args:
+        callback: A callable that returns the prop value.
+        *args: Positional arguments to pass to the callback.
+        **kwargs: Keyword arguments to pass to the callback.
+
+    Returns:
+        A LazyProp wrapper.
+
+    Example:
+        @app.get("/dashboard")
+        async def dashboard(inertia: InertiaDep):
+            user = get_current_user()
+            return inertia.render("Dashboard", {
+                "user": user,
+                # These are only loaded when explicitly requested
+                "permissions": lazy(get_permissions, user.id),
+                "activity": lazy(get_activity, user_id=user.id, limit=100),
+                "billing": lazy(get_billing_history, user.id),
+            })
+
+        # Frontend - load lazy prop on demand:
+        router.reload({ only: ['permissions'] })
+
+        # Load multiple:
+        router.reload({ only: ['permissions', 'activity'] })
+    """
+    return LazyProp(callback, *args, **kwargs)
+
+
+def _is_lazy_prop(value: Any) -> bool:
+    """Check if a value is a lazy prop."""
+    return isinstance(value, LazyProp)
+
+
 def _is_callable_prop(value: Any) -> bool:
-    """Check if a value is a callable prop (function/lambda, not a class)."""
-    return callable(value) and not inspect.isclass(value)
+    """Check if a value is a callable prop (function/lambda, not a class or LazyProp)."""
+    return callable(value) and not inspect.isclass(value) and not _is_lazy_prop(value)
 
 
 async def _resolve_callable(value: Any) -> Any:
     """Resolve a callable value, handling both sync and async callables."""
+    # Handle LazyProp - invoke its callback
+    if _is_lazy_prop(value):
+        result = value()  # Calls LazyProp.__call__ which invokes the callback
+        if inspect.iscoroutine(result):
+            return await result
+        return result
+    # Handle regular callables
     if _is_callable_prop(value):
         result = value()
         # If the result is a coroutine, await it
@@ -63,8 +159,10 @@ async def _resolve_props(props: dict[str, Any]) -> dict[str, Any]:
 
 
 async def _resolve_value(value: Any) -> Any:
-    """Resolve a single value, which may be callable, dict, or list."""
-    if _is_callable_prop(value):
+    """Resolve a single value, which may be callable, lazy prop, dict, or list."""
+    if _is_lazy_prop(value):
+        return await _resolve_callable(value)
+    elif _is_callable_prop(value):
         return await _resolve_callable(value)
     elif isinstance(value, dict):
         return await _resolve_props(value)
@@ -528,11 +626,15 @@ class InertiaResponse:
         partial_data = adapter.headers.get("X-Inertia-Partial-Data")
         partial_except = adapter.headers.get("X-Inertia-Partial-Except")
 
+        # Track which props are lazy for filtering
+        lazy_prop_keys = {key for key, val in props.items() if _is_lazy_prop(val)}
+
         if partial_component == component and (partial_data or partial_except):
             if partial_data:
                 # Only include requested props, but ALWAYS include shared data
                 requested_keys = [key.strip() for key in partial_data.split(",")]
                 # Filter to requested page props only
+                # Lazy props ARE included if explicitly requested
                 filtered_props = {
                     key: props[key] for key in requested_keys if key in props
                 }
@@ -546,10 +648,12 @@ class InertiaResponse:
                 except_keys = [key.strip() for key in partial_except.split(",")]
                 shared_data_keys = set(shared_data.keys())
                 # Keep props that are NOT in except list OR are shared data
+                # Also exclude lazy props (they're only included when explicitly requested)
                 filtered_props = {
                     key: val
                     for key, val in props.items()
-                    if key not in except_keys or key in shared_data_keys
+                    if (key not in except_keys or key in shared_data_keys)
+                    and key not in lazy_prop_keys
                 }
                 # Merge: shared data first, then filtered page props
                 props = {**shared_data, **filtered_props}
@@ -558,6 +662,12 @@ class InertiaResponse:
                 )
         else:
             # No partial reload - merge all shared data with page props
+            # Exclude lazy props on initial load (they must be explicitly requested)
+            if lazy_prop_keys:
+                props = {
+                    key: val for key, val in props.items() if key not in lazy_prop_keys
+                }
+                logger.info(f"Excluding lazy props from initial load: {lazy_prop_keys}")
             if shared_data:
                 # Page props override shared data
                 props = {**shared_data, **props}
