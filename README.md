@@ -20,6 +20,8 @@ A Python adapter for using [Inertia.js](https://inertiajs.com/) with FastAPI.
 - ✅ History encryption for sensitive data
 - ✅ External redirects (OAuth, payments, etc.)
 - ✅ Partial reloads & shared data
+- ✅ Merging props (infinite scroll support)
+- ✅ View data (server-side template variables)
 - ✅ TypeScript support
 
 ## Installation
@@ -262,9 +264,10 @@ No configuration changes needed - it just works!
 | **Shared data** | ✅ | ✅ | - |
 | **External redirects** | ✅ | ✅ | - |
 | **History encryption** | ✅ | ✅ | - |
+| **Merging props (infinite scroll)** | ✅ | ✅ | - |
+| **View data** | ✅ | ✅ | - |
 | Lazy props | ✅ | ⏳ Planned | 🟡 Medium |
 | Deferred props | ✅ | ⏳ Planned | 🟡 Medium |
-| Merging props | ✅ | ⏳ Planned | 🟡 Medium |
 | Error bags | ✅ | ⏳ Planned | 🟢 Low |
 | Prefetching | ✅ | ⏳ Planned | 🟢 Low |
 | SSR | ✅ | ❌ Not planned | - |
@@ -273,7 +276,7 @@ No configuration changes needed - it just works!
 
 ## Current Status
 
-**Version:** v0.2.0 "Production Ready"
+**Version:** v0.4.0 "Advanced Features"
 
 This adapter implements all production-critical Inertia features and is **ready for production use**.
 
@@ -287,11 +290,12 @@ This adapter implements all production-critical Inertia features and is **ready 
 - ✅ Shared data (auth, flash messages)
 - ✅ External redirects (OAuth, payments)
 - ✅ History encryption (sensitive data protection)
+- ✅ Merging props (infinite scroll)
+- ✅ View data (server-side template variables)
 
 **Coming soon:**
 - ⏳ Lazy props evaluation
 - ⏳ Deferred props
-- ⏳ Merging props (infinite scroll)
 
 ## Contributing
 
