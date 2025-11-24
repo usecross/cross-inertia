@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import inspect
 import json
 import logging
 import re
@@ -22,6 +24,74 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _is_callable_prop(value: Any) -> bool:
+    """Check if a value is a callable prop (function/lambda, not a class)."""
+    return callable(value) and not inspect.isclass(value)
+
+
+async def _resolve_callable(value: Any) -> Any:
+    """Resolve a callable value, handling both sync and async callables."""
+    if _is_callable_prop(value):
+        result = value()
+        # If the result is a coroutine, await it
+        if inspect.iscoroutine(result):
+            return await result
+        return result
+    return value
+
+
+async def _resolve_props(props: dict[str, Any]) -> dict[str, Any]:
+    """
+    Recursively resolve all callable props in a dictionary.
+
+    Supports:
+    - Top-level callable props: {"user": lambda: get_user()}
+    - Nested callable props: {"data": {"user": lambda: get_user()}}
+    - Lists with callable props: {"items": [lambda: get_item(1), lambda: get_item(2)]}
+    - Async callables: {"user": async_get_user}
+
+    Non-callable values are passed through unchanged.
+    """
+    resolved: dict[str, Any] = {}
+
+    for key, value in props.items():
+        resolved[key] = await _resolve_value(value)
+
+    return resolved
+
+
+async def _resolve_value(value: Any) -> Any:
+    """Resolve a single value, which may be callable, dict, or list."""
+    if _is_callable_prop(value):
+        return await _resolve_callable(value)
+    elif isinstance(value, dict):
+        return await _resolve_props(value)
+    elif isinstance(value, list):
+        return [await _resolve_value(item) for item in value]
+    else:
+        return value
+
+
+def _resolve_props_sync(props: dict[str, Any]) -> dict[str, Any]:
+    """
+    Synchronous wrapper for resolving callable props.
+    Uses asyncio.run() to execute the async resolution.
+    """
+    try:
+        # Try to get the running loop
+        asyncio.get_running_loop()
+        # If we're already in an async context, we need to handle this differently
+        # Create a new task in the existing loop
+        import concurrent.futures
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, _resolve_props(props))
+            return future.result()
+    except RuntimeError:
+        # No running loop, we can use asyncio.run directly
+        return asyncio.run(_resolve_props(props))
 
 
 def read_vite_entry_from_config(vite_config_path: str = "vite.config.ts") -> str | None:
@@ -494,6 +564,10 @@ class InertiaResponse:
                 logger.debug(
                     f"Merged shared data keys {list(shared_data.keys())} with page props"
                 )
+
+        # Resolve callable props (lambdas, functions) before rendering
+        # This allows lazy evaluation of expensive props
+        props = _resolve_props_sync(props)
 
         # Add errors to props (Inertia checks page.props.errors for validation errors)
         if errors:
