@@ -34,7 +34,9 @@ def test_initial_page_shows_first_batch(page: Page, fastapi_server: str) -> None
     expect(view_profile_links).to_have_count(6)
 
 
-def test_load_more_button_visible_when_more_cats(page: Page, fastapi_server: str) -> None:
+def test_load_more_button_visible_when_more_cats(
+    page: Page, fastapi_server: str
+) -> None:
     """Test that Load More button is visible when there are more cats."""
     page.goto(f"{fastapi_server}/browse")
 
@@ -158,9 +160,7 @@ def test_merge_props_prevents_duplicates(page: Page, fastapi_server: str) -> Non
 
     # Check for duplicates
     unique_names = set(cat_names)
-    assert len(cat_names) == len(unique_names), (
-        f"Found duplicate cats: {cat_names}"
-    )
+    assert len(cat_names) == len(unique_names), f"Found duplicate cats: {cat_names}"
 
 
 def test_inertia_partial_reload_headers(page: Page, fastapi_server: str) -> None:
@@ -175,10 +175,12 @@ def test_inertia_partial_reload_headers(page: Page, fastapi_server: str) -> None
 
     def handle_request(request):
         if "/browse" in request.url and "page=" in request.url:
-            requests_made.append({
-                "url": request.url,
-                "headers": request.headers,
-            })
+            requests_made.append(
+                {
+                    "url": request.url,
+                    "headers": request.headers,
+                }
+            )
 
     page.on("request", handle_request)
 
