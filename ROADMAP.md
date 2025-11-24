@@ -27,22 +27,26 @@ All production-critical features implemented:
 - ✅ History encryption
 - ✅ E2E integration tests
 
-### v0.3.0 - "Performance"
+### v0.3.0 - "Performance" ✅ COMPLETE
 Focus on optimization and developer experience:
+- ✅ Inertia.js v2 support (scrollProps)
+
+### v0.4.0 - "Advanced Features" ✅ COMPLETE
+Additional Inertia.js protocol features:
+- ✅ [Merging props (infinite scroll)](https://github.com/patrick91/cross-inertia/issues/4) - `merge_props`, `prepend_props`, `deep_merge_props`, `match_props_on`
+- ✅ View data support for server-side template variables
+
+### v0.5.0 - "Props Enhancement"
+Advanced prop handling:
 - [Lazy props evaluation](https://github.com/patrick91/cross-inertia/issues/2)
 - [Deferred props](https://github.com/patrick91/cross-inertia/issues/3)
-- Performance benchmarks
-
-### v0.4.0 - "Advanced Features"
-Additional Inertia.js protocol features:
-- [Merging props (infinite scroll)](https://github.com/patrick91/cross-inertia/issues/4)
 - [Error bags](https://github.com/patrick91/cross-inertia/issues/5)
 - [Prefetching support](https://github.com/patrick91/cross-inertia/issues/6)
 
-### v0.5.0 - "Multi-Framework"
+### v0.6.0 - "Multi-Framework"
 Expand framework support:
 - Flask support
-- Django support  
+- Django support
 - Sanic support
 
 ### v1.0.0 - "Stable Release"
@@ -57,14 +61,16 @@ Production-ready stable release:
 
 ## 📊 Current Status
 
-**Latest Version:** v0.2.0 (Production Ready)
+**Latest Version:** v0.4.0 (Advanced Features)
 
-**Core Protocol:** 95% complete
+**Core Protocol:** 98% complete
 - ✅ Request/response handling
 - ✅ Partial reloads
 - ✅ History encryption
 - ✅ External redirects
-- 🚧 Advanced features (lazy/deferred props, merging)
+- ✅ Merging props (infinite scroll)
+- ✅ View data
+- 🚧 Lazy/deferred props
 
 **Framework Support:** 12% complete (1 of 8 planned frameworks)
 - ✅ FastAPI/Starlette
