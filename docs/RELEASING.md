@@ -65,13 +65,13 @@ Fix asset version handling for None values
 release type: minor
 ---
 
-Add lazy props evaluation
+Add optional props evaluation
 
-This release adds support for lazy props, allowing expensive
+This release adds support for optional props, allowing expensive
 computations to be deferred until they're actually needed.
 
 Features:
-- Lazy prop wrapper that defers evaluation
+- Optional prop wrapper that defers evaluation
 - Only evaluated when requested in partial reloads
 - Full test coverage and documentation
 

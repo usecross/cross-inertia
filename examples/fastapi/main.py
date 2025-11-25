@@ -39,6 +39,7 @@ from fastapi import FastAPI, Query, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from inertia.fastapi import InertiaDep, InertiaMiddleware
+from inertia import optional, always
 import mock_data
 
 # Configure logging for this module
@@ -217,7 +218,7 @@ async def show_cat(cat_id: int, inertia: InertiaDep):
         },
         view_data={
             "page_title": f"Meet {cat['name']} - {cat['breed']} Available for Adoption | PurrfectHome",
-            "meta_description": f"Meet {cat['name']}, a {cat['age_years']} year old {cat['breed']} looking for a loving home. {cat['description'][:150]}...",
+            "meta_description": f"Meet {cat['name']}, a {cat['age']} year old {cat['breed']} looking for a loving home. {cat['description'][:150]}...",
         },
     )
 
@@ -562,6 +563,53 @@ async def form_submit(inertia: InertiaDep):
             "message": "There were errors with your submission.",
         },
         errors=errors,
+    )
+
+
+@app.get("/lazy-demo")
+async def lazy_demo(inertia: InertiaDep):
+    """
+    Optional and Always props demo page.
+
+    This demonstrates the optional() and always() prop types:
+
+    - optional(): Props excluded on initial load, only loaded when explicitly
+      requested via partial reload with `only: ['prop_name']`
+    - always(): Props always included, even during partial reloads
+
+    Click "Load Statistics" to trigger a partial reload that fetches the
+    optional 'statistics' prop. Note that 'timestamp' is always included.
+    """
+
+    def get_statistics():
+        """Simulate an expensive database query for statistics."""
+        import time
+
+        time.sleep(0.1)  # Simulate delay
+        return {
+            "total_cats": len(mock_data.CATS),
+            "total_shelters": len(mock_data.SHELTERS),
+            "breeds": list(set(cat["breed"] for cat in mock_data.CATS)),
+            "average_age": sum(cat["age"] for cat in mock_data.CATS)
+            / len(mock_data.CATS),
+        }
+
+    def get_timestamp():
+        """Get current timestamp - always fresh."""
+        from datetime import datetime
+
+        return datetime.now().isoformat()
+
+    return inertia.render(
+        "LazyDemo",
+        {
+            "title": "Optional & Always Props Demo",
+            "message": "Statistics are optional (only loaded when requested). Timestamp is always included.",
+            "statistics": optional(get_statistics),  # Only loaded when requested
+            "timestamp": always(
+                get_timestamp
+            ),  # Always included, even in partial reloads
+        },
     )
 
 

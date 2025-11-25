@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+import inspect
 import json
 import logging
 import re
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Callable
 
 import httpx
 from fastapi import Depends, Request
@@ -22,6 +24,194 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+
+class optional:
+    """
+    Mark a prop as optional - only evaluated when explicitly requested.
+
+    Works like functools.partial - you can pass args and kwargs that will be
+    applied when the prop is evaluated.
+
+    Optional props are excluded from initial page loads. They are only included
+    and evaluated when requested via partial reloads with `only: ['prop_name']`.
+
+    This is useful for expensive queries that users may not always need.
+
+    Example:
+        @app.get("/dashboard")
+        async def dashboard(inertia: InertiaDep):
+            user = get_current_user()
+            return inertia.render("Dashboard", {
+                "user": user,
+                # These are only loaded when explicitly requested
+                "permissions": optional(get_permissions, user.id),
+                "activity": optional(get_activity, user_id=user.id, limit=100),
+                "billing": optional(get_billing_history, user.id),
+            })
+
+        # Frontend - load optional prop on demand:
+        router.reload({ only: ['permissions'] })
+
+        # Load multiple:
+        router.reload({ only: ['permissions', 'activity'] })
+    """
+
+    # TODO: Add proper typing with ParamSpec and TypeVar for better IDE support
+    def __init__(self, callback: Callable[..., Any], *args: Any, **kwargs: Any):
+        """
+        Create an optional prop.
+
+        Args:
+            callback: A callable that returns the prop value when invoked.
+            *args: Positional arguments to pass to the callback.
+            **kwargs: Keyword arguments to pass to the callback.
+        """
+        if not callable(callback):
+            raise ValueError("optional() requires a callable")
+        self.callback = callback
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self) -> Any:
+        """Invoke the callback with stored args/kwargs to get the value."""
+        return self.callback(*self.args, **self.kwargs)
+
+
+class always:
+    """
+    Mark a prop as always included - even during partial reloads.
+
+    Props wrapped with always() are always included in every Inertia response,
+    even during partial reloads when only specific props are requested.
+
+    Works like functools.partial - you can pass args and kwargs, or just a value.
+
+    Example:
+        @app.get("/dashboard")
+        async def dashboard(inertia: InertiaDep):
+            return inertia.render("Dashboard", {
+                "user": get_user(),
+                "flash": always(get_flash_messages),  # Always included
+                "notifications": always(get_notifications, user_id=user.id),
+            })
+
+        # Frontend partial reload - flash is STILL included:
+        router.reload({ only: ['user'] })  # flash is also returned
+    """
+
+    def __init__(self, value_or_callback: Any, *args: Any, **kwargs: Any):
+        """
+        Create an always prop.
+
+        Args:
+            value_or_callback: A value or callable that returns the prop value.
+            *args: Positional arguments to pass to the callback (if callable).
+            **kwargs: Keyword arguments to pass to the callback (if callable).
+        """
+        self.value_or_callback = value_or_callback
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self) -> Any:
+        """Get the value, invoking the callback if needed."""
+        if callable(self.value_or_callback):
+            return self.value_or_callback(*self.args, **self.kwargs)
+        return self.value_or_callback
+
+
+def _is_optional_prop(value: Any) -> bool:
+    """Check if a value is an optional prop (excluded on initial load)."""
+    return isinstance(value, optional)
+
+
+def _is_always_prop(value: Any) -> bool:
+    """Check if a value is an always prop (included even on partial reloads)."""
+    return isinstance(value, always)
+
+
+# Keep old function name for internal compatibility
+def _is_lazy_prop(value: Any) -> bool:
+    """Check if a value is an optional/lazy prop."""
+    return _is_optional_prop(value)
+
+
+def _is_callable_prop(value: Any) -> bool:
+    """Check if a value is a callable prop (function/lambda, not a class or special prop)."""
+    return (
+        callable(value)
+        and not inspect.isclass(value)
+        and not _is_optional_prop(value)
+        and not _is_always_prop(value)
+    )
+
+
+async def _resolve_callable(value: Any) -> Any:
+    """Resolve a callable value, handling both sync and async callables.
+
+    Works with both lazy props and regular callables. Both are invoked the same
+    way - lazy props have a __call__ method that invokes their callback.
+    """
+    result = value()
+    if inspect.iscoroutine(result):
+        return await result
+    return result
+
+
+async def _resolve_props(props: dict[str, Any]) -> dict[str, Any]:
+    """
+    Recursively resolve all callable props in a dictionary.
+
+    Supports:
+    - Top-level callable props: {"user": lambda: get_user()}
+    - Nested callable props: {"data": {"user": lambda: get_user()}}
+    - Lists with callable props: {"items": [lambda: get_item(1), lambda: get_item(2)]}
+    - Async callables: {"user": async_get_user}
+
+    Non-callable values are passed through unchanged.
+    """
+    resolved: dict[str, Any] = {}
+
+    for key, value in props.items():
+        resolved[key] = await _resolve_value(value)
+
+    return resolved
+
+
+async def _resolve_value(value: Any) -> Any:
+    """Resolve a single value, which may be callable, optional, always, dict, or list."""
+    if _is_optional_prop(value):
+        return await _resolve_callable(value)
+    elif _is_always_prop(value):
+        return await _resolve_callable(value)
+    elif _is_callable_prop(value):
+        return await _resolve_callable(value)
+    elif isinstance(value, dict):
+        return await _resolve_props(value)
+    elif isinstance(value, list):
+        return [await _resolve_value(item) for item in value]
+    else:
+        return value
+
+
+def _resolve_props_sync(props: dict[str, Any]) -> dict[str, Any]:
+    """
+    Synchronous wrapper for resolving callable props.
+    Uses asyncio.run() to execute the async resolution.
+    """
+    try:
+        # Try to get the running loop
+        asyncio.get_running_loop()
+        # If we're already in an async context, we need to handle this differently
+        # Create a new task in the existing loop
+        import concurrent.futures
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, _resolve_props(props))
+            return future.result()
+    except RuntimeError:
+        # No running loop, we can use asyncio.run directly
+        return asyncio.run(_resolve_props(props))
 
 
 def read_vite_entry_from_config(vite_config_path: str = "vite.config.ts") -> str | None:
@@ -458,42 +648,71 @@ class InertiaResponse:
         partial_data = adapter.headers.get("X-Inertia-Partial-Data")
         partial_except = adapter.headers.get("X-Inertia-Partial-Except")
 
+        # Track special prop types for filtering
+        optional_prop_keys = {
+            key for key, val in props.items() if _is_optional_prop(val)
+        }
+        always_prop_keys = {key for key, val in props.items() if _is_always_prop(val)}
+
         if partial_component == component and (partial_data or partial_except):
             if partial_data:
-                # Only include requested props, but ALWAYS include shared data
+                # Only include requested props, but ALWAYS include shared data and always() props
                 requested_keys = [key.strip() for key in partial_data.split(",")]
                 # Filter to requested page props only
+                # Optional props ARE included if explicitly requested
                 filtered_props = {
                     key: props[key] for key in requested_keys if key in props
                 }
-                # Merge: shared data first, then filtered page props (page props override)
-                props = {**shared_data, **filtered_props}
+                # Always include always() props
+                always_props = {key: props[key] for key in always_prop_keys}
+                # Merge: shared data first, then always props, then filtered page props
+                props = {**shared_data, **always_props, **filtered_props}
                 logger.info(
-                    f"Partial reload: requested props {requested_keys} + shared data {list(shared_data.keys())} for {component}"
+                    f"Partial reload: requested props {requested_keys} + shared data {list(shared_data.keys())} + always props {list(always_prop_keys)} for {component}"
                 )
             elif partial_except:
-                # Exclude specified props, but NEVER exclude shared data
+                # Exclude specified props, but NEVER exclude shared data or always() props
                 except_keys = [key.strip() for key in partial_except.split(",")]
                 shared_data_keys = set(shared_data.keys())
-                # Keep props that are NOT in except list OR are shared data
+                # Keep props that are NOT in except list OR are shared data OR are always()
+                # Also exclude optional props (they're only included when explicitly requested)
                 filtered_props = {
                     key: val
                     for key, val in props.items()
-                    if key not in except_keys or key in shared_data_keys
+                    if (
+                        key not in except_keys
+                        or key in shared_data_keys
+                        or key in always_prop_keys
+                    )
+                    and key not in optional_prop_keys
                 }
                 # Merge: shared data first, then filtered page props
                 props = {**shared_data, **filtered_props}
                 logger.info(
-                    f"Partial reload: excluding props {except_keys} (preserving shared data) for {component}"
+                    f"Partial reload: excluding props {except_keys} (preserving shared data and always props) for {component}"
                 )
         else:
             # No partial reload - merge all shared data with page props
+            # Exclude optional props on initial load (they must be explicitly requested)
+            if optional_prop_keys:
+                props = {
+                    key: val
+                    for key, val in props.items()
+                    if key not in optional_prop_keys
+                }
+                logger.info(
+                    f"Excluding optional props from initial load: {optional_prop_keys}"
+                )
             if shared_data:
                 # Page props override shared data
                 props = {**shared_data, **props}
                 logger.debug(
                     f"Merged shared data keys {list(shared_data.keys())} with page props"
                 )
+
+        # Resolve callable props (lambdas, functions) before rendering
+        # This allows lazy evaluation of expensive props
+        props = _resolve_props_sync(props)
 
         # Add errors to props (Inertia checks page.props.errors for validation errors)
         if errors:

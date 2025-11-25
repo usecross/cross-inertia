@@ -425,5 +425,5 @@ async def show_user(user_id: int, inertia: InertiaDep):
 ## Next Steps
 
 - [Shared Data](/guides/shared-data/) - Combine with shared data for efficiency
-- [Configuration](/guides/configuration/) - Set up lazy prop evaluation
+- [Configuration](/guides/configuration/) - Set up optional prop evaluation
 - [Validation Errors](/guides/validation-errors/) - Use with form submissions
