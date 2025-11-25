@@ -702,12 +702,18 @@ class InertiaResponse:
             view_data: Optional extra data to pass to the template (not included in page props).
                       Useful for server-side meta tags, page titles, etc.
         """
-        # Extract path from full URL (lia returns full URL like http://testserver/test)
+        # Extract path and query from full URL (lia returns full URL like http://testserver/test)
         from urllib.parse import urlparse
         from starlette.responses import Response
 
         parsed_url = urlparse(adapter.url)
-        url_path = url if url is not None else parsed_url.path
+        # Include query string in the URL so Inertia can update the browser's address bar
+        if url is not None:
+            url_path = url
+        elif parsed_url.query:
+            url_path = f"{parsed_url.path}?{parsed_url.query}"
+        else:
+            url_path = parsed_url.path
 
         # Check for asset version mismatch (only for Inertia requests)
         if self.is_inertia_request(adapter):
@@ -738,6 +744,16 @@ class InertiaResponse:
         partial_component = adapter.headers.get("X-Inertia-Partial-Component")
         partial_data = adapter.headers.get("X-Inertia-Partial-Data")
         partial_except = adapter.headers.get("X-Inertia-Partial-Except")
+
+        # Parse X-Inertia-Reset header - props that should be reset (not merged) on client
+        # Used with infinite scroll to clear data when filters change
+        reset_header = adapter.headers.get("X-Inertia-Reset")
+        reset_props: list[str] = []
+        if reset_header:
+            reset_props = [
+                key.strip() for key in reset_header.split(",") if key.strip()
+            ]
+            logger.info(f"Reset props requested: {reset_props}")
 
         # Track special prop types for filtering
         optional_prop_keys = {
@@ -849,16 +865,50 @@ class InertiaResponse:
         }
 
         # Add optional merge/prepend props for infinite scroll support
+        # Filter out reset props from merge lists - reset props should replace, not merge
+        # Also filter out nested props (e.g., reset "cats" should exclude "cats.data")
+        def should_exclude_from_merge(prop: str) -> bool:
+            """Check if a prop should be excluded due to reset."""
+            for reset_prop in reset_props:
+                # Exact match
+                if prop == reset_prop:
+                    return True
+                # Nested prop: "cats.data" starts with "cats."
+                if prop.startswith(f"{reset_prop}."):
+                    return True
+            return False
+
         if merge_props:
-            page_data["mergeProps"] = merge_props
+            filtered_merge = [
+                p for p in merge_props if not should_exclude_from_merge(p)
+            ]
+            if filtered_merge:
+                page_data["mergeProps"] = filtered_merge
         if prepend_props:
-            page_data["prependProps"] = prepend_props
+            filtered_prepend = [
+                p for p in prepend_props if not should_exclude_from_merge(p)
+            ]
+            if filtered_prepend:
+                page_data["prependProps"] = filtered_prepend
         if deep_merge_props:
-            page_data["deepMergeProps"] = deep_merge_props
+            filtered_deep = [
+                p for p in deep_merge_props if not should_exclude_from_merge(p)
+            ]
+            if filtered_deep:
+                page_data["deepMergeProps"] = filtered_deep
         if match_props_on:
-            page_data["matchPropsOn"] = match_props_on
+            filtered_match = [
+                p for p in match_props_on if not should_exclude_from_merge(p)
+            ]
+            if filtered_match:
+                page_data["matchPropsOn"] = filtered_match
         if scroll_props:
             page_data["scrollProps"] = scroll_props
+
+        # Include reset props in response so client knows which props to reset
+        if reset_props:
+            page_data["resetProps"] = reset_props
+            logger.info(f"Including resetProps in response: {reset_props}")
 
         # Add deferred props map to page data (tells client what to fetch after render)
         if deferred_props_map:

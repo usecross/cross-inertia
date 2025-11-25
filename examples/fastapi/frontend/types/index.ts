@@ -53,7 +53,7 @@ export interface BrowsePageProps {
   has_more: boolean
   filters: {
     breed?: string
-    age?: string
+    age_range?: string
     personality?: string[]
   }
 }

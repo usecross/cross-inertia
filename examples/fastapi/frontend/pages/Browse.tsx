@@ -3,8 +3,30 @@ import Layout from '../components/Layout'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Heart, MapPin } from 'lucide-react'
+import { Heart, MapPin, Filter, X } from 'lucide-react'
 import type { BrowsePageProps, Cat } from '../types'
+
+// Available breeds for filtering (should match backend mock_data)
+const BREEDS = [
+  'Brown Tabby',
+  'Maine Coon',
+  'Gray Tabby',
+  'White Domestic Shorthair',
+  'Calico',
+  'Ragdoll',
+  'Calico Shorthair',
+  'Orange Tabby',
+  'Orange Domestic Shorthair',
+  'Tuxedo Cat',
+]
+
+// Age ranges for filtering
+const AGE_RANGES = [
+  { value: 'kitten', label: 'Kitten (0-1 year)' },
+  { value: 'young', label: 'Young (1-3 years)' },
+  { value: 'adult', label: 'Adult (3-7 years)' },
+  { value: 'senior', label: 'Senior (7+ years)' },
+]
 
 interface CatCardProps {
   cat: Cat
@@ -87,14 +109,14 @@ function CatCard({ cat, onToggleFavorite }: CatCardProps) {
 export default function Browse({ title, cats, total, page, has_more, filters }: BrowsePageProps) {
   // Extract cats array from the data wrapper
   const catsData = Array.isArray(cats) ? cats : cats.data
-  
+
   const handleToggleFavorite = (catId: number) => {
     // Build query string to preserve current page and filters
     const params = new URLSearchParams()
     params.set('page', page.toString())
     if (filters.breed) params.set('breed', filters.breed)
-    if (filters.age) params.set('age_range', filters.age)
-    
+    if (filters.age_range) params.set('age_range', filters.age_range)
+
     // POST to toggle endpoint - server will redirect back to /browse
     // Inertia will automatically follow the redirect
     router.post(`/favorites/${catId}/toggle?${params.toString()}`, {}, {
@@ -108,8 +130,8 @@ export default function Browse({ title, cats, total, page, has_more, filters }: 
     const params = new URLSearchParams()
     params.set('page', (page + 1).toString())
     if (filters.breed) params.set('breed', filters.breed)
-    if (filters.age) params.set('age_range', filters.age)
-    
+    if (filters.age_range) params.set('age_range', filters.age_range)
+
     router.visit(`/browse?${params.toString()}`, {
       preserveScroll: true,
       preserveState: true,
@@ -117,8 +139,133 @@ export default function Browse({ title, cats, total, page, has_more, filters }: 
     })
   }
 
+  // Handle filter changes - RESET cats data when filters change
+  // This uses the X-Inertia-Reset header to clear existing data before loading new results
+  const handleFilterChange = (newBreed: string | null, newAgeRange: string | null) => {
+    const params = new URLSearchParams()
+    // Always start from page 1 when filters change
+    params.set('page', '1')
+    if (newBreed) params.set('breed', newBreed)
+    if (newAgeRange) params.set('age_range', newAgeRange)
+
+    router.visit(`/browse?${params.toString()}`, {
+      preserveScroll: false, // Scroll to top when filters change
+      preserveState: false,
+      // IMPORTANT: Reset cats data when filters change
+      // This sends X-Inertia-Reset header to clear existing data before merging
+      // Without this, new filtered results would be appended to old data!
+      reset: ['cats'],
+      // Request all props needed for the page (reset causes partial reload)
+      only: ['cats', 'total', 'page', 'has_more', 'filters'],
+    })
+  }
+
+  const handleBreedChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newBreed = e.target.value || null
+    handleFilterChange(newBreed, filters.age_range || null)
+  }
+
+  const handleAgeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newAgeRange = e.target.value || null
+    handleFilterChange(filters.breed || null, newAgeRange)
+  }
+
+  const handleClearFilters = () => {
+    router.visit('/browse', {
+      preserveScroll: false,
+      preserveState: false,
+      reset: ['cats'], // Reset data when clearing filters
+      only: ['cats', 'total', 'page', 'has_more', 'filters'],
+    })
+  }
+
+  const hasActiveFilters = filters.breed || filters.age_range
+
   return (
     <Layout title={title}>
+      {/* Filter Bar */}
+      <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filters:</span>
+          </div>
+
+          {/* Breed Filter */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="breed-filter" className="text-sm text-muted-foreground">
+              Breed:
+            </label>
+            <select
+              id="breed-filter"
+              value={filters.breed || ''}
+              onChange={handleBreedChange}
+              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              data-testid="breed-filter"
+            >
+              <option value="">All Breeds</option>
+              {BREEDS.map((breed) => (
+                <option key={breed} value={breed}>
+                  {breed}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Age Filter */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="age-filter" className="text-sm text-muted-foreground">
+              Age:
+            </label>
+            <select
+              id="age-filter"
+              value={filters.age_range || ''}
+              onChange={handleAgeChange}
+              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              data-testid="age-filter"
+            >
+              <option value="">All Ages</option>
+              {AGE_RANGES.map((range) => (
+                <option key={range.value} value={range.value}>
+                  {range.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="text-muted-foreground hover:text-foreground"
+              data-testid="clear-filters"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Clear Filters
+            </Button>
+          )}
+        </div>
+
+        {/* Active Filters Summary */}
+        {hasActiveFilters && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Active:</span>
+            {filters.breed && (
+              <Badge variant="secondary" className="text-xs">
+                Breed: {filters.breed}
+              </Badge>
+            )}
+            {filters.age_range && (
+              <Badge variant="secondary" className="text-xs">
+                Age: {AGE_RANGES.find(r => r.value === filters.age_range)?.label || filters.age_range}
+              </Badge>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="mb-6">
         <p className="text-muted-foreground">
           Showing {catsData.length} of {total} adorable cats available for adoption

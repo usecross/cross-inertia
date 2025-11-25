@@ -286,6 +286,120 @@ export default function Browse({ title, cats, total, page, has_more, filters }: 
 }
 ```
 
+## Resetting Merged Data
+
+When filters change, you typically want to **replace** the data rather than merge it. Use the `reset` option on the frontend to clear existing data before loading new results.
+
+### The Problem
+
+Without reset, changing filters causes new results to be appended to existing data:
+
+```tsx
+// User has loaded 12 cats (2 pages)
+// User changes breed filter to "Maine Coon"
+// Without reset: 12 old cats + 1 Maine Coon = 13 cats shown (wrong!)
+// With reset: Just 1 Maine Coon shown (correct!)
+```
+
+### Frontend Solution
+
+Use the `reset` option when filters change:
+
+```tsx
+const handleFilterChange = (newBreed: string | null) => {
+  const params = new URLSearchParams()
+  params.set('page', '1')  // Start from page 1
+  if (newBreed) params.set('breed', newBreed)
+
+  router.visit(`/browse?${params.toString()}`, {
+    preserveScroll: false,  // Scroll to top when filters change
+    preserveState: false,
+    // Reset cats data when filters change
+    // This sends X-Inertia-Reset header to clear existing data
+    reset: ['cats'],
+    // Request all props needed (reset causes partial reload)
+    only: ['cats', 'total', 'page', 'has_more', 'filters'],
+  })
+}
+```
+
+### How It Works
+
+When you use `reset: ['cats']`:
+
+1. The Inertia client sends the `X-Inertia-Reset: cats` header
+2. The server excludes `cats` from `mergeProps` (so data replaces instead of merges)
+3. The server includes `resetProps: ['cats']` in the response
+4. The client clears the local `cats` state before applying new data
+
+### Complete Filter Example
+
+```tsx
+export default function Browse({ cats, page, has_more, filters }: BrowseProps) {
+  // Load more - MERGES data
+  const handleLoadMore = () => {
+    const params = new URLSearchParams()
+    params.set('page', (page + 1).toString())
+    if (filters.breed) params.set('breed', filters.breed)
+
+    router.visit(`/browse?${params.toString()}`, {
+      preserveScroll: true,
+      preserveState: true,
+      only: ['cats', 'page', 'has_more'],
+    })
+  }
+
+  // Filter change - RESETS data
+  const handleFilterChange = (breed: string | null) => {
+    const params = new URLSearchParams()
+    params.set('page', '1')
+    if (breed) params.set('breed', breed)
+
+    router.visit(`/browse?${params.toString()}`, {
+      preserveScroll: false,
+      preserveState: false,
+      reset: ['cats'],
+      only: ['cats', 'total', 'page', 'has_more', 'filters'],
+    })
+  }
+
+  return (
+    <div>
+      {/* Filter dropdown */}
+      <select
+        value={filters.breed || ''}
+        onChange={(e) => handleFilterChange(e.target.value || null)}
+      >
+        <option value="">All Breeds</option>
+        <option value="Maine Coon">Maine Coon</option>
+        <option value="Siamese">Siamese</option>
+      </select>
+
+      {/* Cat grid */}
+      <div className="grid grid-cols-3 gap-4">
+        {cats.data.map((cat) => (
+          <CatCard key={cat.id} cat={cat} />
+        ))}
+      </div>
+
+      {/* Load more button */}
+      {has_more && (
+        <button onClick={handleLoadMore}>Load More</button>
+      )}
+    </div>
+  )
+}
+```
+
+### Backend: No Changes Needed
+
+The backend automatically handles the reset header. When `X-Inertia-Reset: cats` is received:
+
+- `cats` (and nested paths like `cats.data`) are excluded from `mergeProps`
+- The response includes `resetProps: ['cats']` for the client
+
+No backend code changes are required—the existing `merge_props` configuration works automatically with reset.
+
 ## Advanced Options
 
 ### Prepend Props
