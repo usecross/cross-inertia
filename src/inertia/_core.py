@@ -6,7 +6,7 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Callable
 
 import httpx
 from fastapi import Depends, Request
@@ -26,50 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class LazyProp:
-    """
-    Wrapper for lazy props that are only evaluated when explicitly requested.
-
-    Lazy props are excluded from initial page loads and only included when
-    requested via partial reloads with `only: ['prop_name']`.
-
-    Works like functools.partial - you can pass args and kwargs to be applied
-    when the prop is evaluated.
-
-    Example:
-        return inertia.render("Dashboard", {
-            "user": get_user(),
-            "permissions": lazy(get_permissions, user_id),
-            "activity": lazy(get_activity, user_id=123, limit=50),
-        })
-
-    Frontend:
-        // Initial load: permissions is undefined
-        // To load it:
-        router.reload({ only: ['permissions'] })
-    """
-
-    def __init__(self, callback: Any, *args: Any, **kwargs: Any):
-        """
-        Create a lazy prop.
-
-        Args:
-            callback: A callable that returns the prop value when invoked.
-            *args: Positional arguments to pass to the callback.
-            **kwargs: Keyword arguments to pass to the callback.
-        """
-        if not callable(callback):
-            raise ValueError("LazyProp requires a callable")
-        self.callback = callback
-        self.args = args
-        self.kwargs = kwargs
-
-    def __call__(self) -> Any:
-        """Invoke the callback with stored args/kwargs to get the value."""
-        return self.callback(*self.args, **self.kwargs)
-
-
-def lazy(callback: Any, *args: Any, **kwargs: Any) -> LazyProp:
+class lazy:
     """
     Mark a prop as lazy - only evaluated when explicitly requested.
 
@@ -80,14 +37,6 @@ def lazy(callback: Any, *args: Any, **kwargs: Any) -> LazyProp:
     and evaluated when requested via partial reloads with `only: ['prop_name']`.
 
     This is useful for expensive queries that users may not always need.
-
-    Args:
-        callback: A callable that returns the prop value.
-        *args: Positional arguments to pass to the callback.
-        **kwargs: Keyword arguments to pass to the callback.
-
-    Returns:
-        A LazyProp wrapper.
 
     Example:
         @app.get("/dashboard")
@@ -107,7 +56,31 @@ def lazy(callback: Any, *args: Any, **kwargs: Any) -> LazyProp:
         # Load multiple:
         router.reload({ only: ['permissions', 'activity'] })
     """
-    return LazyProp(callback, *args, **kwargs)
+
+    # TODO: Add proper typing with ParamSpec and TypeVar for better IDE support
+    # e.g., lazy[P, T](callback: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> lazy[P, T]
+    def __init__(self, callback: Callable[..., Any], *args: Any, **kwargs: Any):
+        """
+        Create a lazy prop.
+
+        Args:
+            callback: A callable that returns the prop value when invoked.
+            *args: Positional arguments to pass to the callback.
+            **kwargs: Keyword arguments to pass to the callback.
+        """
+        if not callable(callback):
+            raise ValueError("lazy() requires a callable")
+        self.callback = callback
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self) -> Any:
+        """Invoke the callback with stored args/kwargs to get the value."""
+        return self.callback(*self.args, **self.kwargs)
+
+
+# Backward compatibility alias
+LazyProp = lazy
 
 
 def _is_lazy_prop(value: Any) -> bool:
@@ -121,21 +94,15 @@ def _is_callable_prop(value: Any) -> bool:
 
 
 async def _resolve_callable(value: Any) -> Any:
-    """Resolve a callable value, handling both sync and async callables."""
-    # Handle LazyProp - invoke its callback
-    if _is_lazy_prop(value):
-        result = value()  # Calls LazyProp.__call__ which invokes the callback
-        if inspect.iscoroutine(result):
-            return await result
-        return result
-    # Handle regular callables
-    if _is_callable_prop(value):
-        result = value()
-        # If the result is a coroutine, await it
-        if inspect.iscoroutine(result):
-            return await result
-        return result
-    return value
+    """Resolve a callable value, handling both sync and async callables.
+
+    Works with both lazy props and regular callables. Both are invoked the same
+    way - lazy props have a __call__ method that invokes their callback.
+    """
+    result = value()
+    if inspect.iscoroutine(result):
+        return await result
+    return result
 
 
 async def _resolve_props(props: dict[str, Any]) -> dict[str, Any]:
