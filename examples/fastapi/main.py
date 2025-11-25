@@ -665,7 +665,9 @@ async def deferred_demo(inertia: InertiaDep):
             "timestamp": datetime.now().isoformat(),
             # Deferred props - loaded automatically after page render
             "analytics": defer(get_analytics),  # Default group
-            "notifications": defer(get_notifications),  # Default group (loads with analytics)
+            "notifications": defer(
+                get_notifications
+            ),  # Default group (loads with analytics)
             "recommendations": defer(
                 get_recommendations, group="sidebar"
             ),  # Separate group (loads in parallel)

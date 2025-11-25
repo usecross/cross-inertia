@@ -787,9 +787,7 @@ class InertiaResponse:
             excluded_props = optional_prop_keys | deferred_prop_keys
             if excluded_props:
                 props = {
-                    key: val
-                    for key, val in props.items()
-                    if key not in excluded_props
+                    key: val for key, val in props.items() if key not in excluded_props
                 }
                 if optional_prop_keys:
                     logger.info(

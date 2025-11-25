@@ -56,7 +56,9 @@ def test_deferred_notifications_load(page: Page, fastapi_server: str) -> None:
     expect(page.locator("main h1")).to_contain_text("Deferred Props Demo")
 
     # Wait for notifications to load
-    expect(page.locator("text=New cat available: Whiskers")).to_be_visible(timeout=10000)
+    expect(page.locator("text=New cat available: Whiskers")).to_be_visible(
+        timeout=10000
+    )
     expect(page.locator("text=Application approved!")).to_be_visible()
 
 

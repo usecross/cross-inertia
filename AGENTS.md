@@ -22,7 +22,7 @@ Release notes go here.
 ### Release Types
 - **patch**: Bug fixes, documentation (0.1.0 → 0.1.1)
 - **minor**: New features, backwards compatible (0.1.0 → 0.2.0)
-- **major**: Breaking changes (0.1.0 → 1.0.0)
+- **major**: Breaking changes (0.1.0 → 1.0.0) - though we are still on 0.x so we can break things more freely without a major bump.3
 
 ### Example
 
