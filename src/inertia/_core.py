@@ -750,7 +750,9 @@ class InertiaResponse:
         reset_header = adapter.headers.get("X-Inertia-Reset")
         reset_props: list[str] = []
         if reset_header:
-            reset_props = [key.strip() for key in reset_header.split(",") if key.strip()]
+            reset_props = [
+                key.strip() for key in reset_header.split(",") if key.strip()
+            ]
             logger.info(f"Reset props requested: {reset_props}")
 
         # Track special prop types for filtering
@@ -877,7 +879,9 @@ class InertiaResponse:
             return False
 
         if merge_props:
-            filtered_merge = [p for p in merge_props if not should_exclude_from_merge(p)]
+            filtered_merge = [
+                p for p in merge_props if not should_exclude_from_merge(p)
+            ]
             if filtered_merge:
                 page_data["mergeProps"] = filtered_merge
         if prepend_props:
