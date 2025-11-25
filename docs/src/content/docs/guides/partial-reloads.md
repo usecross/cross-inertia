@@ -424,6 +424,7 @@ async def show_user(user_id: int, inertia: InertiaDep):
 
 ## Next Steps
 
+- [Always Props](/guides/always-props/) - Props that are always included, even during partial reloads
 - [Shared Data](/guides/shared-data/) - Combine with shared data for efficiency
 - [Configuration](/guides/configuration/) - Set up optional prop evaluation
 - [Validation Errors](/guides/validation-errors/) - Use with form submissions
