@@ -16,6 +16,7 @@ import Favorites from './pages/Favorites'
 import ApplicationForm from './pages/ApplicationForm'
 import LazyDemo from './pages/LazyDemo'
 import DeferredDemo from './pages/DeferredDemo'
+import ErrorBagsDemo from './pages/ErrorBagsDemo'
 
 const pages: Record<string, React.ComponentType<any>> = {
   Home,
@@ -30,6 +31,7 @@ const pages: Record<string, React.ComponentType<any>> = {
   ApplicationForm,
   LazyDemo,
   DeferredDemo,
+  ErrorBagsDemo,
 }
 
 createInertiaApp({

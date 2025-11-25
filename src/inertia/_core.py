@@ -809,11 +809,19 @@ class InertiaResponse:
         props = _resolve_props_sync(props)
 
         # Add errors to props (Inertia checks page.props.errors for validation errors)
+        # Check for error bag header to scope errors appropriately
         if errors:
-            props["errors"] = errors
-            logger.info(
-                f"Rendering {component} with validation errors: {list(errors.keys())}"
-            )
+            if error_bag := adapter.headers.get("X-Inertia-Error-Bag"):
+                # Scope errors under the error bag name
+                props["errors"] = {error_bag: errors}
+                logger.info(
+                    f"Rendering {component} with validation errors in bag '{error_bag}': {list(errors.keys())}"
+                )
+            else:
+                props["errors"] = errors
+                logger.info(
+                    f"Rendering {component} with validation errors: {list(errors.keys())}"
+                )
 
         page_data = {
             "component": component,
