@@ -1,14 +1,48 @@
 
 
-0.4.0 - 2025-11-04
+0.5.0 - 2025-11-25
 ------------------
 
-Add view data support for server-side template variables
+Add `optional()` and `always()` prop types following Laravel Inertia conventions.
 
-- Add `view_data` parameter to `render()` method for passing server-side template data
-- Template variables are only included in initial HTML responses, not XHR requests
-- Add comprehensive test coverage (5 tests)
-- Update demo app with dynamic page titles and SEO meta descriptions
-- Add complete documentation guide with examples
+## New Features
 
-This feature enables passing data to the root template (like page titles, meta descriptions, and Open Graph tags) that isn't included in page props, which is essential for SEO and social media sharing. The implementation uses a simple parameter approach that works consistently across all Python frameworks (FastAPI, Django, Flask, etc.).
+### Callable Props (auto-invoke)
+Automatically invoke callable props (lambdas, functions) during render:
+
+```python
+return inertia.render("Page", {
+    "user": lambda: get_user(),  # Invoked automatically
+    "data": get_user_async,      # Async callables are awaited
+})
+```
+
+### Optional Props
+Props that are excluded on initial load and only included when explicitly requested via partial reload:
+
+```python
+from inertia import optional
+
+return inertia.render("Page", {
+    "user": get_user(),                           # Always included
+    "permissions": optional(get_permissions),     # Only when requested
+    "activity": optional(get_activity, limit=10), # Supports args like functools.partial
+})
+```
+
+Frontend usage:
+```javascript
+router.reload({ only: ["permissions"] })
+```
+
+### Always Props
+Props that are always included, even during partial reloads:
+
+```python
+from inertia import always
+
+return inertia.render("Page", {
+    "user": get_user(),
+    "flash": always(get_flash_messages),  # Always included
+    "csrf": always(get_csrf_token),       # Even in partial reloads
+})
