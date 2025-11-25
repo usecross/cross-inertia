@@ -1,41 +1,37 @@
 
 
-0.6.0 - 2025-11-25
+0.7.0 - 2025-11-25
 ------------------
 
-Add support for deferred props with the new `defer()` function.
+Add error bags support for scoped validation errors
 
-Deferred props are excluded from the initial page load and automatically fetched
-by the Inertia client after the page renders, improving perceived performance
-for expensive computations.
+- Implement `X-Inertia-Error-Bag` header handling to scope validation errors under named keys
+- Allow multiple forms on the same page to have independent validation errors
+- Add error bags demo page with login and register forms
+- Add comprehensive E2E tests for error bags functionality
+- Update documentation with error bags usage examples
+- Clear Vite pre-bundling cache in justfile to avoid stale exports
 
 ## Usage
 
-```python
-from inertia import defer
+When multiple forms exist on the same page, use error bags to scope validation errors:
 
-return inertia.render("Dashboard", {
-    "user": get_user(),                    # Loaded immediately
-    "analytics": defer(get_analytics),     # Loaded after page renders
-})
+### Frontend
+
+```tsx
+const loginForm = useForm({ email: '', password: '' })
+const registerForm = useForm({ name: '', email: '', password: '' })
+
+// Submit with error bag
+loginForm.post('/login', { errorBag: 'login' })
+registerForm.post('/register', { errorBag: 'register' })
 ```
 
-## Grouping for Parallel Loading
-
-Props in the same group load together; different groups load in parallel:
+### Backend
 
 ```python
-{
-    "analytics": defer(get_analytics),                        # default group
-    "notifications": defer(get_notifications),                # default group
-    "recommendations": defer(get_recommendations, group="sidebar"),  # parallel
-}
-```
-
-## Arguments Support
-
-Like `functools.partial`, you can pass arguments to the callback:
-
-```python
-defer(get_user_stats, user_id, include_history=True)
+# Errors are automatically scoped when X-Inertia-Error-Bag header is present
+if errors:
+    return inertia.render("Auth", {}, errors=errors)
+    # Returns: { "errors": { "login": { "email": "Invalid" } } }
 ```
