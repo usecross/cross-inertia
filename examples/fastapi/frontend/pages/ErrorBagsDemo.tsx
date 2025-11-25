@@ -1,11 +1,11 @@
 import React from 'react'
-import { useForm } from '@inertiajs/react'
+import { useForm, usePage } from '@inertiajs/react'
 import Layout from '../components/Layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, LogIn, UserPlus } from 'lucide-react'
+import { AlertCircle, LogIn, UserPlus, CheckCircle } from 'lucide-react'
 
 interface ErrorBagsDemoProps {
   title: string
@@ -16,7 +16,18 @@ interface ErrorBagsDemoProps {
   } & Record<string, string>
 }
 
+interface SharedProps {
+  flash?: {
+    message?: string
+    category?: string
+  }
+  [key: string]: unknown
+}
+
 export default function ErrorBagsDemo({ title, message, errors = {} }: ErrorBagsDemoProps) {
+  const { props } = usePage<SharedProps>()
+  const flash = props.flash
+
   // Login form with error bag
   const loginForm = useForm({
     email: '',
@@ -51,6 +62,16 @@ export default function ErrorBagsDemo({ title, message, errors = {} }: ErrorBags
   return (
     <Layout title={title}>
       <p className="text-muted-foreground mb-8">{message}</p>
+
+      {/* Success Flash Message */}
+      {flash?.message && (
+        <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md p-4 mb-6 max-w-4xl" data-testid="success-message">
+          <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+            <CheckCircle className="h-5 w-5" />
+            <span className="font-medium">{flash.message}</span>
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         {/* Login Form */}
