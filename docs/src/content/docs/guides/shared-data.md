@@ -461,6 +461,7 @@ def share_data(request: Request) -> dict:
 
 ## Next Steps
 
+- [Always Props](/guides/always-props/) - Props included even during partial reloads
 - [Partial Reloads](/guides/partial-reloads/) - Optimize shared data loading
 - [Validation Errors](/guides/validation-errors/) - Combine flash with validation
 - [History Encryption](/guides/history-encryption/) - Secure shared data
