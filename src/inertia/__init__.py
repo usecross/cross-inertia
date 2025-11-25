@@ -7,18 +7,19 @@ Framework-specific imports:
     from inertia.fastapi import InertiaDep, InertiaMiddleware
 
 Prop types (following Laravel Inertia conventions):
-    from inertia import optional, always
+    from inertia import optional, always, defer
 
     return inertia.render("Page", {
         "user": get_user(),                        # Regular prop
         "permissions": optional(get_permissions),  # Only when explicitly requested
         "flash": always(get_flash),                # Always included, even in partial reloads
+        "analytics": defer(get_analytics),         # Loaded after initial render
     })
 """
 
 from importlib.metadata import version
 
-from inertia._core import optional, always
+from inertia._core import optional, always, defer
 
 __version__ = version("cross-inertia")
-__all__ = ["optional", "always", "__version__"]
+__all__ = ["optional", "always", "defer", "__version__"]

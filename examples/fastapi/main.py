@@ -39,7 +39,7 @@ from fastapi import FastAPI, Query, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from inertia.fastapi import InertiaDep, InertiaMiddleware
-from inertia import optional, always
+from inertia import optional, always, defer
 import mock_data
 
 # Configure logging for this module
@@ -609,6 +609,68 @@ async def lazy_demo(inertia: InertiaDep):
             "timestamp": always(
                 get_timestamp
             ),  # Always included, even in partial reloads
+        },
+    )
+
+
+@app.get("/deferred-demo")
+async def deferred_demo(inertia: InertiaDep):
+    """
+    Deferred props demo page.
+
+    This demonstrates the defer() prop type - props that are automatically
+    loaded after the initial page render, improving perceived performance.
+
+    Unlike optional() props which require explicit requests from the frontend,
+    deferred props are automatically fetched by the Inertia client after mount.
+
+    Props can be grouped together to load in the same request:
+    - analytics and notifications load together (default group)
+    - recommendations loads separately (sidebar group)
+    """
+    import time
+    from datetime import datetime
+
+    def get_analytics():
+        """Simulate fetching analytics data (slow API call)."""
+        time.sleep(0.2)  # Simulate delay
+        return {
+            "total_cats": len(mock_data.CATS),
+            "total_shelters": len(mock_data.SHELTERS),
+            "breeds_count": len(set(cat["breed"] for cat in mock_data.CATS)),
+            "average_age": round(
+                sum(cat["age"] for cat in mock_data.CATS) / len(mock_data.CATS), 1
+            ),
+        }
+
+    def get_notifications():
+        """Simulate fetching notifications."""
+        time.sleep(0.1)  # Simulate delay
+        return [
+            {"id": 1, "message": "New cat available: Whiskers", "time": "2 hours ago"},
+            {"id": 2, "message": "Application approved!", "time": "1 day ago"},
+            {"id": 3, "message": "5 new cats near you", "time": "3 days ago"},
+        ]
+
+    def get_recommendations():
+        """Simulate fetching personalized recommendations."""
+        time.sleep(0.15)  # Simulate delay
+        return mock_data.CATS[:3]  # Return first 3 cats as recommendations
+
+    return inertia.render(
+        "DeferredDemo",
+        {
+            "title": "Deferred Props Demo",
+            "message": "This page demonstrates deferred props - data loaded after the initial render.",
+            "timestamp": datetime.now().isoformat(),
+            # Deferred props - loaded automatically after page render
+            "analytics": defer(get_analytics),  # Default group
+            "notifications": defer(
+                get_notifications
+            ),  # Default group (loads with analytics)
+            "recommendations": defer(
+                get_recommendations, group="sidebar"
+            ),  # Separate group (loads in parallel)
         },
     )
 

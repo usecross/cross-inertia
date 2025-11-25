@@ -15,6 +15,7 @@ import CatProfile from './pages/CatProfile'
 import Favorites from './pages/Favorites'
 import ApplicationForm from './pages/ApplicationForm'
 import LazyDemo from './pages/LazyDemo'
+import DeferredDemo from './pages/DeferredDemo'
 
 const pages: Record<string, React.ComponentType<any>> = {
   Home,
@@ -28,6 +29,7 @@ const pages: Record<string, React.ComponentType<any>> = {
   Favorites,
   ApplicationForm,
   LazyDemo,
+  DeferredDemo,
 }
 
 createInertiaApp({
