@@ -43,14 +43,20 @@ demo-clean:
 _run-servers:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     cd examples/fastapi
-    
+
     # Check if dependencies are installed
     if [ ! -d "node_modules" ]; then
         echo "⚠️  Frontend dependencies not installed."
         echo "   Run: just demo-install"
         exit 1
+    fi
+
+    # Clear Vite's pre-bundled dependency cache to avoid stale exports
+    if [ -d "node_modules/.vite" ]; then
+        echo "🧹 Clearing Vite cache..."
+        rm -rf node_modules/.vite
     fi
     
     # Function to cleanup processes

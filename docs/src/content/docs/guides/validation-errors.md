@@ -257,19 +257,143 @@ async def validate_email(inertia: InertiaDep):
     return JSONResponse({"valid": True})
 ```
 
-## Error Bags (Coming Soon)
+## Error Bags
 
-Error bags allow you to namespace validation errors for multiple forms on the same page. This feature is planned for a future release.
+Error bags allow you to scope validation errors for multiple forms on the same page. When a form specifies an `errorBag` option, Cross-Inertia automatically scopes errors under that key.
+
+### How It Works
+
+When the frontend sends a request with the `X-Inertia-Error-Bag` header (set automatically by Inertia when using `errorBag` option), Cross-Inertia scopes the errors:
+
+**Without error bag:**
+```json
+{
+  "errors": {
+    "email": "Invalid email",
+    "password": "Password required"
+  }
+}
+```
+
+**With error bag "login":**
+```json
+{
+  "errors": {
+    "login": {
+      "email": "Invalid email",
+      "password": "Password required"
+    }
+  }
+}
+```
+
+### Backend Example
+
+The backend code stays the same - Cross-Inertia handles scoping automatically based on the header:
 
 ```python
-# Planned API (not yet implemented)
-return inertia.render(
-    "Users/Edit",
-    {},
-    errors={"name": "Required"},
-    error_bag="createUser"  # Not yet supported
-)
+@app.post("/login")
+async def login(inertia: InertiaDep):
+    form_data = await inertia.request.json()
+
+    errors = {}
+    email = form_data.get("email", "")
+    password = form_data.get("password", "")
+
+    if not email or "@" not in email:
+        errors["email"] = "Please enter a valid email address"
+    if not password or len(password) < 6:
+        errors["password"] = "Password must be at least 6 characters"
+
+    if errors:
+        return inertia.render("Auth", {}, errors=errors)
+
+    # Success...
 ```
+
+### Frontend Example
+
+Specify the `errorBag` option when submitting the form:
+
+```tsx
+import { useForm } from '@inertiajs/react'
+
+export default function AuthPage() {
+  // Login form with error bag
+  const loginForm = useForm({
+    email: '',
+    password: '',
+  })
+
+  // Register form with different error bag
+  const registerForm = useForm({
+    name: '',
+    email: '',
+    password: '',
+  })
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    loginForm.post('/login', {
+      errorBag: 'login',  // Scope errors under 'login' key
+    })
+  }
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault()
+    registerForm.post('/register', {
+      errorBag: 'register',  // Scope errors under 'register' key
+    })
+  }
+
+  return (
+    <div>
+      {/* Login Form */}
+      <form onSubmit={handleLogin}>
+        <input
+          type="email"
+          value={loginForm.data.email}
+          onChange={e => loginForm.setData('email', e.target.value)}
+        />
+        {loginForm.errors.email && <span>{loginForm.errors.email}</span>}
+
+        <input
+          type="password"
+          value={loginForm.data.password}
+          onChange={e => loginForm.setData('password', e.target.value)}
+        />
+        {loginForm.errors.password && <span>{loginForm.errors.password}</span>}
+
+        <button type="submit">Login</button>
+      </form>
+
+      {/* Register Form */}
+      <form onSubmit={handleRegister}>
+        <input
+          type="text"
+          value={registerForm.data.name}
+          onChange={e => registerForm.setData('name', e.target.value)}
+        />
+        {registerForm.errors.name && <span>{registerForm.errors.name}</span>}
+
+        {/* ... more fields */}
+
+        <button type="submit">Register</button>
+      </form>
+    </div>
+  )
+}
+```
+
+### Use Cases
+
+- **Multiple forms on one page**: Login and register forms, multiple editing sections
+- **Inline editing**: Edit multiple items without error conflicts
+- **Wizard forms**: Multi-step forms with validation at each step
+
+### Reference
+
+See the [Inertia.js error bags documentation](https://inertiajs.com/validation#error-bags) for more details.
 
 ## Best Practices
 
