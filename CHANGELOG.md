@@ -1,11 +1,12 @@
 
 
-0.7.1 - 2025-11-25
+0.8.0 - 2025-11-25
 ------------------
 
-Add prefetch support
+Add X-Inertia-Reset header support for infinite scroll reset
 
-- Add `is_prefetch_request()` method to detect prefetch requests via `Purpose: prefetch` header
-- Log prefetch requests distinctly from regular Inertia XHR requests for debugging
-- Add comprehensive tests for prefetch handling
-- Add documentation guide for prefetching
+- Handle X-Inertia-Reset header to clear props before merging
+- Filter reset props from mergeProps, prependProps, deepMergeProps
+- Support nested prop paths (e.g., reset "cats" excludes "cats.data")
+- Include resetProps in response for client-side handling
+- Fix URL handling to include query strings in responses
