@@ -196,3 +196,191 @@ def test_inertia_partial_reload_headers(page: Page, fastapi_server: str) -> None
     assert inertia_request["headers"].get("x-inertia") == "true", (
         "Request should have X-Inertia header"
     )
+
+
+# ============================================================================
+# Filter Reset Tests - X-Inertia-Reset header functionality
+# ============================================================================
+
+
+def test_filter_ui_visible(page: Page, fastapi_server: str) -> None:
+    """Test that filter dropdowns are visible on the browse page."""
+    page.goto(f"{fastapi_server}/browse")
+
+    # Wait for React to hydrate
+    page.wait_for_selector("h1:has-text('Browse Cats')", timeout=10000)
+
+    # Check filter elements are visible
+    breed_filter = page.locator("[data-testid='breed-filter']")
+    age_filter = page.locator("[data-testid='age-filter']")
+
+    expect(breed_filter).to_be_visible()
+    expect(age_filter).to_be_visible()
+
+
+def test_filter_by_breed_resets_data(page: Page, fastapi_server: str) -> None:
+    """Test that selecting a breed filter resets the cats list (not append)."""
+    page.goto(f"{fastapi_server}/browse")
+
+    # Wait for React to hydrate
+    page.wait_for_selector("h1:has-text('Browse Cats')", timeout=10000)
+
+    # Load more cats first to have more than initial batch
+    load_more_button = page.locator("button:has-text('Load More')")
+    load_more_button.click()
+    page.wait_for_timeout(1500)
+
+    # Should have 12 cats now (6 + 6)
+    cats_before_filter = page.locator("a:has-text('View Profile')").count()
+    assert cats_before_filter == 12, f"Expected 12 cats, got {cats_before_filter}"
+
+    # Now select a breed filter
+    breed_filter = page.locator("[data-testid='breed-filter']")
+    breed_filter.select_option("Maine Coon")
+
+    # Wait for the filter to apply
+    page.wait_for_timeout(1500)
+
+    # The count should be reset (not appended) - should show only filtered results
+    cats_after_filter = page.locator("a:has-text('View Profile')").count()
+
+    # Key assertion: after filtering, we should NOT have 12+ cats
+    # If reset worked, we'll have fewer cats (only Maine Coons)
+    assert cats_after_filter < cats_before_filter, (
+        f"Filter should reset data, but got {cats_after_filter} cats "
+        f"(expected less than {cats_before_filter})"
+    )
+
+
+def test_filter_sends_reset_header(page: Page, fastapi_server: str) -> None:
+    """Test that changing filter sends X-Inertia-Reset header."""
+    page.goto(f"{fastapi_server}/browse")
+
+    # Wait for React to hydrate
+    page.wait_for_selector("h1:has-text('Browse Cats')", timeout=10000)
+
+    # Set up request interception to check headers
+    requests_made = []
+
+    def handle_request(request):
+        if "/browse" in request.url and "breed=" in request.url:
+            requests_made.append(
+                {
+                    "url": request.url,
+                    "headers": dict(request.headers),
+                }
+            )
+
+    page.on("request", handle_request)
+
+    # Select a breed filter
+    breed_filter = page.locator("[data-testid='breed-filter']")
+    breed_filter.select_option("Maine Coon")
+
+    # Wait for the request
+    page.wait_for_timeout(1500)
+
+    # Should have made a request with X-Inertia-Reset header
+    assert len(requests_made) > 0, "No filter requests intercepted"
+
+    filter_request = requests_made[-1]
+    assert filter_request["headers"].get("x-inertia") == "true", (
+        "Request should have X-Inertia header"
+    )
+    assert filter_request["headers"].get("x-inertia-reset") == "cats", (
+        f"Request should have X-Inertia-Reset: cats header, got: "
+        f"{filter_request['headers'].get('x-inertia-reset')}"
+    )
+
+
+def test_clear_filters_resets_data(page: Page, fastapi_server: str) -> None:
+    """Test that clearing filters resets to showing all cats."""
+    page.goto(f"{fastapi_server}/browse")
+
+    # Wait for React to hydrate
+    page.wait_for_selector("h1:has-text('Browse Cats')", timeout=10000)
+
+    # Wait for content to load
+    page.wait_for_selector("text=Showing")
+
+    # Select a breed filter to reduce results
+    breed_filter = page.locator("[data-testid='breed-filter']")
+    breed_filter.select_option("Maine Coon")
+    page.wait_for_timeout(1500)
+
+    # Clear filters button should appear
+    clear_button = page.locator("[data-testid='clear-filters']")
+    expect(clear_button).to_be_visible()
+
+    # Click clear filters
+    clear_button.click()
+    page.wait_for_timeout(1500)
+
+    # Should be back to showing all cats (6 initial)
+    cats_count = page.locator("a:has-text('View Profile')").count()
+    assert cats_count == 6, f"Expected 6 cats after clearing, got {cats_count}"
+
+
+def test_filter_then_load_more_works(page: Page, fastapi_server: str) -> None:
+    """Test that Load More still works after applying a filter."""
+    page.goto(f"{fastapi_server}/browse")
+
+    # Wait for React to hydrate
+    page.wait_for_selector("h1:has-text('Browse Cats')", timeout=10000)
+
+    # Note: With current mock data, some breeds may have < 6 cats
+    # so Load More might not appear. Let's use age filter instead
+    # which should have more results
+
+    age_filter = page.locator("[data-testid='age-filter']")
+    age_filter.select_option("adult")  # Adult cats (3-7 years)
+    page.wait_for_timeout(1500)
+
+    initial_count = page.locator("a:has-text('View Profile')").count()
+
+    # If there's a Load More button, click it
+    load_more = page.locator("button:has-text('Load More')")
+    if load_more.is_visible():
+        load_more.click()
+        page.wait_for_timeout(1500)
+
+        # Should have more cats now (merged, not replaced)
+        new_count = page.locator("a:has-text('View Profile')").count()
+        assert new_count > initial_count, (
+            f"Load More should add cats, got {new_count} (was {initial_count})"
+        )
+
+
+def test_active_filter_badges_shown(page: Page, fastapi_server: str) -> None:
+    """Test that active filter badges are displayed."""
+    page.goto(f"{fastapi_server}/browse")
+
+    # Wait for React to hydrate
+    page.wait_for_selector("h1:has-text('Browse Cats')", timeout=10000)
+
+    # Select a breed filter
+    breed_filter = page.locator("[data-testid='breed-filter']")
+    breed_filter.select_option("Maine Coon")
+    page.wait_for_timeout(1500)
+
+    # Should show active filter badge
+    badge = page.locator("text=Breed: Maine Coon")
+    expect(badge).to_be_visible()
+
+
+def test_filter_url_updates(page: Page, fastapi_server: str) -> None:
+    """Test that the URL updates when filters are applied."""
+    page.goto(f"{fastapi_server}/browse")
+
+    # Wait for React to hydrate
+    page.wait_for_selector("h1:has-text('Browse Cats')", timeout=10000)
+
+    # Select a breed filter
+    breed_filter = page.locator("[data-testid='breed-filter']")
+    breed_filter.select_option("Maine Coon")
+    page.wait_for_timeout(1500)
+
+    # URL should contain the breed parameter
+    assert "breed=Maine" in page.url or "breed=Maine%20Coon" in page.url, (
+        f"URL should contain breed filter, got: {page.url}"
+    )

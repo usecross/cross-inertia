@@ -201,6 +201,49 @@ def app(inertia_response):
             match_props_on=["id"],
         )
 
+    # Reset props test routes for infinite scroll
+    @app.get("/test-reset-with-merge")
+    def test_reset_with_merge(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {"users": [{"id": 1, "name": "User"}], "filters": {"role": "admin"}},
+            merge_props=["users"],
+        )
+
+    @app.get("/test-reset-with-prepend")
+    def test_reset_with_prepend(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {"notifications": ["new1", "new2"], "count": 10},
+            prepend_props=["notifications"],
+        )
+
+    @app.get("/test-reset-with-deep-merge")
+    def test_reset_with_deep_merge(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {"settings": {"theme": "dark"}, "user": {"name": "John"}},
+            deep_merge_props=["settings", "user"],
+        )
+
+    @app.get("/test-reset-multiple-merge-types")
+    def test_reset_multiple_merge_types(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {
+                "users": [{"id": 1}],
+                "notifications": ["n1"],
+                "settings": {"a": 1},
+            },
+            merge_props=["users"],
+            prepend_props=["notifications"],
+            deep_merge_props=["settings"],
+        )
+
     return app
 
 
