@@ -126,7 +126,7 @@ nox -s typecheck
 Use conventional commit messages:
 
 ```bash
-git commit -m "feat: add lazy props evaluation"
+git commit -m "feat: add optional props evaluation"
 git commit -m "fix: handle None in asset version comparison"
 git commit -m "docs: update installation guide"
 ```
@@ -187,25 +187,28 @@ def render(component, props):
 - Include examples in docstrings
 
 ```python
-def lazy(func: Callable[[], T]) -> LazyProp[T]:
-    """Wrap a function to defer evaluation until needed.
-    
+def optional(callback: Callable[..., T], *args: Any, **kwargs: Any) -> optional:
+    """Mark a prop as optional - only evaluated when explicitly requested.
+
     Args:
-        func: Function that returns the prop value
-        
+        callback: Function that returns the prop value
+        *args: Positional arguments to pass to the callback
+        **kwargs: Keyword arguments to pass to the callback
+
     Returns:
-        LazyProp wrapper that evaluates on access
-        
+        optional prop wrapper that evaluates when requested via partial reload
+
     Example:
         ```python
         @app.get("/users")
         def users(inertia: InertiaDep):
             return inertia.render("Users", {
-                "users": lazy(lambda: get_all_users()),
+                "users": get_users(),  # Always included
+                "permissions": optional(get_permissions),  # Only when requested
             })
         ```
     """
-    return LazyProp(func)
+    ...
 ```
 
 ## Testing

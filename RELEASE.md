@@ -45,8 +45,3 @@ return inertia.render("Page", {
     "flash": always(get_flash_messages),  # Always included
     "csrf": always(get_csrf_token),       # Even in partial reloads
 })
-```
-
-## Aliases
-
-`lazy()` is provided as an alias for `optional()` for users familiar with other naming conventions.

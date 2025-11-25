@@ -1,4 +1,4 @@
-"""Tests for lazy/optional/always props functionality."""
+"""Tests for optional/always props functionality."""
 
 import json
 
@@ -6,16 +6,18 @@ import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
-from inertia import lazy, optional, always
+from inertia import optional, always
 
 
-class TestLazyProps:
-    """Test that lazy props are only included when explicitly requested."""
+class TestOptionalPropsCore:
+    """Test that optional props are only included when explicitly requested."""
 
-    def test_lazy_prop_excluded_on_initial_load(self, lazy_client: TestClient):
-        """Test that lazy props are NOT included on initial page load."""
-        response = lazy_client.get(
-            "/test-lazy",
+    def test_optional_prop_excluded_on_initial_load(
+        self, optional_core_client: TestClient
+    ):
+        """Test that optional props are NOT included on initial page load."""
+        response = optional_core_client.get(
+            "/test-optional",
             headers={"X-Inertia": "true"},
         )
         data = response.json()
@@ -23,13 +25,15 @@ class TestLazyProps:
         assert response.status_code == 200
         # Regular prop should be included
         assert data["props"]["user"] == "John"
-        # Lazy prop should NOT be included
+        # Optional prop should NOT be included
         assert "permissions" not in data["props"]
 
-    def test_lazy_prop_included_on_partial_reload(self, lazy_client: TestClient):
-        """Test that lazy props ARE included when explicitly requested."""
-        response = lazy_client.get(
-            "/test-lazy",
+    def test_optional_prop_included_on_partial_reload(
+        self, optional_core_client: TestClient
+    ):
+        """Test that optional props ARE included when explicitly requested."""
+        response = optional_core_client.get(
+            "/test-optional",
             headers={
                 "X-Inertia": "true",
                 "X-Inertia-Partial-Component": "TestComponent",
@@ -39,13 +43,13 @@ class TestLazyProps:
         data = response.json()
 
         assert response.status_code == 200
-        # Lazy prop should be included and evaluated
+        # Optional prop should be included and evaluated
         assert data["props"]["permissions"] == ["read", "write"]
 
-    def test_lazy_prop_with_args(self, lazy_client: TestClient):
-        """Test lazy props with positional arguments (like functools.partial)."""
-        response = lazy_client.get(
-            "/test-lazy-with-args",
+    def test_optional_prop_with_args(self, optional_core_client: TestClient):
+        """Test optional props with positional arguments (like functools.partial)."""
+        response = optional_core_client.get(
+            "/test-optional-with-args",
             headers={
                 "X-Inertia": "true",
                 "X-Inertia-Partial-Component": "TestComponent",
@@ -58,10 +62,10 @@ class TestLazyProps:
         assert data["props"]["user_data"]["id"] == 123
         assert data["props"]["user_data"]["name"] == "Test User"
 
-    def test_lazy_prop_with_kwargs(self, lazy_client: TestClient):
-        """Test lazy props with keyword arguments."""
-        response = lazy_client.get(
-            "/test-lazy-with-kwargs",
+    def test_optional_prop_with_kwargs(self, optional_core_client: TestClient):
+        """Test optional props with keyword arguments."""
+        response = optional_core_client.get(
+            "/test-optional-with-kwargs",
             headers={
                 "X-Inertia": "true",
                 "X-Inertia-Partial-Component": "TestComponent",
@@ -73,10 +77,10 @@ class TestLazyProps:
         assert response.status_code == 200
         assert len(data["props"]["activity"]) == 10  # limit=10
 
-    def test_multiple_lazy_props(self, lazy_client: TestClient):
-        """Test requesting multiple lazy props at once."""
-        response = lazy_client.get(
-            "/test-multiple-lazy",
+    def test_multiple_optional_props(self, optional_core_client: TestClient):
+        """Test requesting multiple optional props at once."""
+        response = optional_core_client.get(
+            "/test-multiple-optional",
             headers={
                 "X-Inertia": "true",
                 "X-Inertia-Partial-Component": "TestComponent",
@@ -89,10 +93,10 @@ class TestLazyProps:
         assert data["props"]["permissions"] == ["admin"]
         assert data["props"]["billing"]["plan"] == "pro"
 
-    def test_mixed_regular_and_lazy_props(self, lazy_client: TestClient):
-        """Test that regular props work alongside lazy props on partial reload."""
-        response = lazy_client.get(
-            "/test-lazy",
+    def test_mixed_regular_and_optional_props(self, optional_core_client: TestClient):
+        """Test that regular props work alongside optional props on partial reload."""
+        response = optional_core_client.get(
+            "/test-optional",
             headers={
                 "X-Inertia": "true",
                 "X-Inertia-Partial-Component": "TestComponent",
@@ -106,10 +110,12 @@ class TestLazyProps:
         assert data["props"]["user"] == "John"
         assert data["props"]["permissions"] == ["read", "write"]
 
-    def test_lazy_prop_excluded_with_except_header(self, lazy_client: TestClient):
-        """Test that lazy props are excluded even with except header."""
-        response = lazy_client.get(
-            "/test-lazy",
+    def test_optional_prop_excluded_with_except_header(
+        self, optional_core_client: TestClient
+    ):
+        """Test that optional props are excluded even with except header."""
+        response = optional_core_client.get(
+            "/test-optional",
             headers={
                 "X-Inertia": "true",
                 "X-Inertia-Partial-Component": "TestComponent",
@@ -121,12 +127,12 @@ class TestLazyProps:
         assert response.status_code == 200
         # Regular prop should be included
         assert data["props"]["user"] == "John"
-        # Lazy prop should still be excluded
+        # Optional prop should still be excluded
         assert "permissions" not in data["props"]
 
-    def test_lazy_prop_in_html_response(self, lazy_client: TestClient):
-        """Test that lazy props are excluded from HTML responses too."""
-        response = lazy_client.get("/test-lazy")
+    def test_optional_prop_in_html_response(self, optional_core_client: TestClient):
+        """Test that optional props are excluded from HTML responses too."""
+        response = optional_core_client.get("/test-optional")
         assert response.status_code == 200
 
         # Extract page data from HTML
@@ -138,13 +144,13 @@ class TestLazyProps:
 
         # Regular prop should be there
         assert page_data["props"]["user"] == "John"
-        # Lazy prop should not be there
+        # Optional prop should not be there
         assert "permissions" not in page_data["props"]
 
-    def test_async_lazy_prop(self, lazy_client: TestClient):
-        """Test that async lazy props are properly awaited."""
-        response = lazy_client.get(
-            "/test-async-lazy",
+    def test_async_optional_prop(self, optional_core_client: TestClient):
+        """Test that async optional props are properly awaited."""
+        response = optional_core_client.get(
+            "/test-async-optional",
             headers={
                 "X-Inertia": "true",
                 "X-Inertia-Partial-Component": "TestComponent",
@@ -157,41 +163,41 @@ class TestLazyProps:
         assert data["props"]["async_data"] == "async result"
 
 
-class TestLazyPropValidation:
-    """Test LazyProp validation and edge cases."""
+class TestOptionalPropValidation:
+    """Test optional prop validation and edge cases."""
 
-    def test_lazy_requires_callable(self):
-        """Test that lazy() raises error for non-callable."""
+    def test_optional_requires_callable(self):
+        """Test that optional() raises error for non-callable."""
         with pytest.raises(ValueError, match="requires a callable"):
-            lazy("not a callable")
+            optional("not a callable")
 
-    def test_lazy_with_no_args(self):
-        """Test lazy() with just a callable, no args."""
+    def test_optional_with_no_args(self):
+        """Test optional() with just a callable, no args."""
 
         def get_data():
             return "data"
 
-        prop = lazy(get_data)
+        prop = optional(get_data)
         assert prop() == "data"
 
-    def test_lazy_with_positional_args(self):
-        """Test lazy() with positional args like partial()."""
+    def test_optional_with_positional_args(self):
+        """Test optional() with positional args like partial()."""
 
         def get_user(user_id, include_email):
             return {"id": user_id, "include_email": include_email}
 
-        prop = lazy(get_user, 123, True)
+        prop = optional(get_user, 123, True)
         result = prop()
         assert result["id"] == 123
         assert result["include_email"] is True
 
-    def test_lazy_with_kwargs(self):
-        """Test lazy() with keyword args like partial()."""
+    def test_optional_with_kwargs(self):
+        """Test optional() with keyword args like partial()."""
 
         def get_items(category, limit=10, offset=0):
             return {"category": category, "limit": limit, "offset": offset}
 
-        prop = lazy(get_items, "books", limit=5, offset=10)
+        prop = optional(get_items, "books", limit=5, offset=10)
         result = prop()
         assert result["category"] == "books"
         assert result["limit"] == 5
@@ -199,8 +205,8 @@ class TestLazyPropValidation:
 
 
 @pytest.fixture
-def lazy_app(inertia_response):
-    """Create a FastAPI test application with lazy prop routes."""
+def optional_core_app(inertia_response):
+    """Create a FastAPI test application with optional prop routes."""
     from inertia._core import Inertia
     from lia import StarletteRequestAdapter
 
@@ -222,56 +228,56 @@ def lazy_app(inertia_response):
     async def async_fetch():
         return "async result"
 
-    @app.get("/test-lazy")
-    def test_lazy(request: Request):
+    @app.get("/test-optional")
+    def test_optional(request: Request):
         inertia = get_test_inertia(request)
         return inertia.render(
             "TestComponent",
             {
                 "user": "John",
-                "permissions": lazy(get_permissions),
+                "permissions": optional(get_permissions),
             },
         )
 
-    @app.get("/test-lazy-with-args")
-    def test_lazy_with_args(request: Request):
+    @app.get("/test-optional-with-args")
+    def test_optional_with_args(request: Request):
         inertia = get_test_inertia(request)
         return inertia.render(
             "TestComponent",
             {
-                "user_data": lazy(get_user_by_id, 123),
+                "user_data": optional(get_user_by_id, 123),
             },
         )
 
-    @app.get("/test-lazy-with-kwargs")
-    def test_lazy_with_kwargs(request: Request):
+    @app.get("/test-optional-with-kwargs")
+    def test_optional_with_kwargs(request: Request):
         inertia = get_test_inertia(request)
         return inertia.render(
             "TestComponent",
             {
-                "activity": lazy(get_activity, user_id=1, limit=10),
+                "activity": optional(get_activity, user_id=1, limit=10),
             },
         )
 
-    @app.get("/test-multiple-lazy")
-    def test_multiple_lazy(request: Request):
+    @app.get("/test-multiple-optional")
+    def test_multiple_optional(request: Request):
         inertia = get_test_inertia(request)
         return inertia.render(
             "TestComponent",
             {
                 "user": "Jane",
-                "permissions": lazy(lambda: ["admin"]),
-                "billing": lazy(lambda: {"plan": "pro"}),
+                "permissions": optional(lambda: ["admin"]),
+                "billing": optional(lambda: {"plan": "pro"}),
             },
         )
 
-    @app.get("/test-async-lazy")
-    def test_async_lazy(request: Request):
+    @app.get("/test-async-optional")
+    def test_async_optional(request: Request):
         inertia = get_test_inertia(request)
         return inertia.render(
             "TestComponent",
             {
-                "async_data": lazy(async_fetch),
+                "async_data": optional(async_fetch),
             },
         )
 
@@ -279,17 +285,13 @@ def lazy_app(inertia_response):
 
 
 @pytest.fixture
-def lazy_client(lazy_app):
-    """Create a test client for lazy props tests."""
-    return TestClient(lazy_app)
+def optional_core_client(optional_core_app):
+    """Create a test client for optional props tests."""
+    return TestClient(optional_core_app)
 
 
 class TestOptionalProps:
-    """Test that optional() is an alias for lazy() and works the same way."""
-
-    def test_optional_is_alias_for_lazy(self):
-        """Test that optional is the same class as lazy."""
-        assert optional is lazy
+    """Test optional() props behavior."""
 
     def test_optional_prop_excluded_on_initial_load(self, optional_client: TestClient):
         """Test that optional props are NOT included on initial page load."""

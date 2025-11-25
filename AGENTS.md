@@ -31,9 +31,9 @@ Release notes go here.
 release type: minor
 ---
 
-Add lazy props evaluation support
+Add optional props evaluation support
 
-- Implement lazy prop wrapper
+- Implement optional prop wrapper
 - Only evaluate when needed
 - Add documentation and tests
 ```

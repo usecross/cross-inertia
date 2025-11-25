@@ -120,11 +120,6 @@ class always:
         return self.value_or_callback
 
 
-# Backward compatibility aliases
-lazy = optional  # lazy is deprecated, use optional instead
-LazyProp = optional  # LazyProp is deprecated, use optional instead
-
-
 def _is_optional_prop(value: Any) -> bool:
     """Check if a value is an optional prop (excluded on initial load)."""
     return isinstance(value, optional)

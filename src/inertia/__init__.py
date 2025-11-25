@@ -14,15 +14,11 @@ Prop types (following Laravel Inertia conventions):
         "permissions": optional(get_permissions),  # Only when explicitly requested
         "flash": always(get_flash),                # Always included, even in partial reloads
     })
-
-Deprecated aliases:
-    - lazy: Use optional() instead
-    - LazyProp: Use optional() instead
 """
 
 from importlib.metadata import version
 
-from inertia._core import optional, always, lazy, LazyProp
+from inertia._core import optional, always
 
 __version__ = version("cross-inertia")
-__all__ = ["optional", "always", "lazy", "LazyProp", "__version__"]
+__all__ = ["optional", "always", "__version__"]
