@@ -540,6 +540,22 @@ class InertiaResponse:
         """Check if request is an Inertia XHR request"""
         return adapter.headers.get("X-Inertia") == "true"
 
+    def is_prefetch_request(self, adapter: StarletteRequestAdapter) -> bool:
+        """Check if request is an Inertia prefetch request.
+
+        Prefetch requests are Inertia XHR requests that include the
+        Purpose: prefetch header. The Inertia client sends this header
+        when prefetching pages in the background to improve perceived
+        performance.
+
+        Reference:
+            https://inertiajs.com/prefetching
+        """
+        return (
+            self.is_inertia_request(adapter)
+            and adapter.headers.get("Purpose") == "prefetch"
+        )
+
     def is_dev_mode(self) -> bool:
         """Check if Vite dev server is running"""
         if self._is_dev is not None:
@@ -853,7 +869,9 @@ class InertiaResponse:
             # Return JSON response for Inertia XHR requests
             # Always return 200 OK for Inertia requests, even with validation errors
             # Errors are communicated via props.errors, not HTTP status codes
-            logger.info(f"→ Inertia XHR: {component} (props: {list(props.keys())})")
+            is_prefetch = self.is_prefetch_request(adapter)
+            request_type = "Prefetch" if is_prefetch else "Inertia XHR"
+            logger.info(f"→ {request_type}: {component} (props: {list(props.keys())})")
             return JSONResponse(
                 content=page_data,
                 headers={
