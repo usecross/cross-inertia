@@ -675,6 +675,97 @@ async def deferred_demo(inertia: InertiaDep):
     )
 
 
+@app.get("/error-bags-demo")
+async def error_bags_demo(inertia: InertiaDep):
+    """
+    Error bags demo page.
+
+    This demonstrates error bags - scoped validation errors for multiple forms
+    on the same page. When a form specifies an errorBag option, validation
+    errors are scoped under that key in page.props.errors.
+
+    Without error bag: errors = { email: "Invalid email" }
+    With error bag "login": errors = { login: { email: "Invalid email" } }
+
+    Reference:
+        https://inertiajs.com/validation#error-bags
+    """
+    return inertia.render(
+        "ErrorBagsDemo",
+        {
+            "title": "Error Bags Demo",
+            "message": "This page has multiple forms with separate error scopes.",
+        },
+    )
+
+
+@app.post("/error-bags-demo/login")
+async def error_bags_login(inertia: InertiaDep):
+    """Handle login form submission with error bag."""
+    request = inertia.request
+    form_data = await request.json()
+
+    errors = {}
+    email = str(form_data.get("email", ""))
+    password = str(form_data.get("password", ""))
+
+    if not email or "@" not in email:
+        errors["email"] = "Please enter a valid email address"
+    if not password or len(password) < 6:
+        errors["password"] = "Password must be at least 6 characters"
+
+    if errors:
+        return inertia.render(
+            "ErrorBagsDemo",
+            {
+                "title": "Error Bags Demo",
+                "message": "This page has multiple forms with separate error scopes.",
+            },
+            errors=errors,
+        )
+
+    # Success - redirect or show success message
+    flash(inertia.request, "Login successful!", "success")
+    from fastapi.responses import RedirectResponse
+
+    return RedirectResponse(url="/error-bags-demo", status_code=303)
+
+
+@app.post("/error-bags-demo/register")
+async def error_bags_register(inertia: InertiaDep):
+    """Handle registration form submission with error bag."""
+    request = inertia.request
+    form_data = await request.json()
+
+    errors = {}
+    name = str(form_data.get("name", ""))
+    email = str(form_data.get("email", ""))
+    password = str(form_data.get("password", ""))
+
+    if not name or len(name) < 2:
+        errors["name"] = "Name must be at least 2 characters"
+    if not email or "@" not in email:
+        errors["email"] = "Please enter a valid email address"
+    if not password or len(password) < 8:
+        errors["password"] = "Password must be at least 8 characters"
+
+    if errors:
+        return inertia.render(
+            "ErrorBagsDemo",
+            {
+                "title": "Error Bags Demo",
+                "message": "This page has multiple forms with separate error scopes.",
+            },
+            errors=errors,
+        )
+
+    # Success
+    flash(inertia.request, "Registration successful!", "success")
+    from fastapi.responses import RedirectResponse
+
+    return RedirectResponse(url="/error-bags-demo", status_code=303)
+
+
 if __name__ == "__main__":
     import uvicorn
 
