@@ -120,6 +120,73 @@ class always:
         return self.value_or_callback
 
 
+class defer:
+    """
+    Mark a prop as deferred - loaded after the initial page render.
+
+    Deferred props are excluded from the initial page load and loaded in a
+    subsequent request after the page renders. This improves perceived performance
+    by allowing the page to display immediately while slower data loads in the
+    background.
+
+    Unlike optional() props which require explicit requests from the frontend,
+    deferred props are automatically loaded by the Inertia client after mount.
+
+    Props can be grouped together to be loaded in the same request by providing
+    a group name. Props in different groups are loaded in parallel.
+
+    Example:
+        @app.get("/dashboard")
+        async def dashboard(inertia: InertiaDep):
+            user = get_current_user()
+            return inertia.render("Dashboard", {
+                "user": user,  # Loaded immediately
+                # These are loaded after page renders:
+                "analytics": defer(get_analytics),  # Default group
+                "notifications": defer(get_notifications, user.id),  # Default group
+                # Load permissions separately (parallel with default group):
+                "permissions": defer(get_permissions, user.id, group="permissions"),
+            })
+
+        # Frontend - use the Deferred component:
+        <Deferred data="analytics" fallback={<Loading />}>
+            <AnalyticsChart analytics={analytics} />
+        </Deferred>
+
+    Reference:
+        https://inertiajs.com/deferred-props
+    """
+
+    def __init__(
+        self,
+        callback: Callable[..., Any],
+        *args: Any,
+        group: str = "default",
+        **kwargs: Any,
+    ):
+        """
+        Create a deferred prop.
+
+        Args:
+            callback: A callable that returns the prop value when invoked.
+            *args: Positional arguments to pass to the callback.
+            group: Name of the group for batching requests. Props in the same
+                   group are loaded together; different groups load in parallel.
+                   Defaults to "default".
+            **kwargs: Keyword arguments to pass to the callback.
+        """
+        if not callable(callback):
+            raise ValueError("defer() requires a callable")
+        self.callback = callback
+        self.args = args
+        self.group = group
+        self.kwargs = kwargs
+
+    def __call__(self) -> Any:
+        """Invoke the callback with stored args/kwargs to get the value."""
+        return self.callback(*self.args, **self.kwargs)
+
+
 def _is_optional_prop(value: Any) -> bool:
     """Check if a value is an optional prop (excluded on initial load)."""
     return isinstance(value, optional)
@@ -128,6 +195,11 @@ def _is_optional_prop(value: Any) -> bool:
 def _is_always_prop(value: Any) -> bool:
     """Check if a value is an always prop (included even on partial reloads)."""
     return isinstance(value, always)
+
+
+def _is_deferred_prop(value: Any) -> bool:
+    """Check if a value is a deferred prop (loaded after initial render)."""
+    return isinstance(value, defer)
 
 
 # Keep old function name for internal compatibility
@@ -143,6 +215,7 @@ def _is_callable_prop(value: Any) -> bool:
         and not inspect.isclass(value)
         and not _is_optional_prop(value)
         and not _is_always_prop(value)
+        and not _is_deferred_prop(value)
     )
 
 
@@ -179,10 +252,12 @@ async def _resolve_props(props: dict[str, Any]) -> dict[str, Any]:
 
 
 async def _resolve_value(value: Any) -> Any:
-    """Resolve a single value, which may be callable, optional, always, dict, or list."""
+    """Resolve a single value, which may be callable, optional, always, defer, dict, or list."""
     if _is_optional_prop(value):
         return await _resolve_callable(value)
     elif _is_always_prop(value):
+        return await _resolve_callable(value)
+    elif _is_deferred_prop(value):
         return await _resolve_callable(value)
     elif _is_callable_prop(value):
         return await _resolve_callable(value)
@@ -653,13 +728,24 @@ class InertiaResponse:
             key for key, val in props.items() if _is_optional_prop(val)
         }
         always_prop_keys = {key for key, val in props.items() if _is_always_prop(val)}
+        # Build deferred props map: {group_name: [prop_keys]}
+        deferred_props_map: dict[str, list[str]] = {}
+        for key, val in props.items():
+            if _is_deferred_prop(val):
+                group = val.group
+                if group not in deferred_props_map:
+                    deferred_props_map[group] = []
+                deferred_props_map[group].append(key)
+        deferred_prop_keys = {
+            key for keys in deferred_props_map.values() for key in keys
+        }
 
         if partial_component == component and (partial_data or partial_except):
             if partial_data:
                 # Only include requested props, but ALWAYS include shared data and always() props
                 requested_keys = [key.strip() for key in partial_data.split(",")]
                 # Filter to requested page props only
-                # Optional props ARE included if explicitly requested
+                # Optional props and deferred props ARE included if explicitly requested
                 filtered_props = {
                     key: props[key] for key in requested_keys if key in props
                 }
@@ -667,6 +753,8 @@ class InertiaResponse:
                 always_props = {key: props[key] for key in always_prop_keys}
                 # Merge: shared data first, then always props, then filtered page props
                 props = {**shared_data, **always_props, **filtered_props}
+                # Clear deferred props map for partial reloads - they're being resolved
+                deferred_props_map = {}
                 logger.info(
                     f"Partial reload: requested props {requested_keys} + shared data {list(shared_data.keys())} + always props {list(always_prop_keys)} for {component}"
                 )
@@ -675,7 +763,7 @@ class InertiaResponse:
                 except_keys = [key.strip() for key in partial_except.split(",")]
                 shared_data_keys = set(shared_data.keys())
                 # Keep props that are NOT in except list OR are shared data OR are always()
-                # Also exclude optional props (they're only included when explicitly requested)
+                # Also exclude optional and deferred props (they're only included when explicitly requested)
                 filtered_props = {
                     key: val
                     for key, val in props.items()
@@ -685,6 +773,7 @@ class InertiaResponse:
                         or key in always_prop_keys
                     )
                     and key not in optional_prop_keys
+                    and key not in deferred_prop_keys
                 }
                 # Merge: shared data first, then filtered page props
                 props = {**shared_data, **filtered_props}
@@ -694,15 +783,22 @@ class InertiaResponse:
         else:
             # No partial reload - merge all shared data with page props
             # Exclude optional props on initial load (they must be explicitly requested)
-            if optional_prop_keys:
+            # Exclude deferred props on initial load (they load automatically after render)
+            excluded_props = optional_prop_keys | deferred_prop_keys
+            if excluded_props:
                 props = {
                     key: val
                     for key, val in props.items()
-                    if key not in optional_prop_keys
+                    if key not in excluded_props
                 }
-                logger.info(
-                    f"Excluding optional props from initial load: {optional_prop_keys}"
-                )
+                if optional_prop_keys:
+                    logger.info(
+                        f"Excluding optional props from initial load: {optional_prop_keys}"
+                    )
+                if deferred_prop_keys:
+                    logger.info(
+                        f"Excluding deferred props from initial load: {deferred_prop_keys}"
+                    )
             if shared_data:
                 # Page props override shared data
                 props = {**shared_data, **props}
@@ -741,6 +837,11 @@ class InertiaResponse:
             page_data["matchPropsOn"] = match_props_on
         if scroll_props:
             page_data["scrollProps"] = scroll_props
+
+        # Add deferred props map to page data (tells client what to fetch after render)
+        if deferred_props_map:
+            page_data["deferredProps"] = deferred_props_map
+            logger.info(f"Deferred props: {deferred_props_map}")
 
         if self.is_inertia_request(adapter):
             # Return JSON response for Inertia XHR requests
