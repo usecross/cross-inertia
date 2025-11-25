@@ -218,7 +218,7 @@ async def show_cat(cat_id: int, inertia: InertiaDep):
         },
         view_data={
             "page_title": f"Meet {cat['name']} - {cat['breed']} Available for Adoption | PurrfectHome",
-            "meta_description": f"Meet {cat['name']}, a {cat['age_years']} year old {cat['breed']} looking for a loving home. {cat['description'][:150]}...",
+            "meta_description": f"Meet {cat['name']}, a {cat['age']} year old {cat['breed']} looking for a loving home. {cat['description'][:150]}...",
         },
     )
 
@@ -590,7 +590,7 @@ async def lazy_demo(inertia: InertiaDep):
             "total_cats": len(mock_data.CATS),
             "total_shelters": len(mock_data.SHELTERS),
             "breeds": list(set(cat["breed"] for cat in mock_data.CATS)),
-            "average_age": sum(cat["age_years"] for cat in mock_data.CATS)
+            "average_age": sum(cat["age"] for cat in mock_data.CATS)
             / len(mock_data.CATS),
         }
 
