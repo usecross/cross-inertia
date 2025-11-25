@@ -39,6 +39,7 @@ from fastapi import FastAPI, Query, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from inertia.fastapi import InertiaDep, InertiaMiddleware
+from inertia import lazy
 import mock_data
 
 # Configure logging for this module
@@ -562,6 +563,42 @@ async def form_submit(inertia: InertiaDep):
             "message": "There were errors with your submission.",
         },
         errors=errors,
+    )
+
+
+@app.get("/lazy-demo")
+async def lazy_demo(inertia: InertiaDep):
+    """
+    Lazy props demo page.
+
+    This demonstrates the lazy() function for props that should only be loaded
+    when explicitly requested via partial reload.
+
+    The 'statistics' prop is lazy - it won't be included on initial page load.
+    Click "Load Statistics" to trigger a partial reload that fetches only
+    the lazy prop.
+    """
+
+    def get_statistics():
+        """Simulate an expensive database query for statistics."""
+        import time
+
+        time.sleep(0.1)  # Simulate delay
+        return {
+            "total_cats": len(mock_data.CATS),
+            "total_shelters": len(mock_data.SHELTERS),
+            "breeds": list(set(cat["breed"] for cat in mock_data.CATS)),
+            "average_age": sum(cat["age_years"] for cat in mock_data.CATS)
+            / len(mock_data.CATS),
+        }
+
+    return inertia.render(
+        "LazyDemo",
+        {
+            "title": "Lazy Props Demo",
+            "message": "Statistics are loaded lazily when you click the button.",
+            "statistics": lazy(get_statistics),  # Only loaded when requested
+        },
     )
 
 
