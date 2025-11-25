@@ -1,48 +1,41 @@
 
 
-0.5.0 - 2025-11-25
+0.6.0 - 2025-11-25
 ------------------
 
-Add `optional()` and `always()` prop types following Laravel Inertia conventions.
+Add support for deferred props with the new `defer()` function.
 
-## New Features
+Deferred props are excluded from the initial page load and automatically fetched
+by the Inertia client after the page renders, improving perceived performance
+for expensive computations.
 
-### Callable Props (auto-invoke)
-Automatically invoke callable props (lambdas, functions) during render:
+## Usage
 
 ```python
-return inertia.render("Page", {
-    "user": lambda: get_user(),  # Invoked automatically
-    "data": get_user_async,      # Async callables are awaited
+from inertia import defer
+
+return inertia.render("Dashboard", {
+    "user": get_user(),                    # Loaded immediately
+    "analytics": defer(get_analytics),     # Loaded after page renders
 })
 ```
 
-### Optional Props
-Props that are excluded on initial load and only included when explicitly requested via partial reload:
+## Grouping for Parallel Loading
+
+Props in the same group load together; different groups load in parallel:
 
 ```python
-from inertia import optional
-
-return inertia.render("Page", {
-    "user": get_user(),                           # Always included
-    "permissions": optional(get_permissions),     # Only when requested
-    "activity": optional(get_activity, limit=10), # Supports args like functools.partial
-})
+{
+    "analytics": defer(get_analytics),                        # default group
+    "notifications": defer(get_notifications),                # default group
+    "recommendations": defer(get_recommendations, group="sidebar"),  # parallel
+}
 ```
 
-Frontend usage:
-```javascript
-router.reload({ only: ["permissions"] })
-```
+## Arguments Support
 
-### Always Props
-Props that are always included, even during partial reloads:
+Like `functools.partial`, you can pass arguments to the callback:
 
 ```python
-from inertia import always
-
-return inertia.render("Page", {
-    "user": get_user(),
-    "flash": always(get_flash_messages),  # Always included
-    "csrf": always(get_csrf_token),       # Even in partial reloads
-})
+defer(get_user_stats, user_id, include_history=True)
+```
