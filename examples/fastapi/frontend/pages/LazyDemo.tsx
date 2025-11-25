@@ -14,10 +14,11 @@ interface Statistics {
 interface LazyDemoProps {
   title: string
   message: string
-  statistics?: Statistics // Lazy prop - only present after partial reload
+  statistics?: Statistics // Optional prop - only present after partial reload
+  timestamp: string // Always prop - always included, even in partial reloads
 }
 
-export default function LazyDemo({ title, message, statistics }: LazyDemoProps) {
+export default function LazyDemo({ title, message, statistics, timestamp }: LazyDemoProps) {
   const [loading, setLoading] = useState(false)
 
   const loadStatistics = () => {
@@ -32,14 +33,32 @@ export default function LazyDemo({ title, message, statistics }: LazyDemoProps) 
     <Layout title={title}>
       <p className="text-lg text-muted-foreground mb-8">{message}</p>
 
+      {/* Always prop: timestamp */}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Lazy Props Demo</CardTitle>
+          <CardTitle>Always Prop Demo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-2">
+            The timestamp below is wrapped with <code className="bg-muted px-1 rounded">always()</code>.
+            It's included in every response, even during partial reloads.
+          </p>
+          <p className="text-2xl font-mono" data-testid="timestamp">
+            {timestamp}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Optional prop: statistics */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Optional Prop Demo</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">
-            The statistics below are loaded lazily. They are NOT included in the initial page load,
-            reducing initial payload size. Click the button to load them via a partial reload.
+            The statistics below are wrapped with <code className="bg-muted px-1 rounded">optional()</code>.
+            They are NOT included in the initial page load, reducing initial payload size.
+            Click the button to load them via a partial reload.
           </p>
 
           {!statistics ? (
@@ -105,17 +124,32 @@ export default function LazyDemo({ title, message, statistics }: LazyDemoProps) 
         <CardHeader>
           <CardTitle>How it works</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-2">
-            <strong>Backend:</strong> The statistics prop is wrapped with <code className="bg-muted px-1 rounded">lazy(get_statistics)</code>
-          </p>
-          <p className="text-muted-foreground mb-2">
-            <strong>Initial load:</strong> Lazy props are excluded, keeping the response small
-          </p>
-          <p className="text-muted-foreground">
-            <strong>Partial reload:</strong> Using <code className="bg-muted px-1 rounded">router.reload(&#123; only: ['statistics'] &#125;)</code> triggers
-            evaluation of the lazy prop
-          </p>
+        <CardContent className="space-y-4">
+          <div>
+            <h3 className="font-semibold mb-2">optional() - Deferred Loading</h3>
+            <p className="text-muted-foreground mb-2">
+              <strong>Backend:</strong> <code className="bg-muted px-1 rounded">optional(get_statistics)</code>
+            </p>
+            <p className="text-muted-foreground mb-2">
+              <strong>Behavior:</strong> Excluded on initial load, only included when explicitly requested
+            </p>
+            <p className="text-muted-foreground">
+              <strong>Usage:</strong> <code className="bg-muted px-1 rounded">router.reload(&#123; only: ['statistics'] &#125;)</code>
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-2">always() - Persistent Props</h3>
+            <p className="text-muted-foreground mb-2">
+              <strong>Backend:</strong> <code className="bg-muted px-1 rounded">always(get_timestamp)</code>
+            </p>
+            <p className="text-muted-foreground mb-2">
+              <strong>Behavior:</strong> Always included, even during partial reloads
+            </p>
+            <p className="text-muted-foreground">
+              <strong>Use case:</strong> Flash messages, notifications, CSRF tokens
+            </p>
+          </div>
         </CardContent>
       </Card>
     </Layout>

@@ -6,18 +6,23 @@ This package provides server-side adapters for Inertia.js.
 Framework-specific imports:
     from inertia.fastapi import InertiaDep, InertiaMiddleware
 
-Lazy props:
-    from inertia import lazy
+Prop types (following Laravel Inertia conventions):
+    from inertia import optional, always
 
     return inertia.render("Page", {
-        "user": get_user(),                    # Always included
-        "permissions": lazy(get_permissions),  # Only when requested
+        "user": get_user(),                        # Regular prop
+        "permissions": optional(get_permissions),  # Only when explicitly requested
+        "flash": always(get_flash),                # Always included, even in partial reloads
     })
+
+Deprecated aliases:
+    - lazy: Use optional() instead
+    - LazyProp: Use optional() instead
 """
 
 from importlib.metadata import version
 
-from inertia._core import lazy, LazyProp
+from inertia._core import optional, always, lazy, LazyProp
 
 __version__ = version("cross-inertia")
-__all__ = ["lazy", "LazyProp", "__version__"]
+__all__ = ["optional", "always", "lazy", "LazyProp", "__version__"]

@@ -39,7 +39,7 @@ from fastapi import FastAPI, Query, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from inertia.fastapi import InertiaDep, InertiaMiddleware
-from inertia import lazy
+from inertia import optional, always
 import mock_data
 
 # Configure logging for this module
@@ -569,14 +569,16 @@ async def form_submit(inertia: InertiaDep):
 @app.get("/lazy-demo")
 async def lazy_demo(inertia: InertiaDep):
     """
-    Lazy props demo page.
+    Optional and Always props demo page.
 
-    This demonstrates the lazy() function for props that should only be loaded
-    when explicitly requested via partial reload.
+    This demonstrates the optional() and always() prop types:
 
-    The 'statistics' prop is lazy - it won't be included on initial page load.
-    Click "Load Statistics" to trigger a partial reload that fetches only
-    the lazy prop.
+    - optional(): Props excluded on initial load, only loaded when explicitly
+      requested via partial reload with `only: ['prop_name']`
+    - always(): Props always included, even during partial reloads
+
+    Click "Load Statistics" to trigger a partial reload that fetches the
+    optional 'statistics' prop. Note that 'timestamp' is always included.
     """
 
     def get_statistics():
@@ -592,12 +594,21 @@ async def lazy_demo(inertia: InertiaDep):
             / len(mock_data.CATS),
         }
 
+    def get_timestamp():
+        """Get current timestamp - always fresh."""
+        from datetime import datetime
+
+        return datetime.now().isoformat()
+
     return inertia.render(
         "LazyDemo",
         {
-            "title": "Lazy Props Demo",
-            "message": "Statistics are loaded lazily when you click the button.",
-            "statistics": lazy(get_statistics),  # Only loaded when requested
+            "title": "Optional & Always Props Demo",
+            "message": "Statistics are optional (only loaded when requested). Timestamp is always included.",
+            "statistics": optional(get_statistics),  # Only loaded when requested
+            "timestamp": always(
+                get_timestamp
+            ),  # Always included, even in partial reloads
         },
     )
 
