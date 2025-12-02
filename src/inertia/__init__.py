@@ -20,6 +20,15 @@ Prop types (following Laravel Inertia conventions):
 from importlib.metadata import version
 
 from inertia._core import optional, always, defer
+from inertia._ssr import InertiaSSR, configure_ssr, get_ssr
 
 __version__ = version("cross-inertia")
-__all__ = ["optional", "always", "defer", "__version__"]
+__all__ = [
+    "optional",
+    "always",
+    "defer",
+    "InertiaSSR",
+    "configure_ssr",
+    "get_ssr",
+    "__version__",
+]

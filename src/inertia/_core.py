@@ -509,12 +509,23 @@ class InertiaResponse:
         manifest_path: str = "static/build/.vite/manifest.json",
         vite_entry: str | None = None,
         vite_config_path: str = "vite.config.ts",
+        ssr_url: str | None = None,
+        ssr_enabled: bool = False,
     ):
         self.vite_dev_url = vite_dev_url
         self.manifest_path = manifest_path
         self._is_dev: bool | None = None
         self._manifest: dict[str, Any] | None = None
         self._shared_data: dict[str, Any] = {}  # Store shared data
+
+        # SSR configuration
+        self.ssr_enabled = ssr_enabled
+        self.ssr_url = ssr_url or "http://127.0.0.1:13714"
+        self._ssr_client: "InertiaSSR | None" = None
+        if ssr_enabled:
+            from inertia._ssr import InertiaSSR
+            self._ssr_client = InertiaSSR(url=self.ssr_url, enabled=True)
+            logger.info(f"SSR enabled: {self.ssr_url}")
 
         # Auto-detect vite entry from config if not provided
         if vite_entry is None:
@@ -937,10 +948,42 @@ class InertiaResponse:
             )
             # Escape single quotes in JSON for safe embedding in HTML attributes
             page_json = json.dumps(page_data).replace("'", "&#39;")
+
+            # Try SSR if enabled
+            ssr_head: list[str] = []
+            ssr_body: str = ""
+            if self._ssr_client and self.ssr_enabled:
+                import asyncio
+                try:
+                    # Run SSR render (need to handle sync context)
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # We're in an async context, create a task
+                        import concurrent.futures
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = executor.submit(
+                                asyncio.run,
+                                self._ssr_client.render(page_data)
+                            )
+                            ssr_result = future.result(timeout=5.0)
+                    else:
+                        ssr_result = loop.run_until_complete(
+                            self._ssr_client.render(page_data)
+                        )
+
+                    if ssr_result:
+                        ssr_head = ssr_result.head
+                        ssr_body = ssr_result.body
+                        logger.info(f"SSR rendered {component} successfully")
+                except Exception as e:
+                    logger.warning(f"SSR failed, falling back to CSR: {e}")
+
             template_context = {
                 "request": request,
                 "page": page_json,
                 "vite_tags": self.get_vite_tags(),  # Backward compatibility
+                "ssr_head": ssr_head,
+                "ssr_body": ssr_body,
                 # Note: vite() function is also available globally
             }
             # Add view_data to template context if provided
