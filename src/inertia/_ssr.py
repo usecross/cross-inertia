@@ -1,22 +1,16 @@
-"""Server-Side Rendering support for Inertia.js
+"""Internal SSR client for Inertia.js
 
-This module provides SSR capabilities by communicating with a Node.js/Bun
-SSR server that pre-renders React/Vue/Svelte components to HTML.
+This is an internal module. To enable SSR, use the `ssr_enabled` flag
+on InertiaResponse:
+
+    inertia_response = InertiaResponse(
+        ssr_enabled=True,
+        ssr_url="http://localhost:13714",  # optional, this is the default
+    )
 
 The SSR server must implement the Inertia SSR protocol:
 - POST /render - Renders a page and returns {head: [...], body: str}
 - GET /health - Returns server health status
-
-Example usage:
-    from inertia._ssr import InertiaSSR
-
-    ssr = InertiaSSR(url="http://localhost:13714")
-
-    # Render a page
-    result = await ssr.render(page_data)
-    if result:
-        html = result.body
-        head_tags = result.head
 """
 
 from __future__ import annotations
@@ -125,34 +119,3 @@ class InertiaSSR:
         if self._client:
             await self._client.aclose()
             self._client = None
-
-
-# Global SSR instance
-_ssr_instance: InertiaSSR | None = None
-
-
-def get_ssr() -> InertiaSSR | None:
-    """Get the global SSR instance."""
-    return _ssr_instance
-
-
-def configure_ssr(
-    url: str = "http://127.0.0.1:13714",
-    timeout: float = 5.0,
-    enabled: bool = True,
-) -> InertiaSSR:
-    """
-    Configure and enable SSR.
-
-    Args:
-        url: Base URL of the SSR server
-        timeout: Request timeout in seconds
-        enabled: Whether SSR is enabled
-
-    Returns:
-        The configured InertiaSSR instance
-    """
-    global _ssr_instance
-    _ssr_instance = InertiaSSR(url=url, timeout=timeout, enabled=enabled)
-    logger.info(f"SSR configured: url={url}, enabled={enabled}")
-    return _ssr_instance

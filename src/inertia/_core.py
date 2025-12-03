@@ -524,6 +524,7 @@ class InertiaResponse:
         self._ssr_client: "InertiaSSR | None" = None
         if ssr_enabled:
             from inertia._ssr import InertiaSSR
+
             self._ssr_client = InertiaSSR(url=self.ssr_url, enabled=True)
             logger.info(f"SSR enabled: {self.ssr_url}")
 
@@ -950,20 +951,21 @@ class InertiaResponse:
             page_json = json.dumps(page_data).replace("'", "&#39;")
 
             # Try SSR if enabled
-            ssr_head: list[str] = []
-            ssr_body: str = ""
+            head: list[str] = []
+            body: str = ""
             if self._ssr_client and self.ssr_enabled:
                 import asyncio
+
                 try:
                     # Run SSR render (need to handle sync context)
                     loop = asyncio.get_event_loop()
                     if loop.is_running():
                         # We're in an async context, create a task
                         import concurrent.futures
+
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             future = executor.submit(
-                                asyncio.run,
-                                self._ssr_client.render(page_data)
+                                asyncio.run, self._ssr_client.render(page_data)
                             )
                             ssr_result = future.result(timeout=5.0)
                     else:
@@ -972,8 +974,8 @@ class InertiaResponse:
                         )
 
                     if ssr_result:
-                        ssr_head = ssr_result.head
-                        ssr_body = ssr_result.body
+                        head = ssr_result.head
+                        body = ssr_result.body
                         logger.info(f"SSR rendered {component} successfully")
                 except Exception as e:
                     logger.warning(f"SSR failed, falling back to CSR: {e}")
@@ -982,8 +984,8 @@ class InertiaResponse:
                 "request": request,
                 "page": page_json,
                 "vite_tags": self.get_vite_tags(),  # Backward compatibility
-                "ssr_head": ssr_head,
-                "ssr_body": ssr_body,
+                "head": head,
+                "body": body,
                 # Note: vite() function is also available globally
             }
             # Add view_data to template context if provided
