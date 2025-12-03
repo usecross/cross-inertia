@@ -22,4 +22,9 @@ from importlib.metadata import version
 from inertia._core import optional, always, defer
 
 __version__ = version("cross-inertia")
-__all__ = ["optional", "always", "defer", "__version__"]
+__all__ = [
+    "optional",
+    "always",
+    "defer",
+    "__version__",
+]
