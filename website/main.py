@@ -4,18 +4,26 @@ Cross-Inertia Documentation Website
 Built with Cross-Inertia, FastAPI, React, and Bun.
 """
 
+import json
+import os
 import subprocess
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from inertia.fastapi import InertiaMiddleware, InertiaDep
 import inertia._core
 
+from _ssr import InertiaSSR
+
 # Auto-detect dev mode: "dev" in argv when running `fastapi dev`
 DEBUG = "dev" in sys.argv
+# Enable SSR by default in production, disable in dev unless SSR=1
+SSR_ENABLED = os.environ.get("SSR", "0" if DEBUG else "1") == "1"
 
 # Configure Inertia response (set singleton before it's accessed)
 inertia_response = inertia._core.InertiaResponse(
@@ -26,10 +34,72 @@ inertia_response = inertia._core.InertiaResponse(
 )
 inertia._core._inertia_response = inertia_response
 
+# SSR client
+ssr_client: InertiaSSR | None = None
+if SSR_ENABLED:
+    ssr_client = InertiaSSR(url="http://127.0.0.1:13714", enabled=True)
+    print("SSR enabled")
+
+
+async def render_with_ssr(
+    request: Request,
+    component: str,
+    props: dict[str, Any],
+    view_data: dict[str, Any] | None = None,
+) -> HTMLResponse | JSONResponse:
+    """Render a page with SSR support."""
+    from urllib.parse import urlparse
+
+    parsed_url = urlparse(str(request.url))
+    url_path = parsed_url.path
+    if parsed_url.query:
+        url_path = f"{parsed_url.path}?{parsed_url.query}"
+
+    page_data = {
+        "component": component,
+        "props": props,
+        "url": url_path,
+        "version": inertia_response.get_asset_version(),
+    }
+
+    # Check if this is an Inertia XHR request (client-side navigation)
+    if request.headers.get("X-Inertia"):
+        return JSONResponse(
+            content=page_data,
+            headers={"X-Inertia": "true"},
+        )
+
+    # Full page load - do SSR
+    head: list[str] = []
+    body: str = ""
+    if ssr_client and SSR_ENABLED:
+        try:
+            ssr_result = await ssr_client.render(page_data)
+            if ssr_result:
+                head = ssr_result.head
+                body = ssr_result.body
+                print(f"SSR rendered {component} successfully")
+        except Exception as e:
+            print(f"SSR failed, falling back to CSR: {e}")
+
+    page_json = json.dumps(page_data).replace("'", "&#39;")
+
+    return inertia_response.templates.TemplateResponse(
+        "app.html",
+        {
+            "request": request,
+            "page": page_json,
+            "head": head,
+            "body": body,
+            **(view_data or {}),
+        },
+    )
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     vite_process = None
+    ssr_process = None
 
     if DEBUG:
         # Start Vite dev server using pybun
@@ -38,12 +108,24 @@ async def lifespan(app: FastAPI):
         )
         print("Started Vite dev server")
 
+    if SSR_ENABLED:
+        # Start SSR server using pybun
+        ssr_process = subprocess.Popen(
+            [sys.executable, "-m", "pybun", "run", "ssr:serve"],
+        )
+        print("Started SSR server")
+
     yield
 
     if vite_process:
         vite_process.terminate()
         vite_process.wait()
         print("Stopped Vite dev server")
+
+    if ssr_process:
+        ssr_process.terminate()
+        ssr_process.wait()
+        print("Stopped SSR server")
 
 # Content directory
 CONTENT_DIR = Path(__file__).parent / "content"
@@ -141,7 +223,7 @@ def generate_docs_nav() -> list[dict]:
 DOCS_NAV = generate_docs_nav()
 
 
-app = FastAPI(title="Cross-Inertia Docs", lifespan=lifespan)
+app = FastAPI(title="Cross-Inertia Docs", lifespan=lifespan, docs_url=None, redoc_url=None)
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -160,50 +242,39 @@ app.add_middleware(InertiaMiddleware, share=share_data)
 
 # Routes
 @app.get("/")
-async def home(inertia: InertiaDep):
+async def home(request: Request, inertia: InertiaDep):
+    props = {
+        "installCommand": "uv add cross-inertia",
+        **share_data(request),
+    }
+    if SSR_ENABLED:
+        return await render_with_ssr(
+            request,
+            "Home",
+            props,
+            view_data={"page_title": "Cross-Inertia - Inertia.js for Python"},
+        )
     return inertia.render(
         "Home",
-        {
-            "features": [
-                {
-                    "title": "FastAPI Integration",
-                    "description": "First-class support for FastAPI with dependency injection, middleware, and async support.",
-                    "icon": "zap",
-                },
-                {
-                    "title": "React & Vue Support",
-                    "description": "Works seamlessly with React, Vue, and Svelte through Inertia.js client adapters.",
-                    "icon": "layers",
-                },
-                {
-                    "title": "Server-Side Rendering",
-                    "description": "Built-in SSR support for improved SEO and faster initial page loads.",
-                    "icon": "server",
-                },
-                {
-                    "title": "Type Safety",
-                    "description": "Full TypeScript support on the frontend with Python type hints on the backend.",
-                    "icon": "shield",
-                },
-            ],
-            "codeExample": '''from fastapi import FastAPI
-from inertia.fastapi import InertiaDep
-
-app = FastAPI()
-
-@app.get("/")
-async def home(inertia: InertiaDep):
-    return inertia.render("Home", {
-        "message": "Hello from Python!"
-    })''',
-        },
-        view_data={"page_title": "Home"},
+        {"installCommand": "uv add cross-inertia"},
+        view_data={"page_title": "Cross-Inertia - Inertia.js for Python"},
     )
 
 
 @app.get("/docs")
-async def docs_index(inertia: InertiaDep):
+async def docs_index(request: Request, inertia: InertiaDep):
     content = load_markdown("docs/introduction")
+    props = {
+        "content": content,
+        **share_data(request),
+    }
+    if SSR_ENABLED:
+        return await render_with_ssr(
+            request,
+            "docs/DocsPage",
+            props,
+            view_data={"page_title": content["title"]},
+        )
     return inertia.render(
         "docs/DocsPage",
         {"content": content},
@@ -212,8 +283,19 @@ async def docs_index(inertia: InertiaDep):
 
 
 @app.get("/docs/{path:path}")
-async def docs_page(path: str, inertia: InertiaDep):
+async def docs_page(path: str, request: Request, inertia: InertiaDep):
     content = load_markdown(f"docs/{path}")
+    props = {
+        "content": content,
+        **share_data(request),
+    }
+    if SSR_ENABLED:
+        return await render_with_ssr(
+            request,
+            "docs/DocsPage",
+            props,
+            view_data={"page_title": content["title"]},
+        )
     return inertia.render(
         "docs/DocsPage",
         {"content": content},

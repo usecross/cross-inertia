@@ -1,4 +1,4 @@
-import { createInertiaApp } from '@inertiajs/react'
+import { createInertiaApp, router } from '@inertiajs/react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import './globals.css'
 
@@ -9,6 +9,14 @@ import DocsPage from './pages/docs/DocsPage'
 const pages: Record<string, React.ComponentType<any>> = {
   Home,
   'docs/DocsPage': DocsPage,
+}
+
+// Disable scroll restoration on initial page load to prevent animated scroll
+if (typeof window !== 'undefined') {
+  // Disable browser's scroll restoration
+  window.history.scrollRestoration = 'manual'
+  // Force scroll to top immediately before any rendering
+  window.scrollTo(0, 0)
 }
 
 createInertiaApp({

@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "build:ssr": "tsc && vite build && vite build --ssr frontend/ssr.tsx --outDir dist/ssr",
+    "build": "vite build",
+    "build:ssr": "vite build --ssr",
+    "ssr:serve": "bun run static/build/ssr/ssr.js",
     "preview": "vite preview"
   },
   "dependencies": {

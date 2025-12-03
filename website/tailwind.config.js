@@ -4,33 +4,33 @@ export default {
   content: ['./frontend/**/*.{ts,tsx}', './templates/**/*.html'],
   theme: {
     extend: {
+      maxWidth: {
+        '8xl': '88rem',
+      },
+      fontFamily: {
+        sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'],
+        heading: ['"roc-grotesk"', 'sans-serif'],
+        mono: ['Fira Code', 'Consolas', 'Monaco', 'Andale Mono', 'monospace'],
+      },
       colors: {
-        // Custom documentation colors
+        // Cross-Inertia brand colors (green)
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49',
+          50: '#f4f7f3',
+          100: '#e6ece4',
+          200: '#cddac9',
+          300: '#a9c1a2',
+          400: '#7fa276',
+          500: '#648C57',
+          600: '#4d7043',
+          700: '#3e5937',
+          800: '#34482f',
+          900: '#2c3c28',
+          950: '#151f13',
         },
-        accent: {
-          DEFAULT: '#8b5cf6',
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
-          900: '#4c1d95',
+        // Dark colors for code blocks
+        dark: {
+          800: '#1e293b',
+          900: '#0f172a',
         },
       },
       typography: (theme) => ({
