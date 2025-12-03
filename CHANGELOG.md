@@ -1,20 +1,39 @@
 
 
-0.9.0 - 2025-12-03
-------------------
+0.10.0 - 2025-12-03
+-------------------
 
-Add Server-Side Rendering (SSR) support
+Add experimental lifespan SSR server management
 
-Enable SSR by passing `ssr_enabled=True` to `InertiaResponse`:
+Auto-start/stop the SSR server with FastAPI's lifespan context manager,
+so users don't need to manage the SSR subprocess manually.
+
+This feature is marked as experimental and available under `inertia.fastapi.experimental`.
+
+Simple usage:
 
 ```python
-inertia_response = InertiaResponse(
-    ssr_enabled=True,
-    ssr_url="http://localhost:13714",  # optional, this is the default
-)
+from fastapi import FastAPI
+from inertia.fastapi.experimental import inertia_lifespan
+
+app = FastAPI(lifespan=inertia_lifespan)
 ```
 
-- Add `ssr_enabled` and `ssr_url` parameters to `InertiaResponse`
-- SSR server must implement the Inertia SSR protocol (`POST /render`, `GET /health`)
-- Graceful fallback to client-side rendering (CSR) when SSR fails or times out
-- Template context now includes `ssr_head` and `ssr_body` variables for SSR output
+Composable approach:
+
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from inertia.fastapi.experimental import create_ssr_lifespan
+
+@asynccontextmanager
+async def lifespan(app):
+    async with create_ssr_lifespan(command="bun dist/ssr/ssr.js"):
+        yield
+
+app = FastAPI(lifespan=lifespan)
+```
+
+- Add `inertia_lifespan` for simple usage with environment variable config
+- Add `create_ssr_lifespan` for composable approach with full control
+- Add `SSRServer` class and `SSRServerError` exception
