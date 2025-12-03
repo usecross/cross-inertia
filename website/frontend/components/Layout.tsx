@@ -30,19 +30,19 @@ function Sidebar({ nav, currentPath }: SharedProps) {
     <nav className="space-y-8">
       {nav.map((section) => (
         <div key={section.title}>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <h3 className="mb-3 text-xs font-mono uppercase tracking-widest text-gray-500">
             {section.title}
           </h3>
-          <ul className="space-y-1 border-l border-slate-200">
+          <ul className="space-y-1 border-l-2 border-gray-200">
             {section.items.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
                   className={cn(
-                    'block border-l-2 py-1 pl-4 text-sm transition-colors -ml-px',
+                    'block border-l-2 py-1.5 pl-4 text-sm transition-colors -ml-0.5',
                     currentPath === item.href
-                      ? 'border-slate-900 text-slate-900 font-medium'
-                      : 'border-transparent text-slate-600 hover:border-slate-400 hover:text-slate-900'
+                      ? 'border-primary-500 text-black font-bold'
+                      : 'border-transparent text-gray-600 hover:border-black hover:text-black'
                   )}
                 >
                   {item.title}
@@ -60,7 +60,7 @@ function MobileMenuButton({ onClick, isOpen }: { onClick: () => void; isOpen: bo
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center justify-center rounded-md p-2 text-white/80 hover:text-white hover:bg-white/10 lg:hidden"
+      className="inline-flex items-center justify-center p-2 text-black hover:text-primary-500 lg:hidden"
       aria-expanded={isOpen}
     >
       <span className="sr-only">{isOpen ? 'Close menu' : 'Open menu'}</span>
@@ -89,18 +89,18 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Fixed colored navigation */}
-      <nav className="fixed w-full z-50 backdrop-blur-md bg-primary-500">
-        <div className="px-4 sm:px-6 lg:px-8">
+      {/* Fixed navigation */}
+      <nav className="fixed w-full z-50 bg-white border-b border-black">
+        <div className="px-6 lg:px-12">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
               <MobileMenuButton onClick={() => setMobileMenuOpen(!mobileMenuOpen)} isOpen={mobileMenuOpen} />
               <Logo />
             </div>
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="flex items-center space-x-8">
               <Link
                 href="/docs"
-                className="hover:underline underline-offset-2 decoration-1 transition text-gray-200"
+                className="text-black font-medium hover:text-primary-500 transition-colors"
               >
                 Docs
               </Link>
@@ -108,7 +108,7 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
                 href="https://github.com/patrick91/cross-inertia"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-200 hover:text-white transition"
+                className="text-black hover:text-primary-500 transition-colors"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path
@@ -127,7 +127,7 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed inset-y-0 left-0 w-64 overflow-y-auto bg-white p-6 pt-20">
+          <div className="fixed inset-y-0 left-0 w-72 overflow-y-auto bg-white p-6 pt-20 border-r border-black">
             <Sidebar nav={nav} currentPath={currentPath} />
           </div>
         </div>
@@ -135,45 +135,38 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
 
       {/* Main content area */}
       <div className="bg-white pt-16 w-full flex-1">
-        <div className="mx-auto max-w-8xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-          <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 xl:gap-x-16">
-            {/* Desktop sidebar */}
-            <aside className="hidden lg:col-span-2 lg:block">
-              <nav className="sticky top-24 space-y-8 max-h-[calc(100vh-8rem)] overflow-y-auto pb-8">
-                <Sidebar nav={nav} currentPath={currentPath} />
-              </nav>
-            </aside>
+        <div className="grid grid-cols-12">
+          {/* Desktop sidebar */}
+          <aside className="hidden lg:block lg:col-span-3 xl:col-span-2 border-r border-black min-h-[calc(100vh-4rem)]">
+            <nav className="sticky top-16 p-6 lg:p-8 max-h-[calc(100vh-4rem)] overflow-y-auto">
+              <Sidebar nav={nav} currentPath={currentPath} />
+            </nav>
+          </aside>
 
-            {/* Main content */}
-            <main className="lg:col-span-7 lg:pl-8 xl:pl-12">
-              <article className="prose md:prose-lg prose-headings:mt-0 prose-headings:mb-2 prose-p:mt-4 prose-li:my-1">
-                {children}
-              </article>
-            </main>
-
-            {/* TOC column (placeholder for future) */}
-            <aside className="hidden lg:col-span-3 lg:block">
-              {/* Table of contents could go here */}
-            </aside>
-          </div>
+          {/* Main content */}
+          <main className="col-span-12 lg:col-span-9 xl:col-span-10 p-6 lg:p-12">
+            <article className="prose prose-lg max-w-3xl prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-4xl prose-h1:border-b-2 prose-h1:border-black prose-h1:pb-4 prose-h1:mb-8 prose-h2:text-2xl prose-h2:mt-12 prose-h3:text-xl prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
+              {children}
+            </article>
+          </main>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="py-12">
-        <div className="px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <Link href="/" className="flex items-center">
-            <img src="/static/logo-full.svg" alt="Cross-Inertia" className="h-6" />
-          </Link>
-          <div className="flex gap-8 text-sm text-gray-800">
-            <Link href="/docs" className="hover:text-gray-600 transition">
+      <footer className="border-t border-black py-8">
+        <div className="px-6 lg:px-12 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="font-bold text-lg">
+            <span className="text-primary-500">Cross</span>Inertia
+          </div>
+          <div className="flex gap-8 text-sm text-gray-600">
+            <Link href="/docs" className="hover:text-black transition-colors">
               Documentation
             </Link>
             <a
               href="https://github.com/patrick91/cross-inertia"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-gray-600 transition"
+              className="hover:text-black transition-colors"
             >
               GitHub
             </a>
@@ -187,15 +180,15 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
 export function MainLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Fixed colored navigation */}
-      <nav className="fixed w-full z-50 backdrop-blur-md bg-primary-500">
-        <div className="px-4 sm:px-6 lg:px-8">
+      {/* Fixed navigation */}
+      <nav className="fixed w-full z-50 bg-white border-b border-black">
+        <div className="px-6 lg:px-12">
           <div className="flex justify-between h-16 items-center">
             <Logo />
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="flex items-center space-x-8">
               <Link
                 href="/docs"
-                className="hover:underline underline-offset-2 decoration-1 transition text-gray-200"
+                className="text-black font-medium hover:text-primary-500 transition-colors"
               >
                 Docs
               </Link>
@@ -203,7 +196,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
                 href="https://github.com/patrick91/cross-inertia"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-200 hover:text-white transition"
+                className="text-black hover:text-primary-500 transition-colors"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path

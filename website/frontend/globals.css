@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* Primary brand color - can be overridden */
+    /* Primary brand color - green */
     --primary-color: #648C57;
 
     /* Font stacks */
@@ -66,11 +66,10 @@
     line-height: 1.6;
   }
 
-  /* First heading styling - uses primary color */
+  /* First heading styling - Swiss black border */
   .prose h1:first-of-type {
-    border-bottom: 3px solid var(--primary-color);
+    border-bottom: 1px solid #000;
     padding-bottom: 1rem;
-    color: var(--primary-color);
     margin-bottom: 2rem;
   }
 
@@ -85,7 +84,7 @@
   }
 
   .prose pre {
-    @apply !bg-slate-800 !p-0 overflow-hidden rounded-lg;
+    @apply !bg-black !p-0 overflow-hidden border border-black;
   }
 
   .prose pre code {
@@ -127,9 +126,9 @@
   }
 }
 
-/* Syntax highlighting */
+/* Syntax highlighting - Swiss sharp edges */
 .shiki {
-  @apply !bg-slate-800 rounded-lg overflow-hidden;
+  @apply !bg-black overflow-hidden border border-black;
 }
 
 .shiki code {

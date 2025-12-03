@@ -6,6 +6,7 @@ Built with Cross-Inertia, FastAPI, React, and Bun.
 
 import json
 import os
+import signal
 import subprocess
 import sys
 from contextlib import asynccontextmanager
@@ -96,36 +97,51 @@ async def render_with_ssr(
     )
 
 
+def _kill_process_group(process: subprocess.Popen, name: str) -> None:
+    """Kill a process and all its children using process group."""
+    try:
+        # Send SIGTERM to the entire process group
+        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+        process.wait(timeout=5)
+        print(f"Stopped {name}")
+    except ProcessLookupError:
+        # Process already terminated
+        pass
+    except subprocess.TimeoutExpired:
+        # Force kill if it doesn't terminate gracefully
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+        process.wait()
+        print(f"Force killed {name}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     vite_process = None
     ssr_process = None
 
     if DEBUG:
-        # Start Vite dev server using pybun
+        # Start Vite dev server using pybun in its own process group
         vite_process = subprocess.Popen(
             [sys.executable, "-m", "pybun", "run", "dev"],
+            start_new_session=True,  # Creates new process group
         )
         print("Started Vite dev server")
 
     if SSR_ENABLED:
-        # Start SSR server using pybun
+        # Start SSR server using pybun in its own process group
         ssr_process = subprocess.Popen(
             [sys.executable, "-m", "pybun", "run", "ssr:serve"],
+            start_new_session=True,  # Creates new process group
         )
         print("Started SSR server")
 
     yield
 
     if vite_process:
-        vite_process.terminate()
-        vite_process.wait()
-        print("Stopped Vite dev server")
+        _kill_process_group(vite_process, "Vite dev server")
 
     if ssr_process:
-        ssr_process.terminate()
-        ssr_process.wait()
-        print("Stopped SSR server")
+        _kill_process_group(ssr_process, "SSR server")
 
 # Content directory
 CONTENT_DIR = Path(__file__).parent / "content"
