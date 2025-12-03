@@ -89,8 +89,8 @@ export default function Home({ installCommand }: HomeProps) {
       </nav>
 
       {/* Hero Section - Swiss Grid Layout */}
-      <section className="pt-16 min-h-screen">
-        <div className="grid grid-cols-12 min-h-[calc(100vh-4rem)]">
+      <section className="pt-16">
+        <div className="grid grid-cols-12">
           {/* Left content area */}
           <div className="col-span-12 lg:col-span-7 flex flex-col justify-between p-6 lg:p-12 border-r-0 lg:border-r border-black">
             {/* Main headline */}
@@ -124,11 +124,11 @@ export default function Home({ installCommand }: HomeProps) {
           </div>
 
           {/* Right decorative area - Framework blueprints */}
-          <div className="col-span-12 lg:col-span-5 bg-primary-500 relative overflow-hidden hidden lg:block">
+          <div className="col-span-12 lg:col-span-5 bg-primary-500 hidden lg:block">
             <img
               src="/static/hero-frameworks.jpg"
               alt="Framework blueprints - FastAPI, Vue, Svelte, Django, React, Flask"
-              className="w-full h-full object-cover"
+              className="w-full h-auto"
             />
           </div>
         </div>
