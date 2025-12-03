@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 
 interface HomeProps {
   installCommand: string
@@ -50,6 +50,83 @@ function Logo() {
     <Link href="/" className="flex items-center">
       <img src="/static/logo.svg" alt="Cross-Inertia" className="h-8" />
     </Link>
+  )
+}
+
+interface Strawberry {
+  id: number
+  x: number
+  y: number
+  angle: number
+  velocity: number
+  spin: number
+  scale: number
+}
+
+function StrawberryConfetti({ children }: { children: React.ReactNode }) {
+  const [strawberries, setStrawberries] = useState<Strawberry[]>([])
+  const [isActive, setIsActive] = useState(false)
+
+  const triggerBurst = useCallback(() => {
+    if (isActive) return
+    setIsActive(true)
+
+    const newStrawberries: Strawberry[] = []
+    const count = 15
+
+    for (let i = 0; i < count; i++) {
+      // Burst in all directions from center
+      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5
+      newStrawberries.push({
+        id: Date.now() + i,
+        x: 50, // Start from center
+        y: 50,
+        angle,
+        velocity: 80 + Math.random() * 60, // Distance to travel
+        spin: (Math.random() - 0.5) * 720, // Random rotation
+        scale: 0.7 + Math.random() * 0.6,
+      })
+    }
+    setStrawberries(newStrawberries)
+
+    setTimeout(() => {
+      setStrawberries([])
+      setIsActive(false)
+    }, 1000)
+  }, [isActive])
+
+  return (
+    <span
+      className="relative inline-block"
+      onMouseEnter={triggerBurst}
+    >
+      {children}
+      <span className="absolute inset-0 pointer-events-none overflow-visible">
+        {strawberries.map((s) => {
+          const endX = s.x + Math.cos(s.angle) * s.velocity
+          const endY = s.y + Math.sin(s.angle) * s.velocity
+
+          return (
+            <span
+              key={s.id}
+              className="absolute"
+              style={{
+                left: '50%',
+                top: '50%',
+                fontSize: `${s.scale}rem`,
+                transform: 'translate(-50%, -50%)',
+                animation: `strawberryBurst 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`,
+                '--end-x': `${(endX - 50)}px`,
+                '--end-y': `${(endY - 50)}px`,
+                '--spin': `${s.spin}deg`,
+              } as React.CSSProperties}
+            >
+              🍓
+            </span>
+          )
+        })}
+      </span>
+    </span>
   )
 }
 
@@ -155,7 +232,7 @@ export default function Home({ installCommand }: HomeProps) {
               <div className="text-6xl font-bold text-primary-500 mb-4">01</div>
               <h3 className="text-xl font-bold mb-2">No API Needed</h3>
               <p className="text-gray-600">
-                Skip building a separate REST or GraphQL API. Your controllers return page components directly.
+                Skip building a separate REST or <StrawberryConfetti>GraphQL</StrawberryConfetti> API. Your controllers return page components directly.
               </p>
             </div>
             <div className="p-6 lg:p-8 border-b border-black">

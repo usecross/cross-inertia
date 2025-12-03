@@ -229,3 +229,24 @@
     margin-left: -6rem;
   }
 }
+
+@keyframes strawberryBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
+    opacity: 1;
+  }
+  20% {
+    opacity: 1;
+    transform: translate(
+      calc(-50% + var(--end-x) * 0.3),
+      calc(-50% + var(--end-y) * 0.3)
+    ) scale(1) rotate(calc(var(--spin) * 0.3));
+  }
+  100% {
+    transform: translate(
+      calc(-50% + var(--end-x)),
+      calc(-50% + var(--end-y) + 30px)
+    ) scale(0.6) rotate(var(--spin));
+    opacity: 0;
+  }
+}
