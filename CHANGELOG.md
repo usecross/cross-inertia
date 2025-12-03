@@ -1,12 +1,20 @@
 
 
-0.8.0 - 2025-11-25
+0.9.0 - 2025-12-03
 ------------------
 
-Add X-Inertia-Reset header support for infinite scroll reset
+Add Server-Side Rendering (SSR) support
 
-- Handle X-Inertia-Reset header to clear props before merging
-- Filter reset props from mergeProps, prependProps, deepMergeProps
-- Support nested prop paths (e.g., reset "cats" excludes "cats.data")
-- Include resetProps in response for client-side handling
-- Fix URL handling to include query strings in responses
+Enable SSR by passing `ssr_enabled=True` to `InertiaResponse`:
+
+```python
+inertia_response = InertiaResponse(
+    ssr_enabled=True,
+    ssr_url="http://localhost:13714",  # optional, this is the default
+)
+```
+
+- Add `ssr_enabled` and `ssr_url` parameters to `InertiaResponse`
+- SSR server must implement the Inertia SSR protocol (`POST /render`, `GET /health`)
+- Graceful fallback to client-side rendering (CSR) when SSR fails or times out
+- Template context now includes `ssr_head` and `ssr_body` variables for SSR output
