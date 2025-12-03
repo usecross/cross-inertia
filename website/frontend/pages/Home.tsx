@@ -53,6 +53,7 @@ function Logo() {
   )
 }
 
+
 export default function Home({ installCommand }: HomeProps) {
   return (
     <div className="min-h-screen bg-white">
@@ -122,21 +123,13 @@ export default function Home({ installCommand }: HomeProps) {
             </div>
           </div>
 
-          {/* Right decorative area - Swiss geometric shapes */}
-          <div className="col-span-12 lg:col-span-5 bg-gray-50 relative overflow-hidden hidden lg:flex items-center justify-center">
-            {/* Large geometric shape */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-[80%] h-[80%] relative">
-                {/* Primary circle */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500 rounded-full" />
-                {/* Black rectangle */}
-                <div className="absolute bottom-0 left-0 w-48 h-72 bg-black" />
-                {/* Outlined circle */}
-                <div className="absolute bottom-12 right-12 w-40 h-40 border-4 border-black rounded-full" />
-                {/* Small accent */}
-                <div className="absolute top-1/2 left-1/3 w-8 h-8 bg-primary-500" />
-              </div>
-            </div>
+          {/* Right decorative area - Framework blueprints */}
+          <div className="col-span-12 lg:col-span-5 bg-primary-500 relative overflow-hidden hidden lg:block">
+            <img
+              src="/static/hero-frameworks.jpg"
+              alt="Framework blueprints - FastAPI, Vue, Svelte, Django, React, Flask"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       </section>
