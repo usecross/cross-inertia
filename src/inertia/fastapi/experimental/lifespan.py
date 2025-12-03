@@ -1,18 +1,21 @@
 """Lifespan management for Inertia SSR server.
 
+.. warning::
+    This module is experimental and may change in future versions.
+
 This module provides utilities to automatically start and stop the SSR server
 with FastAPI's lifespan context manager.
 
 Example - Simple usage:
     from fastapi import FastAPI
-    from inertia import inertia_lifespan
+    from inertia.fastapi.experimental import inertia_lifespan
 
     app = FastAPI(lifespan=inertia_lifespan)
 
 Example - Composable approach:
     from contextlib import asynccontextmanager
     from fastapi import FastAPI
-    from inertia import create_ssr_lifespan
+    from inertia.fastapi.experimental import create_ssr_lifespan
 
     @asynccontextmanager
     async def lifespan(app):
@@ -22,14 +25,6 @@ Example - Composable approach:
             # Your other shutdown logic here
 
     app = FastAPI(lifespan=lifespan)
-
-Example - With Vite dev server (development):
-    from inertia import create_ssr_lifespan, create_vite_lifespan
-
-    @asynccontextmanager
-    async def lifespan(app):
-        async with create_ssr_lifespan(), create_vite_lifespan():
-            yield
 """
 
 from __future__ import annotations
@@ -314,7 +309,7 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     Example:
         from fastapi import FastAPI
-        from inertia import inertia_lifespan
+        from inertia.fastapi.experimental import inertia_lifespan
 
         app = FastAPI(lifespan=inertia_lifespan)
     """

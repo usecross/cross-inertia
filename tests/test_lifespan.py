@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from inertia._lifespan import (
+from inertia.fastapi.experimental import (
     SSRServer,
     SSRServerError,
     create_ssr_lifespan,
@@ -78,7 +78,7 @@ class TestSSRServer:
             mock_process.returncode = None
             server._process = mock_process
 
-            with patch("inertia._lifespan.logger") as mock_logger:
+            with patch("inertia.fastapi.experimental.lifespan.logger") as mock_logger:
                 await server.start()
                 mock_logger.warning.assert_called_once_with(
                     "SSR server is already running"
@@ -480,9 +480,9 @@ class TestInertiaLifespan:
 class TestImports:
     """Test that lifespan utilities are properly exported."""
 
-    def test_import_from_inertia(self):
-        """Test importing from the main inertia package."""
-        from inertia import (
+    def test_import_from_inertia_fastapi_experimental(self):
+        """Test importing from the inertia.fastapi.experimental module."""
+        from inertia.fastapi.experimental import (
             inertia_lifespan,
             create_ssr_lifespan,
             SSRServer,
@@ -494,9 +494,9 @@ class TestImports:
         assert SSRServer is not None
         assert SSRServerError is not None
 
-    def test_import_from_inertia_fastapi(self):
-        """Test importing from the inertia.fastapi module."""
-        from inertia.fastapi import (
+    def test_import_from_lifespan_module(self):
+        """Test importing from the lifespan module directly."""
+        from inertia.fastapi.experimental.lifespan import (
             inertia_lifespan,
             create_ssr_lifespan,
             SSRServer,

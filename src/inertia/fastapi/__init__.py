@@ -14,8 +14,8 @@ Example:
     async def home(inertia: InertiaDep):
         return inertia.render("Home", {"message": "Hello World"})
 
-SSR lifespan management:
-    from inertia.fastapi import inertia_lifespan, create_ssr_lifespan
+Experimental SSR lifespan management:
+    from inertia.fastapi.experimental import inertia_lifespan, create_ssr_lifespan
 
     # Simple usage
     app = FastAPI(lifespan=inertia_lifespan)
@@ -29,7 +29,7 @@ SSR lifespan management:
     app = FastAPI(lifespan=lifespan)
 """
 
-from ._core import (
+from .._core import (
     Inertia,
     InertiaDep,
     InertiaResponse,
@@ -37,13 +37,7 @@ from ._core import (
     get_inertia_response,
     read_vite_entry_from_config,
 )
-from ._lifespan import (
-    inertia_lifespan,
-    create_ssr_lifespan,
-    SSRServer,
-    SSRServerError,
-)
-from .middleware import InertiaMiddleware
+from ..middleware import InertiaMiddleware
 
 __all__ = [
     "Inertia",
@@ -53,8 +47,4 @@ __all__ = [
     "get_inertia",
     "get_inertia_response",
     "read_vite_entry_from_config",
-    "inertia_lifespan",
-    "create_ssr_lifespan",
-    "SSRServer",
-    "SSRServerError",
 ]

@@ -1,7 +1,11 @@
 ---
-title: SSR Server Lifespan
+title: SSR Server Lifespan (Experimental)
 description: Automatically manage your SSR server with FastAPI's lifespan
 ---
+
+:::caution[Experimental Feature]
+This feature is experimental and may change in future versions. Use with caution in production environments.
+:::
 
 Cross-Inertia provides utilities to automatically start and stop your SSR server alongside your FastAPI application. This eliminates the need to manually manage the SSR subprocess.
 
@@ -11,7 +15,7 @@ The simplest way to use lifespan management is with `inertia_lifespan`:
 
 ```python
 from fastapi import FastAPI
-from inertia import inertia_lifespan
+from inertia.fastapi.experimental import inertia_lifespan
 
 app = FastAPI(lifespan=inertia_lifespan)
 ```
@@ -45,7 +49,7 @@ For more control, use `create_ssr_lifespan` which can be composed with other lif
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from inertia import create_ssr_lifespan
+from inertia.fastapi.experimental import create_ssr_lifespan
 
 @asynccontextmanager
 async def lifespan(app):
@@ -105,7 +109,7 @@ async def lifespan(app):
 If the SSR server fails to start or become healthy within the timeout, an `SSRServerError` is raised:
 
 ```python
-from inertia import create_ssr_lifespan, SSRServerError
+from inertia.fastapi.experimental import create_ssr_lifespan, SSRServerError
 
 @asynccontextmanager
 async def lifespan(app):
@@ -126,7 +130,8 @@ Here's a complete example with SSR, custom configuration, and other lifespan ope
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from inertia.fastapi import InertiaDep, InertiaMiddleware, create_ssr_lifespan
+from inertia.fastapi import InertiaDep, InertiaMiddleware
+from inertia.fastapi.experimental import create_ssr_lifespan
 
 @asynccontextmanager
 async def lifespan(app):

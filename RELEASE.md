@@ -2,16 +2,18 @@
 release type: minor
 ---
 
-Add lifespan SSR server management
+Add experimental lifespan SSR server management
 
 Auto-start/stop the SSR server with FastAPI's lifespan context manager,
 so users don't need to manage the SSR subprocess manually.
+
+This feature is marked as experimental and available under `inertia.fastapi.experimental`.
 
 Simple usage:
 
 ```python
 from fastapi import FastAPI
-from inertia import inertia_lifespan
+from inertia.fastapi.experimental import inertia_lifespan
 
 app = FastAPI(lifespan=inertia_lifespan)
 ```
@@ -21,7 +23,7 @@ Composable approach:
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from inertia import create_ssr_lifespan
+from inertia.fastapi.experimental import create_ssr_lifespan
 
 @asynccontextmanager
 async def lifespan(app):

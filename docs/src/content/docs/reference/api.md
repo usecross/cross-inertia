@@ -212,7 +212,11 @@ async def create_user(inertia: InertiaDep):
 
 **Note:** This is a convenience method. For more control, use `inertia.render()` directly.
 
-## SSR Lifespan Management
+## SSR Lifespan Management (Experimental)
+
+:::caution[Experimental Feature]
+This feature is experimental and may change in future versions.
+:::
 
 Utilities for automatically managing SSR server lifecycle.
 
@@ -222,7 +226,7 @@ Simple lifespan context manager for FastAPI.
 
 ```python
 from fastapi import FastAPI
-from inertia import inertia_lifespan
+from inertia.fastapi.experimental import inertia_lifespan
 
 app = FastAPI(lifespan=inertia_lifespan)
 ```
@@ -267,7 +271,7 @@ async def create_ssr_lifespan(
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from inertia import create_ssr_lifespan
+from inertia.fastapi.experimental import create_ssr_lifespan
 
 @asynccontextmanager
 async def lifespan(app):
@@ -303,7 +307,7 @@ async def stop() -> None   # Stop the SSR server
 Exception raised when the SSR server fails to start or encounters an error.
 
 ```python
-from inertia import SSRServerError
+from inertia.fastapi.experimental import SSRServerError
 
 try:
     async with create_ssr_lifespan():

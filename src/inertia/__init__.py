@@ -16,8 +16,8 @@ Prop types (following Laravel Inertia conventions):
         "analytics": defer(get_analytics),         # Loaded after initial render
     })
 
-SSR lifespan management:
-    from inertia import inertia_lifespan, create_ssr_lifespan
+Experimental SSR lifespan management:
+    from inertia.fastapi.experimental import inertia_lifespan, create_ssr_lifespan
 
     # Simple usage
     app = FastAPI(lifespan=inertia_lifespan)
@@ -34,21 +34,11 @@ SSR lifespan management:
 from importlib.metadata import version
 
 from inertia._core import optional, always, defer
-from inertia._lifespan import (
-    inertia_lifespan,
-    create_ssr_lifespan,
-    SSRServer,
-    SSRServerError,
-)
 
 __version__ = version("cross-inertia")
 __all__ = [
     "optional",
     "always",
     "defer",
-    "inertia_lifespan",
-    "create_ssr_lifespan",
-    "SSRServer",
-    "SSRServerError",
     "__version__",
 ]
