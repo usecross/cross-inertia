@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --shiki-color-text: #24292e;
+    --shiki-color-background: #f6f8fa;
+    --shiki-token-constant: #005cc5;
+    --shiki-token-string: #032f62;
+    --shiki-token-comment: #6a737d;
+    --shiki-token-keyword: #d73a49;
+    --shiki-token-parameter: #24292e;
+    --shiki-token-function: #6f42c1;
+    --shiki-token-string-expression: #22863a;
+    --shiki-token-punctuation: #24292e;
+    --shiki-token-link: #032f62;
+  }
+
+  .dark {
+    --shiki-color-text: #e1e4e8;
+    --shiki-color-background: #1f2937;
+    --shiki-token-constant: #79b8ff;
+    --shiki-token-string: #9ecbff;
+    --shiki-token-comment: #6a737d;
+    --shiki-token-keyword: #f97583;
+    --shiki-token-parameter: #e1e4e8;
+    --shiki-token-function: #b392f0;
+    --shiki-token-string-expression: #85e89d;
+    --shiki-token-punctuation: #e1e4e8;
+    --shiki-token-link: #9ecbff;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .prose pre {
+    @apply !bg-gray-50 dark:!bg-gray-900 !p-0 overflow-hidden;
+  }
+
+  .prose pre code {
+    @apply !bg-transparent !p-4 block overflow-x-auto text-sm;
+  }
+
+  .prose :not(pre) > code {
+    @apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-medium;
+  }
+
+  .prose :not(pre) > code::before,
+  .prose :not(pre) > code::after {
+    content: none;
+  }
+}
+
+/* Syntax highlighting */
+.shiki {
+  @apply !bg-gray-50 dark:!bg-gray-900 rounded-lg overflow-hidden;
+}
+
+.shiki code {
+  @apply block p-4 overflow-x-auto text-sm leading-relaxed;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-600;
+}
