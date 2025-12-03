@@ -118,9 +118,7 @@ class SSRServer:
                     stderr=asyncio.subprocess.PIPE,
                 )
         except FileNotFoundError as e:
-            raise SSRServerError(
-                f"SSR server command not found: {self.command}"
-            ) from e
+            raise SSRServerError(f"SSR server command not found: {self.command}") from e
         except Exception as e:
             raise SSRServerError(f"Failed to start SSR server: {e}") from e
 
@@ -136,9 +134,7 @@ class SSRServer:
         if self._process is None:
             return
 
-        async def read_stream(
-            stream: asyncio.StreamReader | None, prefix: str
-        ) -> None:
+        async def read_stream(stream: asyncio.StreamReader | None, prefix: str) -> None:
             if stream is None:
                 return
             while True:

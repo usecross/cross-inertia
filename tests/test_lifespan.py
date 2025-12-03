@@ -143,7 +143,8 @@ class TestSSRServer:
             import httpx
 
             server = SSRServer(
-                command="sleep 10", startup_timeout=0.1  # Very short timeout
+                command="sleep 10",
+                startup_timeout=0.1,  # Very short timeout
             )
 
             mock_process = MagicMock()
@@ -227,9 +228,7 @@ class TestSSRServer:
                 mock_process.send_signal = MagicMock()
 
             # First wait times out, second succeeds
-            mock_process.wait = AsyncMock(
-                side_effect=[asyncio.TimeoutError(), None]
-            )
+            mock_process.wait = AsyncMock(side_effect=[asyncio.TimeoutError(), None])
 
             server._process = mock_process
             server._output_task = None
@@ -449,7 +448,9 @@ class TestInertiaLifespan:
                 "INERTIA_SSR_HEALTH_URL",
                 "INERTIA_SSR_TIMEOUT",
             ]
-            clean_env = {k: v for k, v in os.environ.items() if k not in env_vars_to_remove}
+            clean_env = {
+                k: v for k, v in os.environ.items() if k not in env_vars_to_remove
+            }
 
             with patch.dict(os.environ, clean_env, clear=True):
                 with patch(
