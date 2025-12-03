@@ -15,6 +15,20 @@ Prop types (following Laravel Inertia conventions):
         "flash": always(get_flash),                # Always included, even in partial reloads
         "analytics": defer(get_analytics),         # Loaded after initial render
     })
+
+Experimental SSR lifespan management:
+    from inertia.fastapi.experimental import inertia_lifespan, create_ssr_lifespan
+
+    # Simple usage
+    app = FastAPI(lifespan=inertia_lifespan)
+
+    # Composable approach
+    @asynccontextmanager
+    async def lifespan(app):
+        async with create_ssr_lifespan():
+            yield
+
+    app = FastAPI(lifespan=lifespan)
 """
 
 from importlib.metadata import version

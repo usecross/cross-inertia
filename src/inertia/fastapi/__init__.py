@@ -13,9 +13,23 @@ Example:
     @app.get("/")
     async def home(inertia: InertiaDep):
         return inertia.render("Home", {"message": "Hello World"})
+
+Experimental SSR lifespan management:
+    from inertia.fastapi.experimental import inertia_lifespan, create_ssr_lifespan
+
+    # Simple usage
+    app = FastAPI(lifespan=inertia_lifespan)
+
+    # Composable approach
+    @asynccontextmanager
+    async def lifespan(app):
+        async with create_ssr_lifespan():
+            yield
+
+    app = FastAPI(lifespan=lifespan)
 """
 
-from ._core import (
+from .._core import (
     Inertia,
     InertiaDep,
     InertiaResponse,
@@ -23,7 +37,7 @@ from ._core import (
     get_inertia_response,
     read_vite_entry_from_config,
 )
-from .middleware import InertiaMiddleware
+from ..middleware import InertiaMiddleware
 
 __all__ = [
     "Inertia",

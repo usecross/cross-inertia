@@ -212,6 +212,110 @@ async def create_user(inertia: InertiaDep):
 
 **Note:** This is a convenience method. For more control, use `inertia.render()` directly.
 
+## SSR Lifespan Management (Experimental)
+
+:::caution[Experimental Feature]
+This feature is experimental and may change in future versions.
+:::
+
+Utilities for automatically managing SSR server lifecycle.
+
+### `inertia_lifespan`
+
+Simple lifespan context manager for FastAPI.
+
+```python
+from fastapi import FastAPI
+from inertia.fastapi.experimental import inertia_lifespan
+
+app = FastAPI(lifespan=inertia_lifespan)
+```
+
+**Configuration via environment variables:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `INERTIA_SSR_COMMAND` | `bun dist/ssr/ssr.js` | SSR server command |
+| `INERTIA_SSR_CWD` | Current directory | Working directory |
+| `INERTIA_SSR_HEALTH_URL` | `http://127.0.0.1:13714/health` | Health check URL |
+| `INERTIA_SSR_TIMEOUT` | `10` | Startup timeout in seconds |
+
+**Reference:** [SSR Lifespan Guide](/guides/ssr-lifespan/)
+
+### `create_ssr_lifespan()`
+
+Composable async context manager for SSR server lifecycle.
+
+```python
+async def create_ssr_lifespan(
+    command: str | list[str] = "bun dist/ssr/ssr.js",
+    cwd: str | None = None,
+    health_url: str = "http://127.0.0.1:13714/health",
+    startup_timeout: float = 10.0,
+    env: dict[str, str] | None = None,
+) -> AsyncGenerator[SSRServer, None]
+```
+
+**Parameters:**
+
+- `command` (str | list[str]): Command to start the SSR server
+- `cwd` (str, optional): Working directory for the SSR server
+- `health_url` (str): URL to check for server health
+- `startup_timeout` (float): Maximum time to wait for the server to become healthy
+- `env` (dict, optional): Additional environment variables for the subprocess
+
+**Yields:** `SSRServer` instance
+
+**Example:**
+
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from inertia.fastapi.experimental import create_ssr_lifespan
+
+@asynccontextmanager
+async def lifespan(app):
+    async with create_ssr_lifespan(
+        command="bun dist/ssr/ssr.js",
+        startup_timeout=15.0,
+    ) as ssr:
+        print(f"SSR running: {ssr.is_running}")
+        yield
+
+app = FastAPI(lifespan=lifespan)
+```
+
+**Reference:** [SSR Lifespan Guide](/guides/ssr-lifespan/)
+
+### SSRServer Class
+
+Manages the SSR server subprocess lifecycle.
+
+#### Properties
+
+- `is_running` (bool): Whether the SSR server is currently running
+
+#### Methods
+
+```python
+async def start() -> None  # Start the SSR server
+async def stop() -> None   # Stop the SSR server
+```
+
+### SSRServerError
+
+Exception raised when the SSR server fails to start or encounters an error.
+
+```python
+from inertia.fastapi.experimental import SSRServerError
+
+try:
+    async with create_ssr_lifespan():
+        yield
+except SSRServerError as e:
+    print(f"SSR server failed: {e}")
+```
+
 ## InertiaResponse Class
 
 Core configuration class for Inertia responses.
