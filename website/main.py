@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from inertia.fastapi import InertiaMiddleware, InertiaDep
 import inertia._core
@@ -254,6 +254,20 @@ DOCS_NAV = generate_docs_nav()
 
 
 app = FastAPI(title="Cross-Inertia Docs", lifespan=lifespan, docs_url=None, redoc_url=None)
+
+
+@app.middleware("http")
+async def strip_trailing_slash(request: Request, call_next):
+    """Redirect URLs with trailing slashes to non-trailing slash versions."""
+    path = request.url.path
+    if path != "/" and path.endswith("/"):
+        # Build new URL without trailing slash
+        new_path = path.rstrip("/")
+        if request.url.query:
+            new_path = f"{new_path}?{request.url.query}"
+        return RedirectResponse(url=new_path, status_code=308)
+    return await call_next(request)
+
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
