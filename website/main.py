@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from inertia.fastapi import InertiaMiddleware, InertiaDep
 import inertia._core
@@ -181,6 +181,20 @@ def load_markdown(path: str) -> dict:
     }
 
 
+def load_raw_markdown(path: str) -> str:
+    """Load raw markdown file content."""
+    file_path = CONTENT_DIR / f"{path}.md"
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Content not found: {path}")
+    return file_path.read_text()
+
+
+def wants_markdown(request: Request) -> bool:
+    """Check if the request prefers markdown content."""
+    accept = request.headers.get("accept", "")
+    return "text/markdown" in accept
+
+
 def generate_docs_nav() -> list[dict]:
     """Generate navigation from markdown files in content/docs."""
     docs_dir = CONTENT_DIR / "docs"
@@ -279,6 +293,13 @@ async def home(request: Request, inertia: InertiaDep):
 
 @app.get("/docs")
 async def docs_index(request: Request, inertia: InertiaDep):
+    # Return raw markdown if requested
+    if wants_markdown(request):
+        return PlainTextResponse(
+            load_raw_markdown("docs/introduction"),
+            media_type="text/markdown",
+        )
+
     content = load_markdown("docs/introduction")
     props = {
         "content": content,
@@ -300,6 +321,13 @@ async def docs_index(request: Request, inertia: InertiaDep):
 
 @app.get("/docs/{path:path}")
 async def docs_page(path: str, request: Request, inertia: InertiaDep):
+    # Return raw markdown if requested
+    if wants_markdown(request):
+        return PlainTextResponse(
+            load_raw_markdown(f"docs/{path}"),
+            media_type="text/markdown",
+        )
+
     content = load_markdown(f"docs/{path}")
     props = {
         "content": content,
