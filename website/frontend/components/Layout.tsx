@@ -149,7 +149,7 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
           </aside>
 
           {/* Main content */}
-          <main className="col-span-12 lg:col-span-9 xl:col-span-10 p-4">
+          <main className="col-span-12 lg:col-span-9 xl:col-span-10 p-4 lg:px-10 lg:py-6">
             <article className="prose prose-lg max-w-3xl prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-4xl prose-h1:border-b-2 prose-h1:border-black prose-h1:pb-4 prose-h1:mb-8 prose-h2:text-2xl prose-h2:mt-12 first:prose-h2:mt-0 prose-h3:text-xl prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
               {children}
             </article>
@@ -159,7 +159,7 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
 
       {/* Footer */}
       <footer className="border-t border-black py-8">
-        <div className="px-4 lg:px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="px-4 lg:px-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <Link href="/">
             <img src="/static/logo-full.svg" alt="Cross-Inertia" className="h-5" />
           </Link>
