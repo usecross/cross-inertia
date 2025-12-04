@@ -17,7 +17,7 @@ function InstallCommand({ command }: { command: string }) {
   return (
     <button
       onClick={copyToClipboard}
-      className="group relative flex items-center bg-black border border-black px-4 py-3 font-mono text-sm text-white hover:bg-white hover:text-black transition-colors cursor-pointer"
+      className="group relative flex items-center bg-black border border-black px-4 h-14 font-mono text-sm text-white hover:bg-white hover:text-black transition-colors cursor-pointer"
     >
       <span className="text-primary-500 mr-2">$</span>
       <span>{command}</span>
@@ -35,7 +35,7 @@ function InstallCommand({ command }: { command: string }) {
         />
       </svg>
       <span
-        className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1 px-2 transition-opacity duration-300 ${
+        className={`absolute -top-4 lg:p-10 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1 px-2 transition-opacity duration-300 ${
           copied ? 'opacity-100' : 'opacity-0'
         }`}
       >
@@ -111,7 +111,7 @@ function InteractiveCodeExample() {
   return (
     <section className="border-t border-black">
       <div className="grid grid-cols-12">
-        <div className="col-span-12 lg:col-span-6 p-6 lg:p-12 border-b lg:border-b-0 lg:border-r border-black bg-black text-white">
+        <div className="col-span-12 lg:col-span-6 p-4 lg:p-10 border-b lg:border-b-0 lg:border-r border-black bg-black text-white">
           <div className="text-sm font-mono uppercase tracking-widest text-gray-400 mb-4">
             Backend
           </div>
@@ -133,7 +133,7 @@ function InteractiveCodeExample() {
             </code>
           </pre>
         </div>
-        <div className="col-span-12 lg:col-span-6 p-6 lg:p-12 bg-gray-50">
+        <div className="col-span-12 lg:col-span-6 p-4 lg:p-10 bg-gray-50">
           <div className="text-sm font-mono uppercase tracking-widest text-gray-500 mb-4">
             Frontend
           </div>
@@ -256,7 +256,7 @@ export default function Home({ installCommand }: HomeProps) {
       <Head title="Inertia.js for Python" />
       {/* Navigation */}
       <nav className="fixed w-full z-50 bg-white border-b border-black">
-        <div className="px-6 lg:px-12">
+        <div className="px-4 lg:px-10">
           <div className="flex justify-between h-16 items-center">
             <Logo showFull={showFullLogo} />
             <div className="flex items-center space-x-8">
@@ -289,30 +289,30 @@ export default function Home({ installCommand }: HomeProps) {
       <section className="pt-16">
         <div className="grid grid-cols-12">
           {/* Left content area */}
-          <div className="col-span-12 lg:col-span-7 flex flex-col justify-between p-6 lg:p-12 border-r-0 lg:border-r border-black">
+          <div className="col-span-12 lg:col-span-7 flex flex-col justify-between p-4 lg:p-10 border-r-0 lg:border-r border-black">
             {/* Main headline */}
-            <div className="pt-8 lg:pt-16">
+            <div className="pt-6 lg:pt-16">
               <div className="mb-4 text-sm font-mono uppercase tracking-widest text-gray-500">
                 Python + Inertia.js
               </div>
-              <h1 className="mb-8">
+              <h1 className="mb-6 lg:mb-8">
                 <img
                   src="/static/logo-full.svg"
                   alt="Cross-Inertia"
                   className="h-auto w-auto max-w-[580px]"
                 />
               </h1>
-              <p className="text-xl lg:text-2xl text-gray-700 max-w-xl leading-relaxed">
+              <p className="text-xl lg:text-2xl text-gray-700 max-w-xl leading-relaxed mb-8 lg:mb-0">
                 Build modern single-page applications with Django, Flask, and FastAPI.
                 No API required.
               </p>
             </div>
 
             {/* Bottom actions */}
-            <div className="flex flex-col sm:flex-row gap-4 pb-8 lg:pb-16">
+            <div className="flex flex-col sm:flex-row gap-3 mt-12 lg:mt-0 pb-6 lg:pb-16">
               <Link
                 href="/docs"
-                className="inline-flex items-center justify-center px-8 py-4 bg-black text-white font-bold text-lg hover:bg-primary-500 transition-colors border border-black"
+                className="inline-flex items-center justify-center px-4 lg:px-10 h-14 bg-black text-white font-bold text-lg hover:bg-primary-500 transition-colors border border-black"
               >
                 Get Started
               </Link>
@@ -335,7 +335,7 @@ export default function Home({ installCommand }: HomeProps) {
       <section className="border-t border-black">
         <div className="grid grid-cols-12">
           {/* Section header */}
-          <div className="col-span-12 lg:col-span-4 p-6 lg:p-12 border-b lg:border-b-0 lg:border-r border-black">
+          <div className="col-span-12 lg:col-span-4 p-4 lg:p-10 border-b lg:border-b-0 lg:border-r border-black">
             <div className="text-sm font-mono uppercase tracking-widest text-gray-500 mb-4">
               Why Cross-Inertia
             </div>
@@ -348,28 +348,28 @@ export default function Home({ installCommand }: HomeProps) {
 
           {/* Features grid */}
           <div className="col-span-12 lg:col-span-8 grid grid-cols-1 sm:grid-cols-2">
-            <div className="p-6 lg:p-8 border-b sm:border-r border-black">
+            <div className="p-4 lg:p-10 border-b sm:border-r border-black">
               <div className="text-6xl font-bold text-primary-500 mb-4">01</div>
               <h3 className="text-xl font-bold mb-2">No API Needed</h3>
               <p className="text-gray-600">
                 Skip building a separate REST or <StrawberryConfetti>GraphQL</StrawberryConfetti> API. Your controllers return page components directly.
               </p>
             </div>
-            <div className="p-6 lg:p-8 border-b border-black">
+            <div className="p-4 lg:p-10 border-b border-black">
               <div className="text-6xl font-bold text-primary-500 mb-4">02</div>
               <h3 className="text-xl font-bold mb-2">Server-Side Routing</h3>
               <p className="text-gray-600">
                 Use your familiar Python routing. No client-side router needed.
               </p>
             </div>
-            <div className="p-6 lg:p-8 border-b sm:border-b-0 sm:border-r border-black">
+            <div className="p-4 lg:p-10 border-b sm:border-b-0 sm:border-r border-black">
               <div className="text-6xl font-bold text-primary-500 mb-4">03</div>
               <h3 className="text-xl font-bold mb-2">Full SPA Experience</h3>
               <p className="text-gray-600">
                 Users get the speed and responsiveness of a single-page app without the complexity.
               </p>
             </div>
-            <div className="p-6 lg:p-8">
+            <div className="p-4 lg:p-10">
               <div className="text-6xl font-bold text-primary-500 mb-4">04</div>
               <h3 className="text-xl font-bold mb-2">SEO Friendly</h3>
               <p className="text-gray-600">
@@ -386,7 +386,7 @@ export default function Home({ installCommand }: HomeProps) {
       {/* CTA Section */}
       <section className="border-t border-black">
         <div className="grid grid-cols-12 items-center">
-          <div className="col-span-12 lg:col-span-8 p-6 lg:p-12">
+          <div className="col-span-12 lg:col-span-8 p-4 lg:p-10">
             <h2 className="text-4xl lg:text-6xl font-bold tracking-tight mb-4">
               Ready to start?
             </h2>
@@ -395,14 +395,14 @@ export default function Home({ installCommand }: HomeProps) {
             </p>
             <Link
               href="/docs"
-              className="inline-flex items-center justify-center px-8 py-4 bg-primary-500 text-white font-bold text-lg hover:bg-black transition-colors border border-primary-500 hover:border-black"
+              className="inline-flex items-center justify-center px-4 lg:px-10 py-4 bg-primary-500 text-white font-bold text-lg hover:bg-black transition-colors border border-primary-500 hover:border-black"
             >
               Read the Docs
             </Link>
           </div>
           <Link
             href="/docs"
-            className="col-span-12 lg:col-span-4 h-full bg-primary-500 hidden lg:flex items-center justify-center p-12 hover:bg-black transition-colors"
+            className="col-span-12 lg:col-span-4 h-full bg-primary-500 hidden lg:flex items-center justify-center p-4 lg:p-10 hover:bg-black transition-colors"
           >
             <div className="text-white text-8xl font-bold">
               &rarr;
@@ -413,11 +413,11 @@ export default function Home({ installCommand }: HomeProps) {
 
       {/* Footer */}
       <footer className="border-t border-black py-8">
-        <div className="px-6 lg:px-12 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="px-4 lg:px-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <Link href="/">
             <img src="/static/logo-full.svg" alt="Cross-Inertia" className="h-5" />
           </Link>
-          <div className="flex gap-8 text-sm text-gray-600">
+          <div className="flex gap-4 lg:p-10 text-sm text-gray-600">
             <Link href="/docs" className="hover:text-black transition-colors">
               Documentation
             </Link>

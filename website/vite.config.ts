@@ -2,9 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-export default defineConfig(({ isSsrBuild }) => ({
+export default defineConfig(({ isSsrBuild, command }) => ({
   plugins: [react()],
-  base: isSsrBuild ? '/' : '/static/build/',
+  // Use base path only for production builds, not for dev server
+  base: command === 'serve' ? '/' : isSsrBuild ? '/' : '/static/build/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './frontend'),

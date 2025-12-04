@@ -64,7 +64,7 @@ function MobileMenuButton({ onClick, isOpen }: { onClick: () => void; isOpen: bo
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center justify-center p-2 text-black hover:text-primary-500 lg:hidden"
+      className="inline-flex items-center justify-center p-2 -ml-2 text-black hover:text-primary-500 lg:hidden"
       aria-expanded={isOpen}
     >
       <span className="sr-only">{isOpen ? 'Close menu' : 'Open menu'}</span>
@@ -96,9 +96,9 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
       <Head title={title} />
       {/* Fixed navigation */}
       <nav className="fixed w-full z-50 bg-white border-b border-black">
-        <div className="px-6 lg:px-12">
+        <div className="px-4 lg:px-10">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <MobileMenuButton onClick={() => setMobileMenuOpen(!mobileMenuOpen)} isOpen={mobileMenuOpen} />
               <Logo inverted />
             </div>
@@ -132,7 +132,7 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed inset-y-0 left-0 w-72 overflow-y-auto bg-white px-4 py-6 pt-20 border-r border-black">
+          <div className="fixed inset-y-0 left-0 w-72 overflow-y-auto bg-white px-4 lg:px-10 py-6 pt-20 border-r border-black">
             <Sidebar nav={nav} currentPath={currentPath} />
           </div>
         </div>
@@ -143,13 +143,13 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
         <div className="grid grid-cols-12">
           {/* Desktop sidebar */}
           <aside className="hidden lg:block lg:col-span-3 xl:col-span-2 border-r border-black min-h-[calc(100vh-4rem)]">
-            <nav className="sticky top-16 px-6 lg:px-12 py-6 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            <nav className="sticky top-16 px-4 lg:px-10 py-6 max-h-[calc(100vh-4rem)] overflow-y-auto">
               <Sidebar nav={nav} currentPath={currentPath} />
             </nav>
           </aside>
 
           {/* Main content */}
-          <main className="col-span-12 lg:col-span-9 xl:col-span-10 p-6 lg:p-12">
+          <main className="col-span-12 lg:col-span-9 xl:col-span-10 p-4">
             <article className="prose prose-lg max-w-3xl prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-4xl prose-h1:border-b-2 prose-h1:border-black prose-h1:pb-4 prose-h1:mb-8 prose-h2:text-2xl prose-h2:mt-12 first:prose-h2:mt-0 prose-h3:text-xl prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
               {children}
             </article>
@@ -159,7 +159,7 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
 
       {/* Footer */}
       <footer className="border-t border-black py-8">
-        <div className="px-6 lg:px-12 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="px-4 lg:px-4 flex flex-col md:flex-row justify-between items-center gap-6">
           <Link href="/">
             <img src="/static/logo-full.svg" alt="Cross-Inertia" className="h-5" />
           </Link>
@@ -187,7 +187,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Fixed navigation */}
       <nav className="fixed w-full z-50 bg-white border-b border-black">
-        <div className="px-6 lg:px-12">
+        <div className="px-4 lg:px-10">
           <div className="flex justify-between h-16 items-center">
             <Logo />
             <div className="flex items-center space-x-8">
