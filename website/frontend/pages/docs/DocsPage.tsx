@@ -11,8 +11,8 @@ interface DocsPageProps {
 
 export default function DocsPage({ content }: DocsPageProps) {
   return (
-    <DocsLayout title={content.title} description={content.description}>
-      <Markdown content={content.body} />
+    <DocsLayout title={content?.title ?? ''} description={content?.description}>
+      <Markdown content={content?.body ?? ''} />
     </DocsLayout>
   )
 }

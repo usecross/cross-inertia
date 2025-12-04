@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react'
+import { Head, Link } from '@inertiajs/react'
 import { useState, useCallback, useEffect } from 'react'
 
 interface HomeProps {
@@ -253,6 +253,7 @@ export default function Home({ installCommand }: HomeProps) {
 
   return (
     <div className="min-h-screen bg-white">
+      <Head title="Inertia.js for Python" />
       {/* Navigation */}
       <nav className="fixed w-full z-50 bg-white border-b border-black">
         <div className="px-6 lg:px-12">
@@ -413,9 +414,9 @@ export default function Home({ installCommand }: HomeProps) {
       {/* Footer */}
       <footer className="border-t border-black py-8">
         <div className="px-6 lg:px-12 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="font-bold text-lg">
-            <span className="text-primary-500">Cross</span>Inertia
-          </div>
+          <Link href="/">
+            <img src="/static/logo-full.svg" alt="Cross-Inertia" className="h-5" />
+          </Link>
           <div className="flex gap-8 text-sm text-gray-600">
             <Link href="/docs" className="hover:text-black transition-colors">
               Documentation

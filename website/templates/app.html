@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% if head %}{% for tag in head %}{{ tag|safe }}{% endfor %}{% else %}<title>{% if page_title %}{{ page_title }} - {% endif %}Cross-Inertia</title>{% endif %}
+    {% if head %}{% for tag in head %}{{ tag|safe }}{% endfor %}{% else %}<title inertia>{% if page_title %}{{ page_title }} - {% endif %}Cross-Inertia</title>{% endif %}
     <meta name="description" content="{% if meta_description %}{{ meta_description }}{% else %}Inertia.js adapter for Python backends. Build modern SPAs with FastAPI and React.{% endif %}">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="https://use.typekit.net/blc3tug.css">

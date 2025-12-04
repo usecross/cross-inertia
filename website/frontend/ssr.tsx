@@ -15,6 +15,7 @@ createServer((page) =>
   createInertiaApp({
     page,
     render: ReactDOMServer.renderToString,
+    title: (title) => (title ? `${title} - Cross-Inertia` : 'Cross-Inertia'),
     resolve: (name) => {
       const pageComponent = pages[name]
       if (!pageComponent) {

@@ -20,6 +20,7 @@ if (typeof window !== 'undefined') {
 }
 
 createInertiaApp({
+  title: (title) => (title ? `${title} - Cross-Inertia` : 'Cross-Inertia'),
   resolve: (name) => {
     const page = pages[name]
     if (!page) {

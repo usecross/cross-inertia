@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { getHighlighter } from '@/lib/shiki'
 
 interface CodeBlockProps {
   code: string
@@ -21,9 +22,11 @@ export function CodeBlock({
 
   useEffect(() => {
     async function highlight() {
-      const { codeToHtml } = await import('shiki')
-      const highlighted = await codeToHtml(code.trim(), {
-        lang: language,
+      const highlighter = await getHighlighter()
+      const langs = highlighter.getLoadedLanguages()
+      const lang = langs.includes(language) ? language : 'text'
+      const highlighted = highlighter.codeToHtml(code.trim(), {
+        lang,
         theme: 'github-dark-dimmed',
       })
       setHtml(highlighted)

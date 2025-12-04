@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react'
+import { Head, Link, usePage } from '@inertiajs/react'
 import { cn } from '@/lib/utils'
 import { ReactNode, useState } from 'react'
 
@@ -93,6 +93,7 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      <Head title={title} />
       {/* Fixed navigation */}
       <nav className="fixed w-full z-50 bg-white border-b border-black">
         <div className="px-6 lg:px-12">
@@ -131,7 +132,7 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed inset-y-0 left-0 w-72 overflow-y-auto bg-white p-6 pt-20 border-r border-black">
+          <div className="fixed inset-y-0 left-0 w-72 overflow-y-auto bg-white px-4 py-6 pt-20 border-r border-black">
             <Sidebar nav={nav} currentPath={currentPath} />
           </div>
         </div>
