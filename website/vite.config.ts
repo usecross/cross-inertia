@@ -4,6 +4,7 @@ import path from 'path'
 
 export default defineConfig(({ isSsrBuild }) => ({
   plugins: [react()],
+  base: isSsrBuild ? '/' : '/static/build/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './frontend'),
