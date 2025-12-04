@@ -8,6 +8,10 @@ default:
 dev:
     uv run fastapi dev
 
+# Development server with SSR
+dev-ssr: build-ssr
+    SSR=1 uv run fastapi dev
+
 # Build frontend for production
 build:
     uv run python -m pybun run build
@@ -21,6 +25,6 @@ install:
     uv sync
     uv run python -m pybun install
 
-# Deploy to production
-deploy: build
-    uv run fastapi deploy
+# Deploy to production with SSR
+deploy: build-ssr
+    SSR=1 uv run fastapi deploy

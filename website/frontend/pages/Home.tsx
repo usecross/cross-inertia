@@ -35,7 +35,7 @@ function InstallCommand({ command }: { command: string }) {
         />
       </svg>
       <span
-        className={`absolute -top-4 lg:p-10 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1 px-2 transition-opacity duration-300 ${
+        className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1 px-2 rounded transition-opacity duration-300 whitespace-nowrap ${
           copied ? 'opacity-100' : 'opacity-0'
         }`}
       >
