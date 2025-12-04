@@ -17,10 +17,14 @@ interface SharedProps {
   currentPath: string
 }
 
-function Logo() {
+function Logo({ inverted = false }: { inverted?: boolean }) {
   return (
     <Link href="/" className="flex items-center">
-      <img src="/static/logo.svg" alt="Cross-Inertia" className="h-8" />
+      <img
+        src={inverted ? '/static/logo-inverted.svg' : '/static/logo.svg'}
+        alt="Cross-Inertia"
+        className="h-8"
+      />
     </Link>
   )
 }
@@ -95,7 +99,7 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
               <MobileMenuButton onClick={() => setMobileMenuOpen(!mobileMenuOpen)} isOpen={mobileMenuOpen} />
-              <Logo />
+              <Logo inverted />
             </div>
             <div className="flex items-center space-x-8">
               <Link
@@ -138,14 +142,14 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
         <div className="grid grid-cols-12">
           {/* Desktop sidebar */}
           <aside className="hidden lg:block lg:col-span-3 xl:col-span-2 border-r border-black min-h-[calc(100vh-4rem)]">
-            <nav className="sticky top-16 p-6 lg:p-8 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            <nav className="sticky top-16 px-6 lg:px-12 py-6 max-h-[calc(100vh-4rem)] overflow-y-auto">
               <Sidebar nav={nav} currentPath={currentPath} />
             </nav>
           </aside>
 
           {/* Main content */}
           <main className="col-span-12 lg:col-span-9 xl:col-span-10 p-6 lg:p-12">
-            <article className="prose prose-lg max-w-3xl prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-4xl prose-h1:border-b-2 prose-h1:border-black prose-h1:pb-4 prose-h1:mb-8 prose-h2:text-2xl prose-h2:mt-12 prose-h3:text-xl prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
+            <article className="prose prose-lg max-w-3xl prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-4xl prose-h1:border-b-2 prose-h1:border-black prose-h1:pb-4 prose-h1:mb-8 prose-h2:text-2xl prose-h2:mt-12 first:prose-h2:mt-0 prose-h3:text-xl prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
               {children}
             </article>
           </main>
@@ -155,9 +159,9 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
       {/* Footer */}
       <footer className="border-t border-black py-8">
         <div className="px-6 lg:px-12 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="font-bold text-lg">
-            <span className="text-primary-500">Cross</span>Inertia
-          </div>
+          <Link href="/">
+            <img src="/static/logo-full.svg" alt="Cross-Inertia" className="h-5" />
+          </Link>
           <div className="flex gap-8 text-sm text-gray-600">
             <Link href="/docs" className="hover:text-black transition-colors">
               Documentation
