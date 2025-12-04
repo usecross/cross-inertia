@@ -289,7 +289,7 @@ export default function Home({ installCommand }: HomeProps) {
       <section className="pt-16">
         <div className="grid grid-cols-12">
           {/* Left content area */}
-          <div className="col-span-12 lg:col-span-7 flex flex-col justify-between p-4 lg:p-10 border-r-0 lg:border-r border-black">
+          <div className="col-span-12 lg:col-span-7 flex flex-col justify-between p-4 lg:p-10">
             {/* Main headline */}
             <div className="pt-6 lg:pt-16">
               <div className="mb-4 text-sm font-mono uppercase tracking-widest text-gray-500">
@@ -321,11 +321,11 @@ export default function Home({ installCommand }: HomeProps) {
           </div>
 
           {/* Right decorative area - Framework blueprints */}
-          <div className="col-span-12 lg:col-span-5 bg-primary-500 hidden lg:block">
+          <div className="col-span-12 lg:col-span-5 hidden lg:flex justify-end">
             <img
               src="/static/hero-frameworks.jpg"
               alt="Framework blueprints - FastAPI, Vue, Svelte, Django, React, Flask"
-              className="w-full h-auto"
+              className="w-auto h-auto max-h-[90vh]"
             />
           </div>
         </div>
