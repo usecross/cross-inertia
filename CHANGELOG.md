@@ -1,39 +1,16 @@
 
 
-0.10.0 - 2025-12-03
+0.10.1 - 2025-12-07
 -------------------
 
-Add experimental lifespan SSR server management
+Make `share` parameter optional in `InertiaMiddleware`
 
-Auto-start/stop the SSR server with FastAPI's lifespan context manager,
-so users don't need to manage the SSR subprocess manually.
-
-This feature is marked as experimental and available under `inertia.fastapi.experimental`.
-
-Simple usage:
+The `share` parameter now defaults to `None`, allowing simpler middleware setup when shared data is not needed:
 
 ```python
-from fastapi import FastAPI
-from inertia.fastapi.experimental import inertia_lifespan
+# Before (required)
+app.add_middleware(InertiaMiddleware, share=lambda request: {})
 
-app = FastAPI(lifespan=inertia_lifespan)
+# After (optional)
+app.add_middleware(InertiaMiddleware)
 ```
-
-Composable approach:
-
-```python
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
-from inertia.fastapi.experimental import create_ssr_lifespan
-
-@asynccontextmanager
-async def lifespan(app):
-    async with create_ssr_lifespan(command="bun dist/ssr/ssr.js"):
-        yield
-
-app = FastAPI(lifespan=lifespan)
-```
-
-- Add `inertia_lifespan` for simple usage with environment variable config
-- Add `create_ssr_lifespan` for composable approach with full control
-- Add `SSRServer` class and `SSRServerError` exception
