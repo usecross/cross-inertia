@@ -1,7 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
-  content: ['./frontend/**/*.{ts,tsx}', './templates/**/*.html'],
+  content: [
+    './frontend/**/*.{ts,tsx}',
+    './templates/**/*.html',
+    // Include @usecross/docs components
+    './node_modules/@usecross/docs/src/**/*.{ts,tsx}',
+  ],
   theme: {
     extend: {
       maxWidth: {

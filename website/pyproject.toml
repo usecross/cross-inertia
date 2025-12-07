@@ -17,7 +17,7 @@ dependencies = [
 dev = []
 
 [tool.uv.sources]
-cross-docs = { git = "https://github.com/usecross/cross-docs", subdirectory = "python", branch = "feat/website-docs" }
+cross-docs = { git = "https://github.com/usecross/cross-docs", subdirectory = "python", rev = "959890e" }
 
 [tool.cross-docs]
 content_dir = "content"

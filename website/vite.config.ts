@@ -10,6 +10,8 @@ export default defineConfig(({ isSsrBuild, command }) => ({
     alias: {
       '@': path.resolve(__dirname, './frontend'),
     },
+    // Dedupe to ensure single instance of @inertiajs/react (fixes usePage context issue)
+    dedupe: ['@inertiajs/react', 'react', 'react-dom'],
   },
   build: {
     manifest: !isSsrBuild,

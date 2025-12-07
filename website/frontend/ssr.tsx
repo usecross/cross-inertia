@@ -1,10 +1,10 @@
 import { createInertiaApp } from '@inertiajs/react'
 import createServer from '@inertiajs/react/server'
 import ReactDOMServer from 'react-dom/server'
+import { DocsPage } from '@usecross/docs'
 
 // Import page components
 import Home from './pages/Home'
-import DocsPage from './pages/docs/DocsPage'
 
 const pages: Record<string, React.ComponentType<any>> = {
   Home,
