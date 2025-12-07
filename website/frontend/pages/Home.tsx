@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react'
 import { useState, useCallback, useEffect } from 'react'
-import { HomePage, type HomeFeature } from '@usecross/docs'
+import { HomePage, HomeFooter, type HomeFeature } from '@usecross/docs'
 
 interface HomeProps {
   title: string
@@ -430,42 +430,6 @@ function CustomCTA({ ctaHref }: { ctaHref: string }) {
   )
 }
 
-// Custom footer
-function CustomFooter({ footerLogoUrl, navLinks, githubUrl }: {
-  footerLogoUrl?: string
-  navLinks: Array<{ label: string; href: string }>
-  githubUrl?: string
-}) {
-  return (
-    <footer className="border-t border-gray-200 py-8">
-      <div className="px-4 lg:px-10 flex flex-col md:flex-row justify-between items-center gap-6">
-        {footerLogoUrl && (
-          <Link href="/">
-            <img src={footerLogoUrl} alt="Cross-Inertia" className="h-5" />
-          </Link>
-        )}
-        <div className="flex gap-4 lg:p-10 text-sm text-gray-600">
-          {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-black transition-colors">
-              {link.label}
-            </Link>
-          ))}
-          {githubUrl && (
-            <a
-              href={githubUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-black transition-colors"
-            >
-              GitHub
-            </a>
-          )}
-        </div>
-      </div>
-    </footer>
-  )
-}
-
 export default function Home(props: HomeProps) {
   const [showFullLogo, setShowFullLogo] = useState(false)
   const navLinks = props.navLinks ?? [{ label: 'Docs', href: '/docs' }]
@@ -494,11 +458,7 @@ export default function Home(props: HomeProps) {
       <CustomFeatures features={props.features} />
       <InteractiveCodeExample />
       <CustomCTA ctaHref={props.ctaHref} />
-      <CustomFooter
-        footerLogoUrl={props.footerLogoUrl}
-        navLinks={navLinks}
-        githubUrl={props.githubUrl}
-      />
+      <HomeFooter />
     </HomePage>
   )
 }
