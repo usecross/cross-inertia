@@ -103,12 +103,13 @@ function Hl({
       className={`relative rounded px-1 -mx-1 cursor-default ${className}`}
     >
       <span
-        className="absolute -inset-x-1 rounded bg-primary-500/30 border border-primary-500"
+        className="absolute -inset-x-1 rounded border border-primary-500"
         style={{
           top: '-3px',
           bottom: '-3px',
           opacity: isActive ? 1 : 0,
           transition: 'opacity 300ms ease-out',
+          backgroundColor: 'color-mix(in srgb, var(--color-primary-500, #648C57) 30%, transparent)',
         }}
       />
       <span className="relative">{children}</span>
