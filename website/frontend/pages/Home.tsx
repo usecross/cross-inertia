@@ -120,9 +120,9 @@ function InteractiveCodeExample() {
   const [highlighted, setHighlighted] = useState<HighlightKey>(null)
 
   return (
-    <section className="border-t border-black">
+    <section className="border-t border-gray-200">
       <div className="grid grid-cols-12">
-        <div className="col-span-12 lg:col-span-6 p-4 lg:p-10 border-b lg:border-b-0 lg:border-r border-black bg-black text-white">
+        <div className="col-span-12 lg:col-span-6 p-4 lg:p-10 border-b lg:border-b-0 lg:border-r border-gray-200 bg-black text-white">
           <div className="text-sm font-mono uppercase tracking-widest text-gray-400 mb-4">
             Backend
           </div>
@@ -255,7 +255,7 @@ function CustomHeader({ showFullLogo, githubUrl, navLinks }: {
   navLinks: Array<{ label: string; href: string }>
 }) {
   return (
-    <nav className="fixed w-full z-50 bg-white border-b border-black">
+    <nav className="fixed w-full z-50 bg-white border-b border-gray-200">
       <div className="px-4 lg:px-10">
         <div className="flex justify-between h-16 items-center">
           <Logo showFull={showFullLogo} />
@@ -342,7 +342,7 @@ function CustomHero({ installCommand, ctaHref }: { installCommand: string; ctaHr
   )
 }
 
-// Custom features section with black borders and StrawberryConfetti easter egg
+// Custom features section with StrawberryConfetti easter egg
 function CustomFeatures({ features }: { features: HomeFeature[] }) {
   // Inject StrawberryConfetti into the first feature's description
   const enhancedFeatures = features.map((feature, index) => {
@@ -360,10 +360,10 @@ function CustomFeatures({ features }: { features: HomeFeature[] }) {
   })
 
   return (
-    <section className="border-t border-black">
+    <section className="border-t border-gray-200">
       <div className="grid grid-cols-12">
         {/* Section header */}
-        <div className="col-span-12 lg:col-span-4 p-4 lg:p-10 border-b lg:border-b-0 lg:border-r border-black">
+        <div className="col-span-12 lg:col-span-4 p-4 lg:p-10 border-b lg:border-b-0 lg:border-r border-gray-200">
           <div className="text-sm font-mono uppercase tracking-widest text-gray-500 mb-4">
             Why Cross-Inertia
           </div>
@@ -379,7 +379,7 @@ function CustomFeatures({ features }: { features: HomeFeature[] }) {
           {enhancedFeatures.map((feature, index) => (
             <div
               key={index}
-              className={`p-4 lg:p-10 border-b sm:border-b border-black ${
+              className={`p-4 lg:p-10 border-b sm:border-b border-gray-200 ${
                 index % 2 === 0 ? 'sm:border-r' : ''
               } ${index >= enhancedFeatures.length - 2 ? 'sm:border-b-0' : ''} ${
                 index === enhancedFeatures.length - 1 && enhancedFeatures.length % 2 === 1 ? 'border-b-0' : ''
@@ -398,10 +398,10 @@ function CustomFeatures({ features }: { features: HomeFeature[] }) {
   )
 }
 
-// Custom CTA with black borders
+// Custom CTA section
 function CustomCTA({ ctaHref }: { ctaHref: string }) {
   return (
-    <section className="border-t border-black">
+    <section className="border-t border-gray-200">
       <div className="grid grid-cols-12 items-center">
         <div className="col-span-12 lg:col-span-8 p-4 lg:p-10">
           <h2 className="text-4xl lg:text-6xl font-bold tracking-tight mb-4">
@@ -430,14 +430,14 @@ function CustomCTA({ ctaHref }: { ctaHref: string }) {
   )
 }
 
-// Custom footer with black borders
+// Custom footer
 function CustomFooter({ footerLogoUrl, navLinks, githubUrl }: {
   footerLogoUrl?: string
   navLinks: Array<{ label: string; href: string }>
   githubUrl?: string
 }) {
   return (
-    <footer className="border-t border-black py-8">
+    <footer className="border-t border-gray-200 py-8">
       <div className="px-4 lg:px-10 flex flex-col md:flex-row justify-between items-center gap-6">
         {footerLogoUrl && (
           <Link href="/">
