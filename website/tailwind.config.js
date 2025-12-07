@@ -13,19 +13,19 @@ export default {
         mono: ['Fira Code', 'Consolas', 'Monaco', 'Andale Mono', 'monospace'],
       },
       colors: {
-        // Cross-Inertia brand colors (green)
+        // Cross-Inertia brand colors (green) - using CSS variable for theming
         primary: {
-          50: '#f4f7f3',
-          100: '#e6ece4',
-          200: '#cddac9',
-          300: '#a9c1a2',
-          400: '#7fa276',
-          500: '#648C57',
-          600: '#4d7043',
-          700: '#3e5937',
-          800: '#34482f',
-          900: '#2c3c28',
-          950: '#151f13',
+          50: 'color-mix(in srgb, var(--color-primary-500, #648C57) 5%, white)',
+          100: 'color-mix(in srgb, var(--color-primary-500, #648C57) 10%, white)',
+          200: 'color-mix(in srgb, var(--color-primary-500, #648C57) 20%, white)',
+          300: 'color-mix(in srgb, var(--color-primary-500, #648C57) 40%, white)',
+          400: 'color-mix(in srgb, var(--color-primary-500, #648C57) 70%, white)',
+          500: 'var(--color-primary-500, #648C57)',
+          600: 'color-mix(in srgb, var(--color-primary-500, #648C57) 90%, black)',
+          700: 'color-mix(in srgb, var(--color-primary-500, #648C57) 70%, black)',
+          800: 'color-mix(in srgb, var(--color-primary-500, #648C57) 50%, black)',
+          900: 'color-mix(in srgb, var(--color-primary-500, #648C57) 30%, black)',
+          950: 'color-mix(in srgb, var(--color-primary-500, #648C57) 15%, black)',
         },
         // Dark colors for code blocks
         dark: {

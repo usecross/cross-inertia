@@ -1,12 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+@import '@usecross/docs/styles.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
-
 @layer base {
   :root {
-    /* Primary brand color - green */
+    /* Primary brand color - green (for cross-docs) */
+    --color-primary-500: #648C57;
+    /* Legacy variable */
     --primary-color: #648C57;
 
     /* Font stacks */

@@ -1,10 +1,10 @@
 import { createInertiaApp, router } from '@inertiajs/react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
+import { DocsPage } from '@usecross/docs'
 import './globals.css'
 
 // Import page components
 import Home from './pages/Home'
-import DocsPage from './pages/docs/DocsPage'
 
 const pages: Record<string, React.ComponentType<any>> = {
   Home,
