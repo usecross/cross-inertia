@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { HomePage, HomeFooter, HomeCTA, HomeHero, type HomeFeature } from '@usecross/docs'
-import { CustomHeader } from '@/components/CustomHeader'
+import { HomePage, HomeHeader, HomeFooter, HomeCTA, HomeHero, type HomeFeature } from '@usecross/docs'
+import { Logo } from '@/components/Logo'
 import { CustomFeatures } from '@/components/CustomFeatures'
 import { InteractiveCodeExample } from '@/components/InteractiveCodeExample'
 
@@ -35,11 +35,7 @@ export default function Home(props: HomeProps) {
 
   return (
     <HomePage {...props} navLinks={navLinks}>
-      <CustomHeader
-        showFullLogo={showFullLogo}
-        githubUrl={props.githubUrl}
-        navLinks={navLinks}
-      />
+      <HomeHeader renderLogo={() => <Logo showFull={showFullLogo} />} />
       <HomeHero />
       <CustomFeatures features={props.features} />
       <InteractiveCodeExample />
