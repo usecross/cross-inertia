@@ -1,8 +1,19 @@
-import { Head, Link } from '@inertiajs/react'
+import { Link } from '@inertiajs/react'
 import { useState, useCallback, useEffect } from 'react'
+import { HomePage, type HomeFeature } from '@usecross/docs'
 
 interface HomeProps {
+  title: string
+  tagline: string
+  description: string
   installCommand: string
+  ctaText: string
+  ctaHref: string
+  features: HomeFeature[]
+  logoUrl?: string
+  footerLogoUrl?: string
+  githubUrl?: string
+  navLinks?: Array<{ label: string; href: string }>
 }
 
 function InstallCommand({ command }: { command: string }) {
@@ -237,37 +248,30 @@ function StrawberryConfetti({ children }: { children: React.ReactNode }) {
   )
 }
 
-
-export default function Home({ installCommand }: HomeProps) {
-  const [showFullLogo, setShowFullLogo] = useState(false)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      // Show full logo after scrolling past the hero logo
-      setShowFullLogo(window.scrollY > 250)
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
+// Custom header with animated logo
+function CustomHeader({ showFullLogo, githubUrl, navLinks }: {
+  showFullLogo: boolean
+  githubUrl?: string
+  navLinks: Array<{ label: string; href: string }>
+}) {
   return (
-    <div className="min-h-screen bg-white">
-      <Head title="Inertia.js for Python" />
-      {/* Navigation */}
-      <nav className="fixed w-full z-50 bg-white border-b border-black">
-        <div className="px-4 lg:px-10">
-          <div className="flex justify-between h-16 items-center">
-            <Logo showFull={showFullLogo} />
-            <div className="flex items-center space-x-8">
+    <nav className="fixed w-full z-50 bg-white border-b border-black">
+      <div className="px-4 lg:px-10">
+        <div className="flex justify-between h-16 items-center">
+          <Logo showFull={showFullLogo} />
+          <div className="flex items-center space-x-8">
+            {navLinks.map((link) => (
               <Link
-                href="/docs"
+                key={link.href}
+                href={link.href}
                 className="text-black font-medium hover:text-primary-500 transition-colors"
               >
-                Docs
+                {link.label}
               </Link>
+            ))}
+            {githubUrl && (
               <a
-                href="https://github.com/patrick91/cross-inertia"
+                href={githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-black hover:text-primary-500 transition-colors"
@@ -280,158 +284,221 @@ export default function Home({ installCommand }: HomeProps) {
                   />
                 </svg>
               </a>
-            </div>
+            )}
           </div>
         </div>
-      </nav>
+      </div>
+    </nav>
+  )
+}
 
-      {/* Hero Section - Swiss Grid Layout */}
-      <section className="pt-16">
-        <div className="grid grid-cols-12">
-          {/* Left content area */}
-          <div className="col-span-12 lg:col-span-7 flex flex-col justify-between p-4 lg:p-10">
-            {/* Main headline */}
-            <div className="pt-6 lg:pt-16">
-              <div className="mb-4 text-sm font-mono uppercase tracking-widest text-gray-500">
-                Python + Inertia.js
-              </div>
-              <h1 className="mb-6 lg:mb-8">
-                <img
-                  src="/static/logo-full.svg"
-                  alt="Cross-Inertia"
-                  className="h-auto w-auto max-w-[580px]"
-                />
-              </h1>
-              <p className="text-xl lg:text-2xl text-gray-700 max-w-xl leading-relaxed mb-8 lg:mb-0">
-                Build modern single-page applications with Django, Flask, and FastAPI.
-                No API required.
-              </p>
+// Custom hero with framework image
+function CustomHero({ installCommand, ctaHref }: { installCommand: string; ctaHref: string }) {
+  return (
+    <section className="pt-16">
+      <div className="grid grid-cols-12">
+        {/* Left content area */}
+        <div className="col-span-12 lg:col-span-7 flex flex-col justify-between p-4 lg:p-10">
+          {/* Main headline */}
+          <div className="pt-6 lg:pt-16">
+            <div className="mb-4 text-sm font-mono uppercase tracking-widest text-gray-500">
+              Python + Inertia.js
             </div>
-
-            {/* Bottom actions */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-12 lg:mt-0 pb-6 lg:pb-16">
-              <Link
-                href="/docs"
-                className="inline-flex items-center justify-center px-4 lg:px-10 h-14 bg-black text-white font-bold text-lg hover:bg-primary-500 transition-colors border border-black"
-              >
-                Get Started
-              </Link>
-              <InstallCommand command={installCommand} />
-            </div>
-          </div>
-
-          {/* Right decorative area - Framework blueprints */}
-          <div className="col-span-12 lg:col-span-5 hidden lg:flex justify-end">
-            <img
-              src="/static/hero-frameworks.jpg"
-              alt="Framework blueprints - FastAPI, Vue, Svelte, Django, React, Flask"
-              className="w-auto h-auto max-h-[90vh]"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section - Grid-based */}
-      <section className="border-t border-black">
-        <div className="grid grid-cols-12">
-          {/* Section header */}
-          <div className="col-span-12 lg:col-span-4 p-4 lg:p-10 border-b lg:border-b-0 lg:border-r border-black">
-            <div className="text-sm font-mono uppercase tracking-widest text-gray-500 mb-4">
-              Why Cross-Inertia
-            </div>
-            <h2 className="text-4xl lg:text-5xl font-bold tracking-tight">
-              Modern
-              <br />
-              Monoliths
-            </h2>
-          </div>
-
-          {/* Features grid */}
-          <div className="col-span-12 lg:col-span-8 grid grid-cols-1 sm:grid-cols-2">
-            <div className="p-4 lg:p-10 border-b sm:border-r border-black">
-              <div className="text-6xl font-bold text-primary-500 mb-4">01</div>
-              <h3 className="text-xl font-bold mb-2">No API Needed</h3>
-              <p className="text-gray-600">
-                Skip building a separate REST or <StrawberryConfetti>GraphQL</StrawberryConfetti> API. Your controllers return page components directly.
-              </p>
-            </div>
-            <div className="p-4 lg:p-10 border-b border-black">
-              <div className="text-6xl font-bold text-primary-500 mb-4">02</div>
-              <h3 className="text-xl font-bold mb-2">Server-Side Routing</h3>
-              <p className="text-gray-600">
-                Use your familiar Python routing. No client-side router needed.
-              </p>
-            </div>
-            <div className="p-4 lg:p-10 border-b sm:border-b-0 sm:border-r border-black">
-              <div className="text-6xl font-bold text-primary-500 mb-4">03</div>
-              <h3 className="text-xl font-bold mb-2">Full SPA Experience</h3>
-              <p className="text-gray-600">
-                Users get the speed and responsiveness of a single-page app without the complexity.
-              </p>
-            </div>
-            <div className="p-4 lg:p-10">
-              <div className="text-6xl font-bold text-primary-500 mb-4">04</div>
-              <h3 className="text-xl font-bold mb-2">SEO Friendly</h3>
-              <p className="text-gray-600">
-                With server-side rendering support, your pages are fully indexable by search engines.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Code example section */}
-      <InteractiveCodeExample />
-
-      {/* CTA Section */}
-      <section className="border-t border-black">
-        <div className="grid grid-cols-12 items-center">
-          <div className="col-span-12 lg:col-span-8 p-4 lg:p-10">
-            <h2 className="text-4xl lg:text-6xl font-bold tracking-tight mb-4">
-              Ready to start?
-            </h2>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl">
-              Get up and running with Cross-Inertia in minutes. Check out our documentation to learn more.
+            <h1 className="mb-6 lg:mb-8">
+              <img
+                src="/static/logo-full.svg"
+                alt="Cross-Inertia"
+                className="h-auto w-auto max-w-[580px]"
+              />
+            </h1>
+            <p className="text-xl lg:text-2xl text-gray-700 max-w-xl leading-relaxed mb-8 lg:mb-0">
+              Build modern single-page applications with Django, Flask, and FastAPI.
+              No API required.
             </p>
-            <Link
-              href="/docs"
-              className="inline-flex items-center justify-center px-4 lg:px-10 py-4 bg-primary-500 text-white font-bold text-lg hover:bg-black transition-colors border border-primary-500 hover:border-black"
-            >
-              Read the Docs
-            </Link>
           </div>
-          <Link
-            href="/docs"
-            className="col-span-12 lg:col-span-4 h-full bg-primary-500 hidden lg:flex items-center justify-center p-4 lg:p-10 hover:bg-black transition-colors"
-          >
-            <div className="text-white text-8xl font-bold">
-              &rarr;
+
+          {/* Bottom actions */}
+          <div className="flex flex-col sm:flex-row gap-3 mt-12 lg:mt-0 pb-6 lg:pb-16">
+            <Link
+              href={ctaHref}
+              className="inline-flex items-center justify-center px-4 lg:px-10 h-14 bg-black text-white font-bold text-lg hover:bg-primary-500 transition-colors border border-black"
+            >
+              Get Started
+            </Link>
+            <InstallCommand command={installCommand} />
+          </div>
+        </div>
+
+        {/* Right decorative area - Framework blueprints */}
+        <div className="col-span-12 lg:col-span-5 hidden lg:flex justify-end">
+          <img
+            src="/static/hero-frameworks.jpg"
+            alt="Framework blueprints - FastAPI, Vue, Svelte, Django, React, Flask"
+            className="w-auto h-auto max-h-[90vh]"
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Custom features section with black borders and StrawberryConfetti easter egg
+function CustomFeatures({ features }: { features: HomeFeature[] }) {
+  // Inject StrawberryConfetti into the first feature's description
+  const enhancedFeatures = features.map((feature, index) => {
+    if (index === 0 && typeof feature.description === 'string' && feature.description.includes('GraphQL')) {
+      return {
+        ...feature,
+        description: (
+          <>
+            Skip building a separate REST or <StrawberryConfetti>GraphQL</StrawberryConfetti> API. Your controllers return page components directly.
+          </>
+        ),
+      }
+    }
+    return feature
+  })
+
+  return (
+    <section className="border-t border-black">
+      <div className="grid grid-cols-12">
+        {/* Section header */}
+        <div className="col-span-12 lg:col-span-4 p-4 lg:p-10 border-b lg:border-b-0 lg:border-r border-black">
+          <div className="text-sm font-mono uppercase tracking-widest text-gray-500 mb-4">
+            Why Cross-Inertia
+          </div>
+          <h2 className="text-4xl lg:text-5xl font-bold tracking-tight">
+            Modern
+            <br />
+            Monoliths
+          </h2>
+        </div>
+
+        {/* Features grid */}
+        <div className="col-span-12 lg:col-span-8 grid grid-cols-1 sm:grid-cols-2">
+          {enhancedFeatures.map((feature, index) => (
+            <div
+              key={index}
+              className={`p-4 lg:p-10 border-b sm:border-b border-black ${
+                index % 2 === 0 ? 'sm:border-r' : ''
+              } ${index >= enhancedFeatures.length - 2 ? 'sm:border-b-0' : ''} ${
+                index === enhancedFeatures.length - 1 && enhancedFeatures.length % 2 === 1 ? 'border-b-0' : ''
+              }`}
+            >
+              <div className="text-6xl font-bold text-primary-500 mb-4">
+                {String(index + 1).padStart(2, '0')}
+              </div>
+              <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+              <p className="text-gray-600">{feature.description}</p>
             </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Custom CTA with black borders
+function CustomCTA({ ctaHref }: { ctaHref: string }) {
+  return (
+    <section className="border-t border-black">
+      <div className="grid grid-cols-12 items-center">
+        <div className="col-span-12 lg:col-span-8 p-4 lg:p-10">
+          <h2 className="text-4xl lg:text-6xl font-bold tracking-tight mb-4">
+            Ready to start?
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl">
+            Get up and running with Cross-Inertia in minutes. Check out our documentation to learn more.
+          </p>
+          <Link
+            href={ctaHref}
+            className="inline-flex items-center justify-center px-4 lg:px-10 py-4 bg-primary-500 text-white font-bold text-lg hover:bg-black transition-colors border border-primary-500 hover:border-black"
+          >
+            Read the Docs
           </Link>
         </div>
-      </section>
+        <Link
+          href={ctaHref}
+          className="col-span-12 lg:col-span-4 h-full bg-primary-500 hidden lg:flex items-center justify-center p-4 lg:p-10 hover:bg-black transition-colors"
+        >
+          <div className="text-white text-8xl font-bold">
+            &rarr;
+          </div>
+        </Link>
+      </div>
+    </section>
+  )
+}
 
-      {/* Footer */}
-      <footer className="border-t border-black py-8">
-        <div className="px-4 lg:px-10 flex flex-col md:flex-row justify-between items-center gap-6">
+// Custom footer with black borders
+function CustomFooter({ footerLogoUrl, navLinks, githubUrl }: {
+  footerLogoUrl?: string
+  navLinks: Array<{ label: string; href: string }>
+  githubUrl?: string
+}) {
+  return (
+    <footer className="border-t border-black py-8">
+      <div className="px-4 lg:px-10 flex flex-col md:flex-row justify-between items-center gap-6">
+        {footerLogoUrl && (
           <Link href="/">
-            <img src="/static/logo-full.svg" alt="Cross-Inertia" className="h-5" />
+            <img src={footerLogoUrl} alt="Cross-Inertia" className="h-5" />
           </Link>
-          <div className="flex gap-4 lg:p-10 text-sm text-gray-600">
-            <Link href="/docs" className="hover:text-black transition-colors">
-              Documentation
+        )}
+        <div className="flex gap-4 lg:p-10 text-sm text-gray-600">
+          {navLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-black transition-colors">
+              {link.label}
             </Link>
+          ))}
+          {githubUrl && (
             <a
-              href="https://github.com/patrick91/cross-inertia"
+              href={githubUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-black transition-colors"
             >
               GitHub
             </a>
-          </div>
+          )}
         </div>
-      </footer>
-    </div>
+      </div>
+    </footer>
+  )
+}
+
+export default function Home(props: HomeProps) {
+  const [showFullLogo, setShowFullLogo] = useState(false)
+  const navLinks = props.navLinks ?? [{ label: 'Docs', href: '/docs' }]
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show full logo after scrolling past the hero logo
+      setShowFullLogo(window.scrollY > 250)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  return (
+    <HomePage {...props} navLinks={navLinks}>
+      <CustomHeader
+        showFullLogo={showFullLogo}
+        githubUrl={props.githubUrl}
+        navLinks={navLinks}
+      />
+      <CustomHero
+        installCommand={props.installCommand}
+        ctaHref={props.ctaHref}
+      />
+      <CustomFeatures features={props.features} />
+      <InteractiveCodeExample />
+      <CustomCTA ctaHref={props.ctaHref} />
+      <CustomFooter
+        footerLogoUrl={props.footerLogoUrl}
+        navLinks={navLinks}
+        githubUrl={props.githubUrl}
+      />
+    </HomePage>
   )
 }

@@ -32,9 +32,34 @@ async def home(request: Request, inertia: InertiaDep):
     return inertia.render(
         "Home",
         {
+            "title": "Cross-Inertia",
+            "tagline": "Python + Inertia.js",
+            "description": "Build modern single-page applications with Django, Flask, and FastAPI. No API required.",
             "installCommand": "uv add cross-inertia",
-            "nav": docs_router.nav,
-            "currentPath": str(request.url.path),
+            "ctaText": "Get Started",
+            "ctaHref": "/docs",
+            "features": [
+                {
+                    "title": "No API Needed",
+                    "description": "Skip building a separate REST or GraphQL API. Your controllers return page components directly.",
+                },
+                {
+                    "title": "Server-Side Routing",
+                    "description": "Use your familiar Python routing. No client-side router needed.",
+                },
+                {
+                    "title": "Full SPA Experience",
+                    "description": "Users get the speed and responsiveness of a single-page app without the complexity.",
+                },
+                {
+                    "title": "SEO Friendly",
+                    "description": "With server-side rendering support, your pages are fully indexable by search engines.",
+                },
+            ],
+            "logoUrl": "/static/logo.svg",
+            "footerLogoUrl": "/static/logo-full.svg",
+            "githubUrl": "https://github.com/patrick91/cross-inertia",
+            "navLinks": [{"label": "Docs", "href": "/docs"}],
         },
         view_data={"page_title": "Cross-Inertia - Inertia.js for Python"},
     )
