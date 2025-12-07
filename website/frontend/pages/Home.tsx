@@ -133,7 +133,7 @@ function InteractiveCodeExample() {
   )
 }
 
-interface Strawberry {
+interface ConfettiParticle {
   id: number
   x: number
   y: number
@@ -143,21 +143,21 @@ interface Strawberry {
   scale: number
 }
 
-function StrawberryConfetti({ children }: { children: React.ReactNode }) {
-  const [strawberries, setStrawberries] = useState<Strawberry[]>([])
+function EmojiConfetti({ children, emoji }: { children: React.ReactNode; emoji: string }) {
+  const [particles, setParticles] = useState<ConfettiParticle[]>([])
   const [isActive, setIsActive] = useState(false)
 
   const triggerBurst = useCallback(() => {
     if (isActive) return
     setIsActive(true)
 
-    const newStrawberries: Strawberry[] = []
+    const newParticles: ConfettiParticle[] = []
     const count = 15
 
     for (let i = 0; i < count; i++) {
       // Burst in all directions from center
       const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5
-      newStrawberries.push({
+      newParticles.push({
         id: Date.now() + i,
         x: 50, // Start from center
         y: 50,
@@ -167,10 +167,10 @@ function StrawberryConfetti({ children }: { children: React.ReactNode }) {
         scale: 0.7 + Math.random() * 0.6,
       })
     }
-    setStrawberries(newStrawberries)
+    setParticles(newParticles)
 
     setTimeout(() => {
-      setStrawberries([])
+      setParticles([])
       setIsActive(false)
     }, 1000)
   }, [isActive])
@@ -182,26 +182,26 @@ function StrawberryConfetti({ children }: { children: React.ReactNode }) {
     >
       {children}
       <span className="absolute inset-0 pointer-events-none overflow-visible">
-        {strawberries.map((s) => {
-          const endX = s.x + Math.cos(s.angle) * s.velocity
-          const endY = s.y + Math.sin(s.angle) * s.velocity
+        {particles.map((p) => {
+          const endX = p.x + Math.cos(p.angle) * p.velocity
+          const endY = p.y + Math.sin(p.angle) * p.velocity
 
           return (
             <span
-              key={s.id}
+              key={p.id}
               className="absolute"
               style={{
                 left: '50%',
                 top: '50%',
-                fontSize: `${s.scale}rem`,
+                fontSize: `${p.scale}rem`,
                 transform: 'translate(-50%, -50%)',
-                animation: `strawberryBurst 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`,
+                animation: `emojiConfettiBurst 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`,
                 '--end-x': `${(endX - 50)}px`,
                 '--end-y': `${(endY - 50)}px`,
-                '--spin': `${s.spin}deg`,
+                '--spin': `${p.spin}deg`,
               } as React.CSSProperties}
             >
-              🍓
+              {emoji}
             </span>
           )
         })}
@@ -254,16 +254,16 @@ function CustomHeader({ showFullLogo, githubUrl, navLinks }: {
   )
 }
 
-// Custom features section with StrawberryConfetti easter egg
+// Custom features section with emoji confetti easter eggs
 function CustomFeatures({ features }: { features: HomeFeature[] }) {
-  // Inject StrawberryConfetti into the first feature's description
+  // Inject EmojiConfetti into the first feature's description
   const enhancedFeatures = features.map((feature, index) => {
     if (index === 0 && typeof feature.description === 'string' && feature.description.includes('GraphQL')) {
       return {
         ...feature,
         description: (
           <>
-            Skip building a separate REST or <StrawberryConfetti>GraphQL</StrawberryConfetti> API. Your controllers return page components directly.
+            Skip building a separate <EmojiConfetti emoji="⚡">REST</EmojiConfetti> or <EmojiConfetti emoji="🍓">GraphQL</EmojiConfetti> API. Your controllers return page components directly.
           </>
         ),
       }
