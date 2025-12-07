@@ -36,19 +36,20 @@ class InertiaMiddleware(BaseHTTPMiddleware):
         self,
         app,
         share: Callable[[Request], dict[str, Any]]
-        | Callable[[Request], Awaitable[dict[str, Any]]],
+        | Callable[[Request], Awaitable[dict[str, Any]]]
+        | None = None,
     ):
         """
-        Initialize the middleware with a share function.
+        Initialize the middleware with an optional share function.
 
         Args:
             app: The ASGI application
             share: A function that takes a Request and returns a dict of shared data.
-                   Can be sync or async.
+                   Can be sync or async. If None, no shared data will be added.
         """
         super().__init__(app)
         self.share_func = share
-        self._is_async = asyncio.iscoroutinefunction(share)
+        self._is_async = share is not None and asyncio.iscoroutinefunction(share)
 
     async def dispatch(self, request: Request, call_next) -> Response:
         """
@@ -64,21 +65,20 @@ class InertiaMiddleware(BaseHTTPMiddleware):
         # Resolve shared data (support both sync and async functions)
         shared_data: dict[str, Any] = {}
 
-        try:
-            if self._is_async:
-                shared_data = await self.share_func(request)  # type: ignore
-            else:
-                shared_data = self.share_func(request)  # type: ignore
+        if self.share_func is not None:
+            try:
+                if self._is_async:
+                    shared_data = await self.share_func(request)  # type: ignore
+                else:
+                    shared_data = self.share_func(request)  # type: ignore
 
-            # Store in request.state so it's accessible in routes
-            request.state.inertia_shared = shared_data
+                logger.debug(f"Shared data keys: {list(shared_data.keys())}")
 
-            logger.debug(f"Shared data keys: {list(shared_data.keys())}")
+            except Exception as e:
+                logger.error(f"Error computing shared data: {e}", exc_info=True)
 
-        except Exception as e:
-            logger.error(f"Error computing shared data: {e}", exc_info=True)
-            # On error, set empty shared data so the request can continue
-            request.state.inertia_shared = {}
+        # Store in request.state so it's accessible in routes
+        request.state.inertia_shared = shared_data
 
         # Continue processing the request
         response = await call_next(request)
