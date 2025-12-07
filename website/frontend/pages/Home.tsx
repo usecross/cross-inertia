@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react'
 import { useState, useCallback, useEffect } from 'react'
-import { HomePage, HomeFooter, HomeCTA, type HomeFeature } from '@usecross/docs'
+import { HomePage, HomeFooter, HomeCTA, HomeHero, type HomeFeature } from '@usecross/docs'
 
 interface HomeProps {
   title: string
@@ -11,49 +11,10 @@ interface HomeProps {
   ctaHref: string
   features: HomeFeature[]
   logoUrl?: string
+  heroLogoUrl?: string
   footerLogoUrl?: string
   githubUrl?: string
   navLinks?: Array<{ label: string; href: string }>
-}
-
-function InstallCommand({ command }: { command: string }) {
-  const [copied, setCopied] = useState(false)
-
-  const copyToClipboard = async () => {
-    await navigator.clipboard.writeText(command)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <button
-      onClick={copyToClipboard}
-      className="group relative flex items-center bg-black border border-black px-4 h-14 font-mono text-sm text-white hover:bg-white hover:text-black transition-colors cursor-pointer"
-    >
-      <span className="text-primary-500 mr-2">$</span>
-      <span>{command}</span>
-      <svg
-        className={`ml-4 w-4 h-4 transition ${copied ? 'text-green-400' : 'opacity-50 group-hover:opacity-100'}`}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-        />
-      </svg>
-      <span
-        className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1 px-2 rounded transition-opacity duration-300 whitespace-nowrap ${
-          copied ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        Copied!
-      </span>
-    </button>
-  )
 }
 
 function Logo({ showFull = false }: { showFull?: boolean }) {
@@ -293,42 +254,6 @@ function CustomHeader({ showFullLogo, githubUrl, navLinks }: {
   )
 }
 
-// Custom hero with logo image instead of text
-function CustomHero({ installCommand, ctaHref }: { installCommand: string; ctaHref: string }) {
-  return (
-    <section className="pt-16">
-      <div className="px-4 lg:px-10 py-16 lg:py-24">
-        <div className="max-w-4xl">
-          <div className="mb-4 text-sm font-mono uppercase tracking-widest text-gray-500">
-            Python + Inertia.js
-          </div>
-          <h1 className="mb-6 lg:mb-8">
-            <img
-              src="/static/logo-full.svg"
-              alt="Cross-Inertia"
-              className="h-auto w-auto max-w-[580px]"
-            />
-          </h1>
-          <p className="text-xl lg:text-2xl text-gray-700 max-w-2xl leading-relaxed mb-8">
-            Build modern single-page applications with Django, Flask, and FastAPI.
-            No API required.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Link
-              href={ctaHref}
-              className="inline-flex items-center justify-center px-8 h-14 bg-black text-white font-bold text-lg hover:bg-primary-500 transition-colors border border-black"
-            >
-              Get Started
-            </Link>
-            <InstallCommand command={installCommand} />
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 // Custom features section with StrawberryConfetti easter egg
 function CustomFeatures({ features }: { features: HomeFeature[] }) {
   // Inject StrawberryConfetti into the first feature's description
@@ -406,10 +331,7 @@ export default function Home(props: HomeProps) {
         githubUrl={props.githubUrl}
         navLinks={navLinks}
       />
-      <CustomHero
-        installCommand={props.installCommand}
-        ctaHref={props.ctaHref}
-      />
+      <HomeHero />
       <CustomFeatures features={props.features} />
       <InteractiveCodeExample />
       <HomeCTA />

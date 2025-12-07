@@ -57,6 +57,7 @@ async def home(request: Request, inertia: InertiaDep):
                 },
             ],
             "logoUrl": "/static/logo.svg",
+            "heroLogoUrl": "/static/logo-full.svg",
             "footerLogoUrl": "/static/logo-full.svg",
             "githubUrl": "https://github.com/patrick91/cross-inertia",
             "navLinks": [{"label": "Docs", "href": "/docs"}],
