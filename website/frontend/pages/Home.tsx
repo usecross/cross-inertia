@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react'
 import { useState, useCallback, useEffect } from 'react'
-import { HomePage, HomeFooter, type HomeFeature } from '@usecross/docs'
+import { HomePage, HomeFooter, HomeCTA, type HomeFeature } from '@usecross/docs'
 
 interface HomeProps {
   title: string
@@ -293,50 +293,36 @@ function CustomHeader({ showFullLogo, githubUrl, navLinks }: {
   )
 }
 
-// Custom hero with framework image
+// Custom hero with logo image instead of text
 function CustomHero({ installCommand, ctaHref }: { installCommand: string; ctaHref: string }) {
   return (
     <section className="pt-16">
-      <div className="grid grid-cols-12">
-        {/* Left content area */}
-        <div className="col-span-12 lg:col-span-7 flex flex-col justify-between p-4 lg:p-10">
-          {/* Main headline */}
-          <div className="pt-6 lg:pt-16">
-            <div className="mb-4 text-sm font-mono uppercase tracking-widest text-gray-500">
-              Python + Inertia.js
-            </div>
-            <h1 className="mb-6 lg:mb-8">
-              <img
-                src="/static/logo-full.svg"
-                alt="Cross-Inertia"
-                className="h-auto w-auto max-w-[580px]"
-              />
-            </h1>
-            <p className="text-xl lg:text-2xl text-gray-700 max-w-xl leading-relaxed mb-8 lg:mb-0">
-              Build modern single-page applications with Django, Flask, and FastAPI.
-              No API required.
-            </p>
+      <div className="px-4 lg:px-10 py-16 lg:py-24">
+        <div className="max-w-4xl">
+          <div className="mb-4 text-sm font-mono uppercase tracking-widest text-gray-500">
+            Python + Inertia.js
           </div>
+          <h1 className="mb-6 lg:mb-8">
+            <img
+              src="/static/logo-full.svg"
+              alt="Cross-Inertia"
+              className="h-auto w-auto max-w-[580px]"
+            />
+          </h1>
+          <p className="text-xl lg:text-2xl text-gray-700 max-w-2xl leading-relaxed mb-8">
+            Build modern single-page applications with Django, Flask, and FastAPI.
+            No API required.
+          </p>
 
-          {/* Bottom actions */}
-          <div className="flex flex-col sm:flex-row gap-3 mt-12 lg:mt-0 pb-6 lg:pb-16">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href={ctaHref}
-              className="inline-flex items-center justify-center px-4 lg:px-10 h-14 bg-black text-white font-bold text-lg hover:bg-primary-500 transition-colors border border-black"
+              className="inline-flex items-center justify-center px-8 h-14 bg-black text-white font-bold text-lg hover:bg-primary-500 transition-colors border border-black"
             >
               Get Started
             </Link>
             <InstallCommand command={installCommand} />
           </div>
-        </div>
-
-        {/* Right decorative area - Framework blueprints */}
-        <div className="col-span-12 lg:col-span-5 hidden lg:flex justify-end">
-          <img
-            src="/static/hero-frameworks.jpg"
-            alt="Framework blueprints - FastAPI, Vue, Svelte, Django, React, Flask"
-            className="w-auto h-auto max-h-[90vh]"
-          />
         </div>
       </div>
     </section>
@@ -399,38 +385,6 @@ function CustomFeatures({ features }: { features: HomeFeature[] }) {
   )
 }
 
-// Custom CTA section
-function CustomCTA({ ctaHref }: { ctaHref: string }) {
-  return (
-    <section className="border-t border-gray-200">
-      <div className="grid grid-cols-12 items-center">
-        <div className="col-span-12 lg:col-span-8 p-4 lg:p-10">
-          <h2 className="text-4xl lg:text-6xl font-bold tracking-tight mb-4">
-            Ready to start?
-          </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl">
-            Get up and running with Cross-Inertia in minutes. Check out our documentation to learn more.
-          </p>
-          <Link
-            href={ctaHref}
-            className="inline-flex items-center justify-center px-4 lg:px-10 py-4 bg-primary-500 text-white font-bold text-lg hover:bg-black transition-colors border border-primary-500 hover:border-black"
-          >
-            Read the Docs
-          </Link>
-        </div>
-        <Link
-          href={ctaHref}
-          className="col-span-12 lg:col-span-4 h-full bg-primary-500 hidden lg:flex items-center justify-center p-4 lg:p-10 hover:bg-black transition-colors"
-        >
-          <div className="text-white text-8xl font-bold">
-            &rarr;
-          </div>
-        </Link>
-      </div>
-    </section>
-  )
-}
-
 export default function Home(props: HomeProps) {
   const [showFullLogo, setShowFullLogo] = useState(false)
   const navLinks = props.navLinks ?? [{ label: 'Docs', href: '/docs' }]
@@ -458,7 +412,7 @@ export default function Home(props: HomeProps) {
       />
       <CustomFeatures features={props.features} />
       <InteractiveCodeExample />
-      <CustomCTA ctaHref={props.ctaHref} />
+      <HomeCTA />
       <HomeFooter />
     </HomePage>
   )
