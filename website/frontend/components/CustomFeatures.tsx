@@ -1,5 +1,4 @@
-import type { HomeFeature } from '@usecross/docs'
-import { EmojiConfetti } from './EmojiConfetti'
+import { EmojiConfetti, type HomeFeature } from '@usecross/docs'
 
 export function CustomFeatures({ features }: { features: HomeFeature[] }) {
   // Inject EmojiConfetti into the first feature's description
