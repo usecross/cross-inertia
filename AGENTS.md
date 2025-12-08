@@ -45,7 +45,7 @@ The autopub workflow will automatically:
 4. Update CHANGELOG.md
 5. Remove RELEASE.md
 
-See `docs/RELEASING.md` for full details.
+See `website/RELEASING.md` for full details.
 
 ## Code Style
 
@@ -73,8 +73,8 @@ Use conventional commit style:
 ## Documentation
 
 - **Live site**: https://inertia.patrick.wtf
-- Update docs in `docs/src/content/docs/` for new features
-- Run `cd docs && bun run dev` to preview locally at http://localhost:4321
+- Update docs in `website/content/docs/` for new features
+- Run `cd website && just dev` to preview locally
 - Documentation deploys automatically via Cloudflare Pages on push to main
 
 ## CI/CD
@@ -90,7 +90,7 @@ src/inertia/          # Main package code
 tests/                # Unit tests
 tests/e2e/           # End-to-end tests
 examples/fastapi/    # Example application
-docs/                # Starlight documentation
+website/             # Documentation website
 ```
 
 ## Dependencies
@@ -111,7 +111,7 @@ nox -s typecheck         # Check types
 nox -s format            # Auto-format code
 
 # Documentation
-cd docs && bun run dev   # Start docs server at http://localhost:4321
+cd website && just dev   # Start docs/website server
 
 # E2E (requires frontend build)
 cd examples/fastapi && bun run build
