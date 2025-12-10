@@ -49,6 +49,8 @@ def app_with_view_data(temp_template_dir_with_view_data):
         vite_dev_url="http://localhost:5173",
         manifest_path="static/build/.vite/manifest.json",
     )
+    # Force dev mode for tests (avoids HTTP check to Vite server)
+    inertia_response._is_dev = True
 
     def get_test_inertia(request: Request):
         adapter = StarletteRequestAdapter(request)
