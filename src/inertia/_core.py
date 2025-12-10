@@ -26,6 +26,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class ManifestNotFoundError(Exception):
+    """Raised when the Vite manifest file is not found in production mode."""
+
+    pass
+
+
 class optional:
     """
     Mark a prop as optional - only evaluated when explicitly requested.
@@ -592,7 +598,11 @@ class InertiaResponse:
         return self._is_dev
 
     def get_manifest(self) -> dict[str, Any]:
-        """Load Vite manifest for production builds"""
+        """Load Vite manifest for production builds.
+
+        Raises:
+            ManifestNotFoundError: If the manifest file doesn't exist in production mode.
+        """
         if self._manifest is not None:
             return self._manifest
 
@@ -604,10 +614,11 @@ class InertiaResponse:
                 self._manifest = manifest_data
             logger.info(f"Manifest loaded with {len(manifest_data)} entry/entries")
         else:
-            logger.warning(
-                f"Vite manifest not found at {self.manifest_path} - no built assets available"
+            raise ManifestNotFoundError(
+                f"Vite manifest not found at '{self.manifest_path}'. "
+                "Did you run 'vite build'? "
+                "Make sure build artifacts are included in your deployment."
             )
-            self._manifest = {}
 
         return self._manifest
 

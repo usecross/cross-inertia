@@ -36,11 +36,14 @@ def inertia_response(temp_template_dir):
     """Create an InertiaResponse instance for testing."""
     from inertia._core import InertiaResponse
 
-    return InertiaResponse(
+    response = InertiaResponse(
         template_dir=temp_template_dir,
         vite_dev_url="http://localhost:5173",
         manifest_path="static/build/.vite/manifest.json",
     )
+    # Force dev mode for tests (avoids HTTP check to Vite server)
+    response._is_dev = True
+    return response
 
 
 @pytest.fixture
