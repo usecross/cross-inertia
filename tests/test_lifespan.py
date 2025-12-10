@@ -7,12 +7,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from inertia._config import reset_config
 from inertia.fastapi.experimental import (
     SSRServer,
     SSRServerError,
     create_ssr_lifespan,
     inertia_lifespan,
 )
+
+
+@pytest.fixture(autouse=True)
+def reset_config_after_test():
+    """Reset config after each test to avoid state leakage."""
+    yield
+    reset_config()
 
 
 class TestSSRServer:
@@ -393,6 +401,7 @@ class TestInertiaLifespan:
             mock_response.status_code = 200
 
             env_vars = {
+                "INERTIA_SSR_ENABLED": "1",  # Enable SSR via env var
                 "INERTIA_SSR_COMMAND": "custom_command",
                 "INERTIA_SSR_CWD": "/custom/cwd",
                 "INERTIA_SSR_HEALTH_URL": "http://custom:1234/health",
@@ -426,8 +435,12 @@ class TestInertiaLifespan:
 
     def test_inertia_lifespan_uses_defaults(self):
         """Test that inertia_lifespan uses defaults when env vars not set."""
+        from inertia import configure_inertia
 
         async def run_test():
+            # Enable SSR via config (since env var defaults won't enable it)
+            configure_inertia(ssr_enabled=True)
+
             mock_process = MagicMock()
             mock_process.returncode = None
             mock_process.stdout = None
@@ -441,8 +454,9 @@ class TestInertiaLifespan:
             mock_response = MagicMock()
             mock_response.status_code = 200
 
-            # Clear any existing env vars
+            # Clear any existing env vars that would override config
             env_vars_to_remove = [
+                "INERTIA_SSR_ENABLED",
                 "INERTIA_SSR_COMMAND",
                 "INERTIA_SSR_CWD",
                 "INERTIA_SSR_HEALTH_URL",

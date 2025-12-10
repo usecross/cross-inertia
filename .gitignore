@@ -80,6 +80,8 @@ bun.lockb
 # Vite / Frontend build outputs
 examples/*/static/build/
 examples/*/.vite/
+website/static/build/
+website/.vite/
 dist/
 
 # Playwright

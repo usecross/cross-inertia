@@ -1,0 +1,234 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+@import '@usecross/docs/styles.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primary brand color - green (for cross-docs) */
+    --color-primary-500: #648C57;
+    /* Legacy variable */
+    --primary-color: #648C57;
+
+    /* Font stacks */
+    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+      sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    --font-heading: "roc-grotesk", sans-serif;
+    --font-mono: 'Fira Code', Consolas, Monaco, 'Andale Mono', monospace;
+
+    /* Code highlighting - dark theme */
+    --shiki-color-text: #e2e8f0;
+    --shiki-color-background: #1e293b;
+    --shiki-token-constant: #7dd3fc;
+    --shiki-token-string: #86efac;
+    --shiki-token-comment: #64748b;
+    --shiki-token-keyword: #f472b6;
+    --shiki-token-parameter: #e2e8f0;
+    --shiki-token-function: #c4b5fd;
+    --shiki-token-string-expression: #86efac;
+    --shiki-token-punctuation: #94a3b8;
+    --shiki-token-link: #38bdf8;
+  }
+
+  html {
+    /* Note: scroll-behavior: smooth removed to prevent animated scroll on page refresh */
+    /* Smooth scrolling for anchor navigation is handled via CSS below */
+  }
+
+  /* Only apply smooth scrolling when navigating to anchor links, not on page load */
+  html:focus-within {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply antialiased;
+    font-family: var(--font-sans);
+    font-weight: 400;
+    background: #ffffff;
+    color: #1f2937;
+  }
+
+  /* Headings use Roc Grotesk font */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+  }
+
+  /* Monospace fonts for code */
+  code, pre, kbd, samp {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer components {
+  /* Prose content styles */
+  .prose {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+
+  /* First heading styling - Swiss black border */
+  .prose h1:first-of-type {
+    border-bottom: 1px solid #000;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  /* Scroll margin for headings (so they don't hide under fixed header) */
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    scroll-margin-top: 6rem;
+  }
+
+  .prose pre {
+    @apply !bg-black !p-0 overflow-hidden border border-black;
+  }
+
+  .prose pre code {
+    @apply !bg-transparent !p-4 block overflow-x-auto text-sm;
+  }
+
+  .prose :not(pre) > code {
+    @apply bg-slate-100 px-1.5 py-0.5 rounded text-sm font-medium text-slate-800;
+  }
+
+  .prose :not(pre) > code::before,
+  .prose :not(pre) > code::after {
+    content: none;
+  }
+
+  /* Custom text selection style - uses primary color */
+  ::selection {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  ::-moz-selection {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  /* Glass panel effect */
+  .glass-panel {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Custom gradient text */
+  .text-gradient {
+    background: linear-gradient(to right, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* Syntax highlighting - Swiss sharp edges */
+.shiki {
+  @apply !bg-black overflow-hidden border border-black;
+}
+
+.shiki code {
+  @apply block p-4 overflow-x-auto text-sm leading-relaxed;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Hero animation keyframes */
+@keyframes pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+@keyframes slideWidth {
+  0%, 100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.7);
+  }
+}
+
+@keyframes travelRight {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(100vw * 0.42));
+    opacity: 0;
+  }
+}
+
+@keyframes travelLeft {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(-100vw * 0.42));
+    opacity: 0;
+  }
+}
+
+@keyframes pulseHeight {
+  0%, 100% {
+    height: 10rem;
+    top: -5rem;
+  }
+  50% {
+    height: 12rem;
+    top: -6rem;
+  }
+}
+
+@keyframes pulseWidth {
+  0%, 100% {
+    width: 10rem;
+    margin-left: -5rem;
+  }
+  50% {
+    width: 12rem;
+    margin-left: -6rem;
+  }
+}

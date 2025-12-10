@@ -1,0 +1,30 @@
+# Cross-Inertia Documentation Website
+
+[private]
+default:
+    @just --list
+
+# Development server (starts both FastAPI and Vite via pybun)
+dev:
+    uv run fastapi dev
+
+# Development server with SSR
+dev-ssr: build-ssr
+    SSR=1 uv run fastapi dev
+
+# Build frontend for production
+build:
+    uv run python -m pybun run build
+
+# Build with SSR
+build-ssr: build
+    uv run python -m pybun run build:ssr
+
+# Install all dependencies
+install:
+    uv sync
+    uv run python -m pybun install
+
+# Deploy to production with SSR
+deploy: build-ssr
+    SSR=1 uv run fastapi deploy
