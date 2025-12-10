@@ -6,9 +6,15 @@
 This module provides utilities to automatically start and stop the SSR server
 and Vite dev server with FastAPI's lifespan context manager.
 
-Example - Simple usage:
+Example - Simple usage with configure_inertia:
     from fastapi import FastAPI
+    from inertia import configure_inertia
     from inertia.fastapi.experimental import inertia_lifespan
+
+    configure_inertia(
+        vite_port="auto",  # Finds an available port automatically
+        vite_entry="frontend/app.tsx",
+    )
 
     app = FastAPI(lifespan=inertia_lifespan)
 
@@ -37,6 +43,8 @@ import signal
 import sys
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, AsyncGenerator
+
+from inertia._config import get_config
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -556,7 +564,21 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     This is designed to be used directly as the lifespan parameter for FastAPI.
     For more control, use create_ssr_lifespan() and create_vite_lifespan() instead.
 
-    Environment variables:
+    Configuration is read from configure_inertia() if called, otherwise falls back
+    to environment variables for backwards compatibility.
+
+    Recommended usage with configure_inertia():
+        from inertia import configure_inertia
+        from inertia.fastapi.experimental import inertia_lifespan
+
+        configure_inertia(
+            vite_port="auto",  # Finds an available port
+            vite_entry="frontend/app.tsx",
+        )
+
+        app = FastAPI(lifespan=inertia_lifespan)
+
+    Environment variables (fallback):
         Development:
         - INERTIA_DEV: Set to "1" or "true" to force dev mode, "0" or "false" to disable
         - INERTIA_VITE_COMMAND: Command to start Vite (default: "bun run dev")
@@ -573,22 +595,18 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     Args:
         app: The FastAPI application instance.
-
-    Example:
-        from fastapi import FastAPI
-        from inertia.fastapi.experimental import inertia_lifespan
-
-        app = FastAPI(lifespan=inertia_lifespan)
     """
+    config = get_config()
     dev_mode = is_dev_mode()
 
     # Vite dev server (only in dev mode)
     vite_server: ViteDevServer | None = None
     if dev_mode:
-        vite_command = os.environ.get("INERTIA_VITE_COMMAND", "bun run dev")
-        vite_cwd = os.environ.get("INERTIA_VITE_CWD")
-        vite_url = os.environ.get("INERTIA_VITE_URL", "http://localhost:5173")
-        vite_timeout = float(os.environ.get("INERTIA_VITE_TIMEOUT", "30"))
+        # Use config values, fall back to env vars for backwards compatibility
+        vite_command = os.environ.get("INERTIA_VITE_COMMAND") or config.get_vite_command_with_port()
+        vite_cwd = os.environ.get("INERTIA_VITE_CWD") or config.vite_cwd
+        vite_url = os.environ.get("INERTIA_VITE_URL") or config.vite_dev_url
+        vite_timeout = float(os.environ.get("INERTIA_VITE_TIMEOUT") or config.vite_timeout)
 
         vite_server = ViteDevServer(
             command=vite_command,
@@ -598,18 +616,20 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         )
         await vite_server.start()
 
-    # SSR server (in production, or when explicitly enabled)
+    # SSR server (in production, or when explicitly enabled via config)
     ssr_enabled_env = os.environ.get("INERTIA_SSR_ENABLED", "").lower()
-    ssr_enabled = ssr_enabled_env not in ("0", "false") and not dev_mode
+    if ssr_enabled_env:
+        ssr_enabled = ssr_enabled_env not in ("0", "false")
+    else:
+        ssr_enabled = config.ssr_enabled and not dev_mode
 
     ssr_server: SSRServer | None = None
     if ssr_enabled:
-        ssr_command = os.environ.get("INERTIA_SSR_COMMAND", "bun dist/ssr/ssr.js")
-        ssr_cwd = os.environ.get("INERTIA_SSR_CWD")
-        ssr_health_url = os.environ.get(
-            "INERTIA_SSR_HEALTH_URL", "http://127.0.0.1:13714/health"
-        )
-        ssr_timeout = float(os.environ.get("INERTIA_SSR_TIMEOUT", "10"))
+        # Use config values, fall back to env vars for backwards compatibility
+        ssr_command = os.environ.get("INERTIA_SSR_COMMAND") or config.ssr_command
+        ssr_cwd = os.environ.get("INERTIA_SSR_CWD") or config.ssr_cwd
+        ssr_health_url = os.environ.get("INERTIA_SSR_HEALTH_URL") or config.ssr_health_url
+        ssr_timeout = float(os.environ.get("INERTIA_SSR_TIMEOUT") or config.ssr_timeout)
 
         ssr_server = SSRServer(
             command=ssr_command,

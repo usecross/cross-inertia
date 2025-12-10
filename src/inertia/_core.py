@@ -1003,12 +1003,33 @@ _inertia_response: InertiaResponse | None = None
 
 
 def get_inertia_response() -> InertiaResponse:
-    """Get or create the singleton InertiaResponse instance"""
+    """Get or create the singleton InertiaResponse instance.
+
+    If configure_inertia() was called, this uses those settings.
+    Otherwise, uses default values.
+    """
     global _inertia_response
     if _inertia_response is None:
-        _inertia_response = InertiaResponse()
+        from inertia._config import get_config
+
+        config = get_config()
+        _inertia_response = InertiaResponse(
+            template_dir=config.template_dir,
+            vite_dev_url=config.vite_dev_url,
+            manifest_path=config.manifest_path,
+            vite_entry=config.vite_entry,
+            vite_config_path=config.vite_config_path,
+            ssr_url=config.ssr_url,
+            ssr_enabled=config.ssr_enabled,
+        )
         logger.info("Inertia module initialized")
     return _inertia_response
+
+
+def reset_inertia_response() -> None:
+    """Reset the InertiaResponse singleton. Useful for testing."""
+    global _inertia_response
+    _inertia_response = None
 
 
 def get_inertia(request: Request) -> Inertia:
