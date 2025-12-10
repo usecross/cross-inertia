@@ -241,7 +241,9 @@ def configure_inertia(
         ssr_health_path=ssr_health_path,
     )
 
-    logger.info(f"Inertia configured: vite_port={_config.resolved_vite_port}, ssr_enabled={ssr_enabled}")
+    logger.info(
+        f"Inertia configured: vite_port={_config.resolved_vite_port}, ssr_enabled={ssr_enabled}"
+    )
     return _config
 
 

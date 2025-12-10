@@ -1,7 +1,6 @@
 """Tests for the unified configuration module."""
 
 import socket
-from unittest.mock import patch
 
 import pytest
 

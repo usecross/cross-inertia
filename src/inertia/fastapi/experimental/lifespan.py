@@ -603,10 +603,15 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     vite_server: ViteDevServer | None = None
     if dev_mode:
         # Use config values, fall back to env vars for backwards compatibility
-        vite_command = os.environ.get("INERTIA_VITE_COMMAND") or config.get_vite_command_with_port()
+        vite_command = (
+            os.environ.get("INERTIA_VITE_COMMAND")
+            or config.get_vite_command_with_port()
+        )
         vite_cwd = os.environ.get("INERTIA_VITE_CWD") or config.vite_cwd
         vite_url = os.environ.get("INERTIA_VITE_URL") or config.vite_dev_url
-        vite_timeout = float(os.environ.get("INERTIA_VITE_TIMEOUT") or config.vite_timeout)
+        vite_timeout = float(
+            os.environ.get("INERTIA_VITE_TIMEOUT") or config.vite_timeout
+        )
 
         vite_server = ViteDevServer(
             command=vite_command,
@@ -628,7 +633,9 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         # Use config values, fall back to env vars for backwards compatibility
         ssr_command = os.environ.get("INERTIA_SSR_COMMAND") or config.ssr_command
         ssr_cwd = os.environ.get("INERTIA_SSR_CWD") or config.ssr_cwd
-        ssr_health_url = os.environ.get("INERTIA_SSR_HEALTH_URL") or config.ssr_health_url
+        ssr_health_url = (
+            os.environ.get("INERTIA_SSR_HEALTH_URL") or config.ssr_health_url
+        )
         ssr_timeout = float(os.environ.get("INERTIA_SSR_TIMEOUT") or config.ssr_timeout)
 
         ssr_server = SSRServer(
