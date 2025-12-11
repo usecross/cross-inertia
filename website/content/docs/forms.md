@@ -45,7 +45,7 @@ export default function CreateUser() {
 
 ## Server-side validation
 
-Return validation errors using the `errors` parameter or `inertia.back()`:
+Return validation errors using the `errors` parameter in `render()`:
 
 ```python
 from pydantic import BaseModel, EmailStr, ValidationError
@@ -62,7 +62,7 @@ async def create_user(request: Request, inertia: InertiaDep):
         data = CreateUserRequest(**form)
     except ValidationError as e:
         errors = {err["loc"][0]: err["msg"] for err in e.errors()}
-        return inertia.back(errors=errors)
+        return inertia.render("Users/Create", errors=errors)
 
     # Create user...
     return RedirectResponse("/users", status_code=303)
