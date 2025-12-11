@@ -43,33 +43,6 @@ inertia.render(
 
 **Returns:** `InertiaResponse`
 
-### back()
-
-Return to the previous page with optional errors.
-
-```python
-inertia.back(errors: dict = {})
-```
-
-**Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `errors` | `dict` | Validation errors to pass back |
-
-**Returns:** `Response`
-
-**Example:**
-
-```python
-@app.post("/users")
-async def create_user(request: Request, inertia: InertiaDep):
-    form = await request.form()
-    if not form.get("email"):
-        return inertia.back(errors={"email": "Email is required"})
-    # ... create user
-```
-
 ### location()
 
 Perform an external redirect (non-Inertia URL).

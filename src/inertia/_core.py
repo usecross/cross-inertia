@@ -375,23 +375,6 @@ class Inertia:
             view_data=view_data,
         )
 
-    def back(
-        self, errors: dict[str, str] | None = None
-    ) -> JSONResponse | HTMLResponse | Response:
-        """Redirect back with errors (for form validation)"""
-        # Get the referring component from the request headers or props
-        # For simplicity, we'll just re-render with errors
-        # In a real implementation, you'd track the previous component
-        return self.response.render(
-            self.request,
-            self.adapter,
-            self.adapter.headers.get("X-Inertia-Component", "Home"),
-            {},
-            errors,
-            encrypt_history=self._encrypt_history,
-            clear_history=self._clear_history,
-        )
-
     def location(self, url: str) -> Response:
         """
         Perform an external redirect (full page navigation).
