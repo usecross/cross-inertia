@@ -1,21 +1,9 @@
 
 
-0.11.1 - 2025-12-10
+0.11.2 - 2025-12-11
 -------------------
 
-Fix error handling when Vite manifest is missing in production
+Remove unused `back()` method from documentation
 
-- Added `ManifestNotFoundError` exception that is raised when the Vite manifest file is missing in production mode
-- Error message now clearly indicates the missing path and suggests running `vite build`
-- Previously, missing manifest would silently return empty content, causing pages to load without JavaScript
-
-```python
-# The error can be caught if needed:
-from inertia import ManifestNotFoundError
-
-try:
-    response = inertia.render("Page", props)
-except ManifestNotFoundError as e:
-    # Handle missing manifest (e.g., show deployment instructions)
-    pass
-```
+- Remove `back()` method section from API reference docs
+- Update forms documentation to use `render()` with `errors` parameter instead of `back()`
