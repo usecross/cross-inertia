@@ -60,7 +60,7 @@ class TestInertiaConfig:
         config = InertiaConfig()
         assert config.vite_port == 5173
         assert config.vite_host == "localhost"
-        assert config.vite_entry == "frontend/app.tsx"
+        assert config.vite_entry == "app.tsx"
         assert config.vite_command == "bun run dev"
         assert config.template_dir == "templates"
         assert config.ssr_enabled is False
