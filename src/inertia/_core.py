@@ -471,7 +471,7 @@ class InertiaResponse:
         template_dir: str = "templates",
         vite_dev_url: str = "http://localhost:5173",
         manifest_path: str = "static/build/.vite/manifest.json",
-        vite_entry: str = "app.tsx",
+        vite_entry: str = "frontend/app.tsx",
         ssr_url: str | None = None,
         ssr_enabled: bool = False,
     ):

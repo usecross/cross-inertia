@@ -6,9 +6,13 @@ Built with Cross-Inertia, FastAPI, React, and Bun.
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from inertia import configure_inertia
 from inertia.fastapi import InertiaMiddleware
 
 from cross_docs import CrossDocs
+
+# Configure Inertia with explicit vite entry point
+configure_inertia(vite_entry="frontend/app.tsx")
 
 app = FastAPI(title="Cross-Inertia Docs", docs_url=None, redoc_url=None)
 
