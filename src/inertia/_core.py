@@ -4,7 +4,6 @@ import asyncio
 import inspect
 import json
 import logging
-import re
 from pathlib import Path
 from typing import Annotated, Any, Callable
 
@@ -295,30 +294,6 @@ def _resolve_props_sync(props: dict[str, Any]) -> dict[str, Any]:
         return asyncio.run(_resolve_props(props))
 
 
-def read_vite_entry_from_config(vite_config_path: str = "vite.config.ts") -> str | None:
-    """
-    Attempt to read the Vite entry point from vite.config.ts/js.
-    Returns None if not found.
-    """
-    config_path = Path(vite_config_path)
-    if not config_path.exists():
-        # Try .js extension
-        config_path = Path(vite_config_path.replace(".ts", ".js"))
-        if not config_path.exists():
-            return None
-
-    try:
-        content = config_path.read_text()
-        # Look for input: "path/to/entry"
-        match = re.search(r'input:\s*["\']([^"\']+)["\']', content)
-        if match:
-            return match.group(1)
-    except Exception as e:
-        logger.debug(f"Could not read Vite config: {e}")
-
-    return None
-
-
 class Inertia:
     """Request-scoped Inertia renderer"""
 
@@ -496,8 +471,7 @@ class InertiaResponse:
         template_dir: str = "templates",
         vite_dev_url: str = "http://localhost:5173",
         manifest_path: str = "static/build/.vite/manifest.json",
-        vite_entry: str | None = None,
-        vite_config_path: str = "vite.config.ts",
+        vite_entry: str = "frontend/app.tsx",
         ssr_url: str | None = None,
         ssr_enabled: bool = False,
     ):
@@ -517,20 +491,8 @@ class InertiaResponse:
             self._ssr_client = InertiaSSR(url=self.ssr_url, enabled=True)
             logger.info(f"SSR enabled: {self.ssr_url}")
 
-        # Auto-detect vite entry from config if not provided
-        if vite_entry is None:
-            detected_entry = read_vite_entry_from_config(vite_config_path)
-            if detected_entry:
-                logger.info(f"Auto-detected Vite entry from config: {detected_entry}")
-                self.vite_entry = detected_entry
-            else:
-                # Fallback to default
-                logger.warning(
-                    "Could not auto-detect Vite entry, using default: frontend/app.tsx"
-                )
-                self.vite_entry = "frontend/app.tsx"
-        else:
-            self.vite_entry = vite_entry
+        self.vite_entry = vite_entry
+        logger.info(f"Vite entry: {self.vite_entry}")
 
         # Initialize Jinja2 with custom functions
         self.templates = Jinja2Templates(directory=template_dir)
@@ -1012,7 +974,6 @@ def get_inertia_response() -> InertiaResponse:
             vite_dev_url=config.vite_dev_url,
             manifest_path=config.manifest_path,
             vite_entry=config.vite_entry,
-            vite_config_path=config.vite_config_path,
             ssr_url=config.ssr_url,
             ssr_enabled=config.ssr_enabled,
         )

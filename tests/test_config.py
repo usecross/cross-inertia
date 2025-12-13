@@ -60,7 +60,7 @@ class TestInertiaConfig:
         config = InertiaConfig()
         assert config.vite_port == 5173
         assert config.vite_host == "localhost"
-        assert config.vite_entry is None
+        assert config.vite_entry == "frontend/app.tsx"
         assert config.vite_command == "bun run dev"
         assert config.template_dir == "templates"
         assert config.ssr_enabled is False
@@ -139,15 +139,12 @@ class TestConfigureInertia:
             vite_host="0.0.0.0",
             vite_entry="src/main.tsx",
             vite_command="npm run dev",
-            vite_cwd="/app",
             vite_timeout=60.0,
             template_dir="views",
             manifest_path="dist/manifest.json",
-            vite_config_path="vite.config.js",
             ssr_enabled=True,
             ssr_url="http://localhost:3000",
             ssr_command="node ssr.js",
-            ssr_cwd="/app/ssr",
             ssr_timeout=20.0,
             ssr_health_path="/ping",
         )
@@ -155,15 +152,12 @@ class TestConfigureInertia:
         assert config.vite_host == "0.0.0.0"
         assert config.vite_entry == "src/main.tsx"
         assert config.vite_command == "npm run dev"
-        assert config.vite_cwd == "/app"
         assert config.vite_timeout == 60.0
         assert config.template_dir == "views"
         assert config.manifest_path == "dist/manifest.json"
-        assert config.vite_config_path == "vite.config.js"
         assert config.ssr_enabled is True
         assert config.ssr_url == "http://localhost:3000"
         assert config.ssr_command == "node ssr.js"
-        assert config.ssr_cwd == "/app/ssr"
         assert config.ssr_timeout == 20.0
         assert config.ssr_health_path == "/ping"
 
