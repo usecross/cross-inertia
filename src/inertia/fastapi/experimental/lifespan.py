@@ -274,7 +274,7 @@ class ViteDevServer:
     def __init__(
         self,
         command: str | list[str] = "bun run dev",
-        health_url: str = "http://localhost:5173",
+        health_url: str = "http://localhost:5173/@vite/client",
         startup_timeout: float = 30.0,
         env: dict[str, str] | None = None,
     ):
@@ -284,7 +284,7 @@ class ViteDevServer:
         Args:
             command: Command to start the Vite dev server. Can be a string (shell command)
                 or a list of arguments. Defaults to "bun run dev".
-            health_url: URL to check for server health (Vite dev server URL).
+            health_url: URL to check for server health. Defaults to /@vite/client endpoint.
             startup_timeout: Maximum time to wait for the server to become healthy.
             env: Additional environment variables for the subprocess.
         """
@@ -452,7 +452,7 @@ class ViteDevServer:
 @asynccontextmanager
 async def create_vite_lifespan(
     command: str | list[str] = "bun run dev",
-    health_url: str = "http://localhost:5173",
+    health_url: str = "http://localhost:5173/@vite/client",
     startup_timeout: float = 30.0,
     env: dict[str, str] | None = None,
 ) -> AsyncGenerator[ViteDevServer, None]:
@@ -598,13 +598,15 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             or config.get_vite_command_with_port()
         )
         vite_url = os.environ.get("INERTIA_VITE_URL") or config.vite_dev_url
+        # Health check uses /@vite/client endpoint which always returns 200
+        vite_health_url = f"{vite_url}/@vite/client"
         vite_timeout = float(
             os.environ.get("INERTIA_VITE_TIMEOUT") or config.vite_timeout
         )
 
         vite_server = ViteDevServer(
             command=vite_command,
-            health_url=vite_url,
+            health_url=vite_health_url,
             startup_timeout=vite_timeout,
         )
         await vite_server.start()
