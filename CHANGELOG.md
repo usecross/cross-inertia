@@ -1,9 +1,20 @@
 
 
-0.11.2 - 2025-12-11
+0.11.3 - 2025-12-13
 -------------------
 
-Remove unused `back()` method from documentation
+Simplify Vite configuration
 
-- Remove `back()` method section from API reference docs
-- Update forms documentation to use `render()` with `errors` parameter instead of `back()`
+This simplifies the configuration by:
+1. Removing auto-detection of Vite entry point from vite.config.ts
+2. Removing `vite_cwd` parameter (Vite should always run from project root)
+
+The `vite_entry` now defaults to `"frontend/app.tsx"` which matches the example
+project structure. This follows Laravel's vite-plugin pattern where entry points
+are explicitly specified rather than auto-detected.
+
+Changes:
+- Remove `read_vite_entry_from_config()` function
+- Remove `vite_config_path` parameter from `InertiaConfig` and `configure_inertia()`
+- Remove `vite_cwd` parameter from `InertiaConfig`, `configure_inertia()`, and `ViteDevServer`
+- Change `vite_entry` default from `None` (with auto-detection) to `"frontend/app.tsx"`
