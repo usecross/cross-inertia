@@ -6,7 +6,7 @@ including Vite dev server, SSR, and template settings.
 Example:
     from inertia import configure_inertia
 
-    # Basic configuration (uses default vite_entry="app.tsx")
+    # Basic configuration (uses default vite_entry="frontend/app.tsx")
     configure_inertia(
         template_dir="templates",
     )
@@ -14,13 +14,12 @@ Example:
     # With auto port selection (finds an unused port)
     configure_inertia(
         vite_port="auto",
-        vite_entry="app.tsx",
     )
 
     # Full configuration
     configure_inertia(
         vite_port=5173,
-        vite_entry="app.tsx",
+        vite_entry="frontend/app.tsx",
         vite_command="bun run dev",
         template_dir="templates",
         ssr_enabled=True,
@@ -78,14 +77,11 @@ class InertiaConfig:
     vite_host: str = "localhost"
     """Host for Vite dev server."""
 
-    vite_entry: str = "app.tsx"
-    """Entry point for Vite (e.g., 'app.tsx', 'src/main.tsx')."""
+    vite_entry: str = "frontend/app.tsx"
+    """Entry point for Vite (e.g., 'frontend/app.tsx', 'src/main.tsx')."""
 
     vite_command: str | list[str] = "bun run dev"
     """Command to start Vite dev server. Port will be appended automatically."""
-
-    vite_cwd: str | None = None
-    """Working directory for Vite dev server."""
 
     vite_timeout: float = 30.0
     """Timeout in seconds for Vite dev server startup."""
@@ -162,16 +158,14 @@ def configure_inertia(
     *,
     vite_port: int | Literal["auto"] = 5173,
     vite_host: str = "localhost",
-    vite_entry: str = "app.tsx",
+    vite_entry: str = "frontend/app.tsx",
     vite_command: str | list[str] = "bun run dev",
-    vite_cwd: str | None = None,
     vite_timeout: float = 30.0,
     template_dir: str = "templates",
     manifest_path: str = "static/build/.vite/manifest.json",
     ssr_enabled: bool = False,
     ssr_url: str = "http://127.0.0.1:13714",
     ssr_command: str | list[str] = "bun dist/ssr/ssr.js",
-    ssr_cwd: str | None = None,
     ssr_timeout: float = 10.0,
     ssr_health_path: str = "/health",
 ) -> InertiaConfig:
@@ -183,16 +177,14 @@ def configure_inertia(
     Args:
         vite_port: Port for Vite dev server. Use "auto" to find an available port.
         vite_host: Host for Vite dev server.
-        vite_entry: Entry point for Vite (e.g., 'app.tsx', 'src/main.tsx').
+        vite_entry: Entry point for Vite (e.g., 'frontend/app.tsx', 'src/main.tsx').
         vite_command: Command to start Vite dev server.
-        vite_cwd: Working directory for Vite dev server.
         vite_timeout: Timeout for Vite server startup.
         template_dir: Directory containing Jinja2 templates.
         manifest_path: Path to Vite manifest for production.
         ssr_enabled: Whether to enable SSR.
         ssr_url: URL of the SSR server.
         ssr_command: Command to start the SSR server.
-        ssr_cwd: Working directory for SSR server.
         ssr_timeout: Timeout for SSR server startup.
         ssr_health_path: Health check path for SSR server.
 
@@ -205,13 +197,12 @@ def configure_inertia(
         # Auto port selection - finds unused port automatically
         configure_inertia(
             vite_port="auto",
-            vite_entry="app.tsx",
         )
 
         # Explicit configuration
         configure_inertia(
             vite_port=5188,
-            vite_entry="main.tsx",
+            vite_entry="src/main.tsx",
             ssr_enabled=True,
         )
     """
@@ -222,14 +213,12 @@ def configure_inertia(
         vite_host=vite_host,
         vite_entry=vite_entry,
         vite_command=vite_command,
-        vite_cwd=vite_cwd,
         vite_timeout=vite_timeout,
         template_dir=template_dir,
         manifest_path=manifest_path,
         ssr_enabled=ssr_enabled,
         ssr_url=ssr_url,
         ssr_command=ssr_command,
-        ssr_cwd=ssr_cwd,
         ssr_timeout=ssr_timeout,
         ssr_health_path=ssr_health_path,
     )

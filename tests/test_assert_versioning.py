@@ -87,12 +87,12 @@ class TestViteIntegration:
             tags = inertia_response.get_vite_tags()
             assert "@vite/client" in tags
             assert "@react-refresh" in tags
-            assert "app.tsx" in tags
+            assert "frontend/app.tsx" in tags
 
     def test_vite_tags_in_production(self, inertia_response):
         """Test that production mode uses manifest for asset tags."""
         manifest = {
-            "app.tsx": {
+            "frontend/app.tsx": {
                 "file": "assets/app.abc123.js",
                 "css": ["assets/app.xyz789.css"],
             }

@@ -274,7 +274,6 @@ class ViteDevServer:
     def __init__(
         self,
         command: str | list[str] = "bun run dev",
-        cwd: str | None = None,
         health_url: str = "http://localhost:5173",
         startup_timeout: float = 30.0,
         env: dict[str, str] | None = None,
@@ -285,13 +284,11 @@ class ViteDevServer:
         Args:
             command: Command to start the Vite dev server. Can be a string (shell command)
                 or a list of arguments. Defaults to "bun run dev".
-            cwd: Working directory for the Vite server. Defaults to current directory.
             health_url: URL to check for server health (Vite dev server URL).
             startup_timeout: Maximum time to wait for the server to become healthy.
             env: Additional environment variables for the subprocess.
         """
         self.command = command
-        self.cwd = cwd
         self.health_url = health_url
         self.startup_timeout = startup_timeout
         self.env = env
@@ -315,7 +312,6 @@ class ViteDevServer:
                 logger.info(f"Starting Vite dev server: {self.command}")
                 self._process = await asyncio.create_subprocess_shell(
                     self.command,
-                    cwd=self.cwd,
                     env=process_env,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -324,7 +320,6 @@ class ViteDevServer:
                 logger.info(f"Starting Vite dev server: {self.command}")
                 self._process = await asyncio.create_subprocess_exec(
                     *self.command,
-                    cwd=self.cwd,
                     env=process_env,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -457,7 +452,6 @@ class ViteDevServer:
 @asynccontextmanager
 async def create_vite_lifespan(
     command: str | list[str] = "bun run dev",
-    cwd: str | None = None,
     health_url: str = "http://localhost:5173",
     startup_timeout: float = 30.0,
     env: dict[str, str] | None = None,
@@ -470,7 +464,6 @@ async def create_vite_lifespan(
 
     Args:
         command: Command to start the Vite dev server. Defaults to "bun run dev".
-        cwd: Working directory for the Vite server.
         health_url: URL to check for server health.
         startup_timeout: Maximum time to wait for the server to become healthy.
         env: Additional environment variables for the subprocess.
@@ -489,7 +482,6 @@ async def create_vite_lifespan(
     """
     server = ViteDevServer(
         command=command,
-        cwd=cwd,
         health_url=health_url,
         startup_timeout=startup_timeout,
         env=env,
@@ -582,14 +574,12 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         Development:
         - INERTIA_DEV: Set to "1" or "true" to force dev mode, "0" or "false" to disable
         - INERTIA_VITE_COMMAND: Command to start Vite (default: "bun run dev")
-        - INERTIA_VITE_CWD: Working directory for Vite server
         - INERTIA_VITE_URL: Vite dev server URL (default: "http://localhost:5173")
         - INERTIA_VITE_TIMEOUT: Startup timeout in seconds (default: 30)
 
         SSR (production):
         - INERTIA_SSR_ENABLED: Set to "0" or "false" to disable SSR (default: enabled)
         - INERTIA_SSR_COMMAND: Command to start SSR server (default: "bun dist/ssr/ssr.js")
-        - INERTIA_SSR_CWD: Working directory for SSR server
         - INERTIA_SSR_HEALTH_URL: Health check URL (default: "http://127.0.0.1:13714/health")
         - INERTIA_SSR_TIMEOUT: Startup timeout in seconds (default: 10)
 
@@ -607,7 +597,6 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             os.environ.get("INERTIA_VITE_COMMAND")
             or config.get_vite_command_with_port()
         )
-        vite_cwd = os.environ.get("INERTIA_VITE_CWD") or config.vite_cwd
         vite_url = os.environ.get("INERTIA_VITE_URL") or config.vite_dev_url
         vite_timeout = float(
             os.environ.get("INERTIA_VITE_TIMEOUT") or config.vite_timeout
@@ -615,7 +604,6 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
         vite_server = ViteDevServer(
             command=vite_command,
-            cwd=vite_cwd,
             health_url=vite_url,
             startup_timeout=vite_timeout,
         )

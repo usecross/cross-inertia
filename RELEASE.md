@@ -1,15 +1,17 @@
 Release type: patch
 
-Remove auto-detection of Vite entry point from vite.config.ts
+Simplify Vite configuration
 
-This simplifies the configuration by removing the fragile regex-based auto-detection
-of the Vite entry point. Instead, `vite_entry` now defaults to `"app.tsx"` and should
-be explicitly configured if a different entry point is needed.
+This simplifies the configuration by:
+1. Removing auto-detection of Vite entry point from vite.config.ts
+2. Removing `vite_cwd` parameter (Vite should always run from project root)
 
-This follows the same pattern as Laravel's vite-plugin where entry points are
-explicitly specified rather than auto-detected.
+The `vite_entry` now defaults to `"frontend/app.tsx"` which matches the example
+project structure. This follows Laravel's vite-plugin pattern where entry points
+are explicitly specified rather than auto-detected.
 
 Changes:
 - Remove `read_vite_entry_from_config()` function
 - Remove `vite_config_path` parameter from `InertiaConfig` and `configure_inertia()`
-- Change `vite_entry` default from `None` (with auto-detection) to `"app.tsx"`
+- Remove `vite_cwd` parameter from `InertiaConfig`, `configure_inertia()`, and `ViteDevServer`
+- Change `vite_entry` default from `None` (with auto-detection) to `"frontend/app.tsx"`
