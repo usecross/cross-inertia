@@ -35,7 +35,6 @@ from .._core import (
     InertiaResponse,
     get_inertia,
     get_inertia_response,
-    read_vite_entry_from_config,
 )
 from ..middleware import InertiaMiddleware
 
@@ -46,5 +45,4 @@ __all__ = [
     "InertiaDep",
     "get_inertia",
     "get_inertia_response",
-    "read_vite_entry_from_config",
 ]

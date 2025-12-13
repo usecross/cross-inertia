@@ -32,3 +32,29 @@ github_url = "https://github.com/patrick91/cross-inertia"
 [[tool.cross-docs.nav_links]]
 label = "Docs"
 href = "/docs"
+
+[tool.cross-docs.home]
+enabled = true
+component = "Home"
+title = "Cross-Inertia"
+tagline = "Python + Inertia.js"
+description = "Build modern single-page applications with Django, Flask, and FastAPI. No API required."
+install_command = "uv add cross-inertia"
+cta_text = "Get Started"
+cta_href = "/docs"
+
+[[tool.cross-docs.home.features]]
+title = "No API Needed"
+description = "Skip building a separate REST or GraphQL API. Your controllers return page components directly."
+
+[[tool.cross-docs.home.features]]
+title = "Server-Side Routing"
+description = "Use your familiar Python routing. No client-side router needed."
+
+[[tool.cross-docs.home.features]]
+title = "Full SPA Experience"
+description = "Users get the speed and responsiveness of a single-page app without the complexity."
+
+[[tool.cross-docs.home.features]]
+title = "SEO Friendly"
+description = "With server-side rendering support, your pages are fully indexable by search engines."
