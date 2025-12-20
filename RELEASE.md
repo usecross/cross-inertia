@@ -8,6 +8,6 @@ Add Django framework support
 - Implement `render()`, `location()`, `@inertia` decorator, and `InertiaViewMixin` for Django views
 - Add `InertiaMiddleware` for shared data injection via `INERTIA_SHARE` setting
 - Add `{% vite %}` template tag for Vite asset injection in Django templates
-- Add `rundev` management command to run Vite and Django dev servers together
+- Automatic Vite dev server startup when using `runserver`
 - Support all prop types: `optional()`, `always()`, `defer()`
 - Refactor core modules to avoid FastAPI imports when using Django
