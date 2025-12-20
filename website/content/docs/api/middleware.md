@@ -21,7 +21,21 @@ app.add_middleware(InertiaMiddleware, share=share_data)
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `share` | `Callable[[Request], dict]` | Function that returns shared props |
+| `share` | `Callable[[Request], dict] \| None` | Function that returns shared props (optional) |
+
+## Basic Usage (No Shared Data)
+
+If you don't need to share data across all pages, you can add the middleware without a share function:
+
+```python
+from fastapi import FastAPI
+from inertia.fastapi import InertiaMiddleware
+
+app = FastAPI()
+app.add_middleware(InertiaMiddleware)  # No share function needed
+```
+
+When no share function is provided, no shared data is added to requests. You can still pass props directly to your Inertia responses.
 
 ## Share Function
 

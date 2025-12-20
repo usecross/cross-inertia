@@ -55,13 +55,37 @@ async def show_user(user_id: int, inertia: InertiaDep):
 # Other expensive queries are skipped automatically
 ```
 
-However, for optimal performance, you can use lazy evaluation:
+However, for optimal performance, you can use **optional props** to avoid executing expensive operations unless explicitly requested:
+
+### Using the `optional` Decorator (Recommended)
+
+The `optional()` function marks props that should only be evaluated when requested. This follows Laravel Inertia conventions and provides better semantics:
+
+```python
+from inertia import optional
+
+@app.get("/users/{user_id}")
+async def show_user(user_id: int, inertia: InertiaDep):
+    return inertia.render("Users/Show", {
+        "user": get_user(user_id),
+        # These only execute when requested
+        "posts": optional(get_user_posts, user_id),
+        "comments": optional(get_user_comments, user_id),
+        "stats": optional(calculate_user_stats, user_id)
+    })
+```
+
+> **Why `optional()`?** The `optional()` decorator provides clearer intent, matches Laravel Inertia's API, and handles argument passing elegantly. Optional props are excluded from the initial page load and only included when explicitly requested via partial reloads.
+
+### Using Lambda Functions (Alternative)
+
+If you prefer or need more flexibility, you can also use lambda functions:
 
 ```python
 @app.get("/users/{user_id}")
 async def show_user(user_id: int, inertia: InertiaDep):
     user_id_val = user_id  # Capture for lambda
-    
+
     return inertia.render("Users/Show", {
         "user": get_user(user_id),
         # These only execute when requested
@@ -70,6 +94,8 @@ async def show_user(user_id: int, inertia: InertiaDep):
         "stats": lambda: calculate_user_stats(user_id_val)
     })
 ```
+
+> **Note**: We recommend using `optional()` as it provides clearer intent, matches Laravel Inertia's API, and handles argument passing more elegantly. Use lambdas when you need complex logic or closures.
 
 ## Frontend Usage
 
@@ -145,15 +171,17 @@ export default function UserList({ users }: { users: User[] }) {
 ### Dashboard with Real-Time Updates
 
 ```python
+from inertia import optional
+
 @app.get("/dashboard")
 async def dashboard(inertia: InertiaDep):
     user = get_current_user()
-    
+
     return inertia.render("Dashboard", {
         "user": user,
         "notifications": get_notifications(user.id),
-        "stats": lambda: calculate_dashboard_stats(user.id),  # Expensive
-        "activity": lambda: get_recent_activity(user.id)      # Expensive
+        "stats": optional(calculate_dashboard_stats, user.id),  # Expensive
+        "activity": optional(get_recent_activity, user.id)      # Expensive
     })
 ```
 
@@ -224,24 +252,26 @@ export default function ProductSearch({ products, categories, filters }) {
 ### Form Submission with Partial Reload
 
 ```python
+from inertia import optional
+
 @app.post("/settings/profile")
 async def update_profile(inertia: InertiaDep):
     form_data = await inertia.request.json()
-    
+
     # Update profile
     user = update_user_profile(form_data)
-    
+
     from fastapi.responses import RedirectResponse
     return RedirectResponse("/settings", status_code=303)
 
 @app.get("/settings")
 async def settings(inertia: InertiaDep):
     user = get_current_user()
-    
+
     return inertia.render("Settings", {
         "user": user,
-        "billing": lambda: get_billing_info(user.id),    # Expensive
-        "usage": lambda: calculate_usage_stats(user.id)  # Expensive
+        "billing": optional(get_billing_info, user.id),    # Expensive
+        "usage": optional(calculate_usage_stats, user.id)  # Expensive
     })
 ```
 
@@ -282,13 +312,17 @@ export default function Settings({ user, billing, usage }) {
 ### Nested Partial Reloads
 
 ```python
+from inertia import optional
+
 @app.get("/blog/{post_id}")
 async def show_post(post_id: int, inertia: InertiaDep):
     return inertia.render("Blog/Show", {
         "post": get_post(post_id),
+        # For nested data, use lambda when you need to call get_post again
         "author": lambda: get_author(get_post(post_id).author_id),
-        "comments": lambda: get_comments(post_id),
-        "related": lambda: get_related_posts(post_id)
+        # Use optional for simple function calls
+        "comments": optional(get_comments, post_id),
+        "related": optional(get_related_posts, post_id)
     })
 ```
 
@@ -362,7 +396,7 @@ router.reload({ only: ['user'] })
 
 ## Best Practices
 
-1. **Use Lazy Evaluation**: Wrap expensive operations in lambdas
+1. **Use Optional Props**: Prefer the `optional()` decorator for marking props that should only load when requested. Use lambdas only when you need complex logic or closures.
 2. **Group Related Data**: Keep related props together for efficient reloads
 3. **Minimize Initial Load**: Load heavy data on-demand with partial reloads
 4. **Combine with Caching**: Cache expensive queries on the backend
@@ -424,7 +458,7 @@ async def show_user(user_id: int, inertia: InertiaDep):
 
 ## Next Steps
 
-- [Always Props](/guides/always-props/) - Props that are always included, even during partial reloads
+- [Always Props](/guides/always-props/) - Props that are always included, even during partial reloads. Also covers the `optional()` decorator and other prop types.
 - [Shared Data](/guides/shared-data/) - Combine with shared data for efficiency
 - [Configuration](/guides/configuration/) - Set up optional prop evaluation
 - [Validation Errors](/guides/validation-errors/) - Use with form submissions
