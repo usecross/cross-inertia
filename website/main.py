@@ -13,7 +13,7 @@ from inertia.fastapi.experimental import inertia_lifespan
 from cross_docs import CrossDocs
 
 # Configure Inertia (vite root is 'frontend', so entry is just 'app.tsx')
-configure_inertia(vite_entry="app.tsx", vite_cwd="frontend")
+configure_inertia(vite_entry="app.tsx")
 
 app = FastAPI(
     title="Cross-Inertia Docs", docs_url=None, redoc_url=None, lifespan=inertia_lifespan
