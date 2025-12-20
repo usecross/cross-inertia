@@ -18,7 +18,7 @@ export default defineConfig(({ isSsrBuild, command }) => ({
     manifest: !isSsrBuild,
     outDir: isSsrBuild ? '../static/build/ssr' : '../static/build',
     rollupOptions: {
-      input: isSsrBuild ? 'ssr.tsx' : 'app.tsx',
+      input: path.resolve(__dirname, 'frontend', isSsrBuild ? 'ssr.tsx' : 'app.tsx'),
     },
   },
   ssr: {
