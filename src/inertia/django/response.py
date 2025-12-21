@@ -58,13 +58,13 @@ class DjangoInertiaResponse:
 
     def is_inertia_request(self, request: "HttpRequest") -> bool:
         """Check if request is an Inertia XHR request."""
-        return request.headers.get("X-Inertia") == "true"
+        return request.headers.get("X-Inertia") == "true"  # type: ignore[attr-defined]
 
     def is_prefetch_request(self, request: "HttpRequest") -> bool:
         """Check if request is an Inertia prefetch request."""
         return (
             self.is_inertia_request(request)
-            and request.headers.get("Purpose") == "prefetch"
+            and request.headers.get("Purpose") == "prefetch"  # type: ignore[attr-defined]
         )
 
     def is_dev_mode(self) -> bool:
@@ -196,7 +196,7 @@ class DjangoInertiaResponse:
 
         # Check for asset version mismatch (only for Inertia requests)
         if self.is_inertia_request(request):
-            client_version = request.headers.get("X-Inertia-Version")
+            client_version = request.headers.get("X-Inertia-Version")  # type: ignore[attr-defined]
             server_version = self.get_asset_version()
 
             if client_version and client_version != server_version:
@@ -213,12 +213,12 @@ class DjangoInertiaResponse:
         shared_data = getattr(request, "_inertia_shared", {})
 
         # Handle partial reloads
-        partial_component = request.headers.get("X-Inertia-Partial-Component")
-        partial_data = request.headers.get("X-Inertia-Partial-Data")
-        partial_except = request.headers.get("X-Inertia-Partial-Except")
+        partial_component = request.headers.get("X-Inertia-Partial-Component")  # type: ignore[attr-defined]
+        partial_data = request.headers.get("X-Inertia-Partial-Data")  # type: ignore[attr-defined]
+        partial_except = request.headers.get("X-Inertia-Partial-Except")  # type: ignore[attr-defined]
 
         # Parse X-Inertia-Reset header
-        reset_header = request.headers.get("X-Inertia-Reset")
+        reset_header = request.headers.get("X-Inertia-Reset")  # type: ignore[attr-defined]
         reset_props: list[str] = []
         if reset_header:
             reset_props = [key.strip() for key in reset_header.split(",") if key.strip()]
@@ -284,7 +284,7 @@ class DjangoInertiaResponse:
 
         # Add errors to props
         if errors:
-            if error_bag := request.headers.get("X-Inertia-Error-Bag"):
+            if error_bag := request.headers.get("X-Inertia-Error-Bag"):  # type: ignore[attr-defined]
                 props["errors"] = {error_bag: errors}
                 logger.info(
                     f"Rendering {component} with validation errors in bag '{error_bag}': {list(errors.keys())}"

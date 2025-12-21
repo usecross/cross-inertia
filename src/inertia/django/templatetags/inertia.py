@@ -18,13 +18,13 @@ Usage:
 """
 
 from django import template
-from django.utils.safestring import mark_safe
+from django.utils.safestring import SafeString, mark_safe
 
 register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
-def inertia_head(context: dict) -> str:
+def inertia_head(context: dict) -> SafeString:
     """
     Generate all head content needed for Inertia.
 
@@ -56,11 +56,11 @@ def inertia_head(context: dict) -> str:
         else:
             parts.append(str(ssr_head))
 
-    return mark_safe("\n".join(parts))
+    return mark_safe("\n".join(parts))  # type: ignore[return-value]
 
 
 @register.simple_tag(takes_context=True)
-def inertia_body(context: dict) -> str:
+def inertia_body(context: dict) -> SafeString:
     """
     Generate the Inertia app container.
 
@@ -81,4 +81,4 @@ def inertia_body(context: dict) -> str:
     page = context.get("page", "{}")
     ssr_body = context.get("ssr_body", "")
 
-    return mark_safe(f"<div id=\"app\" data-page='{page}'>{ssr_body}</div>")
+    return mark_safe(f"<div id=\"app\" data-page='{page}'>{ssr_body}</div>")  # type: ignore[return-value]

@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import asyncio
-import inspect
 import json
 import logging
 from pathlib import Path
-from typing import Annotated, Any, Callable
+from typing import Annotated, Any
 
 import httpx
 from fastapi import Depends, Request
@@ -16,6 +14,12 @@ from lia import StarletteRequestAdapter
 
 from ._props import optional, always, defer
 from ._exceptions import ManifestNotFoundError
+from ._utils import (
+    _is_optional_prop,
+    _is_always_prop,
+    _is_deferred_prop,
+    _resolve_props_sync,
+)
 
 # Configure logging with basic config if not already configured
 logging.basicConfig(
@@ -30,19 +34,6 @@ logger = logging.getLogger(__name__)
 
 # Re-export for backwards compatibility
 __all__ = ["optional", "always", "defer", "ManifestNotFoundError"]
-
-# Import shared utilities
-from ._utils import (
-    _is_optional_prop,
-    _is_always_prop,
-    _is_deferred_prop,
-    _is_lazy_prop,
-    _is_callable_prop,
-    _resolve_callable,
-    _resolve_props,
-    _resolve_value,
-    _resolve_props_sync,
-)
 
 
 class Inertia:
