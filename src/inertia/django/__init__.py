@@ -28,12 +28,13 @@ Example usage:
     }
 
     # In views.py
-    from inertia.django import render, optional
+    from inertia.django import render
+    from inertia import optional  # Prop wrappers are framework-agnostic
 
     def home(request):
         return render(request, 'Home', {
             'message': 'Hello World',
-            'items': list(Item.objects.values()),
+            'lazy_items': optional(lambda: list(Item.objects.values())),
         })
 
     # Or with decorator
@@ -64,7 +65,6 @@ from .shortcuts import (
     InertiaViewMixin,
     get_inertia_response,
 )
-from .._props import optional, always, defer
 
 __all__ = [
     # Middleware
@@ -75,8 +75,4 @@ __all__ = [
     "inertia",
     "InertiaViewMixin",
     "get_inertia_response",
-    # Prop wrappers
-    "optional",
-    "always",
-    "defer",
 ]
