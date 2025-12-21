@@ -12,7 +12,7 @@ PYTHON_VERSIONS = ["3.10", "3.11", "3.12", "3.13", "3.14"]
 @nox.session(python=PYTHON_VERSIONS, name="tests", tags=["tests"])
 def tests(session: nox.Session) -> None:
     """Run unit tests."""
-    session.install("pytest", "pytest-cov", "fastapi", "httpx", "jinja2")
+    session.install("pytest", "pytest-cov", "pytest-django", "fastapi", "httpx", "jinja2", "django")
     # Install in editable mode so coverage can track the source
     session.install("-e", ".")
     session.run(
