@@ -119,13 +119,16 @@ Create a `templates/app.html` file:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Inertia App</title>
-    {{ vite() | safe }}
+    {{ inertia_head() | safe }}
 </head>
 <body>
-    <div id="app" data-page='{{ page | safe }}'></div>
+    {{ inertia_body() | safe }}
 </body>
 </html>
 ```
+
+The `inertia_head()` function outputs Vite script/style tags and SSR head content.
+The `inertia_body()` function outputs the app container div with page data.
 
 ## Step 7: Create your React app
 

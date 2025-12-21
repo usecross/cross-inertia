@@ -7,9 +7,9 @@
     {% if meta_description %}
     <meta name="description" content="{{ meta_description }}">
     {% endif %}
-    {{ vite() | safe }}
+    {{ inertia_head() | safe }}
 </head>
 <body>
-    <div id="app" data-page='{{ page | safe }}'></div>
+    {{ inertia_body() | safe }}
 </body>
 </html>

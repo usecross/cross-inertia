@@ -16,6 +16,8 @@ Shared data is data that is automatically included in every Inertia response. Th
 
 ## Setting up shared data
 
+### FastAPI
+
 Use the `InertiaMiddleware` to define shared data:
 
 ```python
@@ -34,6 +36,29 @@ def share_data(request: Request) -> dict:
     }
 
 app.add_middleware(InertiaMiddleware, share=share_data)
+```
+
+### Django
+
+Define a share function and reference it in your settings:
+
+```python
+# myapp/inertia.py
+def share_data(request):
+    return {
+        "auth": {
+            "user": request.user.username if request.user.is_authenticated else None
+        },
+        "flash": request.session.pop("flash", None),
+        "app_name": "My App"
+    }
+```
+
+```python
+# settings.py
+CROSS_INERTIA = {
+    "SHARE": "myapp.inertia.share_data",
+}
 ```
 
 ## Accessing shared data

@@ -8,6 +8,7 @@ from typing import Annotated, Any
 import httpx
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from jinja2 import pass_context
 from starlette.responses import Response
 from fastapi.templating import Jinja2Templates
 from lia import StarletteRequestAdapter
@@ -238,8 +239,10 @@ class InertiaResponse:
 
         # Initialize Jinja2 with custom functions
         self.templates = Jinja2Templates(directory=template_dir)
-        # Add the vite() function to the Jinja2 environment
+        # Add template functions to the Jinja2 environment
         self.templates.env.globals["vite"] = self._vite_template_function
+        self.templates.env.globals["inertia_head"] = self._make_inertia_head_function()
+        self.templates.env.globals["inertia_body"] = self._make_inertia_body_function()
 
     def is_inertia_request(self, adapter: StarletteRequestAdapter) -> bool:
         """Check if request is an Inertia XHR request"""
@@ -334,6 +337,52 @@ class InertiaResponse:
             self.vite_entry = original_entry
             return result
         return self.get_vite_tags()
+
+    def _make_inertia_head_function(self) -> Any:
+        """Create the inertia_head template function with access to self."""
+        response = self
+
+        @pass_context
+        def inertia_head(context: dict) -> str:
+            """
+            Generate all head content needed for Inertia.
+
+            Includes Vite script/style tags and SSR head content if present.
+
+            Usage: {{ inertia_head() }}
+            """
+            parts = [response.get_vite_tags()]
+
+            # Add SSR head tags if present
+            head = context.get("head")
+            if head:
+                if isinstance(head, list):
+                    parts.extend(head)
+                else:
+                    parts.append(str(head))
+
+            return "\n".join(parts)
+
+        return inertia_head
+
+    def _make_inertia_body_function(self) -> Any:
+        """Create the inertia_body template function."""
+
+        @pass_context
+        def inertia_body(context: dict) -> str:
+            """
+            Generate the Inertia app container.
+
+            Renders the app div with data-page attribute and SSR body content.
+
+            Usage: {{ inertia_body() }}
+            """
+            page = context.get("page", "{}")
+            body = context.get("body", "")
+
+            return f"<div id=\"app\" data-page='{page}'>{body}</div>"
+
+        return inertia_body
 
     def get_vite_tags(self) -> str:
         """Generate script tags for Vite assets"""
