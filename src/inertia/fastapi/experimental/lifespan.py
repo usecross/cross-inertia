@@ -45,6 +45,7 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, AsyncGenerator
 
 from inertia._config import get_config
+from inertia._vite import AsyncViteProcess
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -268,194 +269,13 @@ class SSRServer:
         return self._process is not None and self._process.returncode is None
 
 
-class ViteDevServer:
-    """Manages the Vite dev server subprocess lifecycle."""
-
-    def __init__(
-        self,
-        command: str | list[str] = "bun run dev",
-        health_url: str = "http://localhost:5173/@vite/client",
-        startup_timeout: float = 30.0,
-        env: dict[str, str] | None = None,
-    ):
-        """
-        Initialize the Vite dev server manager.
-
-        Args:
-            command: Command to start the Vite dev server. Can be a string (shell command)
-                or a list of arguments. Defaults to "bun run dev".
-            health_url: URL to check for server health. Defaults to /@vite/client endpoint.
-            startup_timeout: Maximum time to wait for the server to become healthy.
-            env: Additional environment variables for the subprocess.
-        """
-        self.command = command
-        self.health_url = health_url
-        self.startup_timeout = startup_timeout
-        self.env = env
-        self._process: asyncio.subprocess.Process | None = None
-        self._output_task: asyncio.Task | None = None
-
-    async def start(self) -> None:
-        """Start the Vite dev server subprocess and wait for it to become healthy."""
-        if self._process is not None:
-            logger.warning("Vite dev server is already running")
-            return
-
-        # Prepare environment
-        process_env = os.environ.copy()
-        if self.env:
-            process_env.update(self.env)
-
-        # Start subprocess
-        try:
-            if isinstance(self.command, str):
-                logger.info(f"Starting Vite dev server: {self.command}")
-                self._process = await asyncio.create_subprocess_shell(
-                    self.command,
-                    env=process_env,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-            else:
-                logger.info(f"Starting Vite dev server: {self.command}")
-                self._process = await asyncio.create_subprocess_exec(
-                    *self.command,
-                    env=process_env,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-        except FileNotFoundError as e:
-            raise ViteServerError(
-                f"Vite dev server command not found: {self.command}"
-            ) from e
-        except Exception as e:
-            raise ViteServerError(f"Failed to start Vite dev server: {e}") from e
-
-        # Start a task to log output
-        self._output_task = asyncio.create_task(self._log_output())
-
-        # Wait for server to become healthy
-        await self._wait_for_health()
-        logger.info("Vite dev server started successfully")
-
-    async def _log_output(self) -> None:
-        """Log stdout and stderr from the Vite dev server."""
-        if self._process is None:
-            return
-
-        async def read_stream(stream: asyncio.StreamReader | None, prefix: str) -> None:
-            if stream is None:
-                return
-            while True:
-                line = await stream.readline()
-                if not line:
-                    break
-                text = line.decode().rstrip()
-                if text:
-                    logger.debug(f"Vite {prefix}: {text}")
-
-        if self._process.stdout and self._process.stderr:
-            await asyncio.gather(
-                read_stream(self._process.stdout, "stdout"),
-                read_stream(self._process.stderr, "stderr"),
-            )
-
-    async def _wait_for_health(self) -> None:
-        """Wait for the Vite dev server to become healthy."""
-        import httpx
-
-        start_time = asyncio.get_event_loop().time()
-
-        async with httpx.AsyncClient(timeout=2.0) as client:
-            while True:
-                elapsed = asyncio.get_event_loop().time() - start_time
-                if elapsed > self.startup_timeout:
-                    await self.stop()
-                    raise ViteServerError(
-                        f"Vite dev server did not become healthy within "
-                        f"{self.startup_timeout}s"
-                    )
-
-                # Check if process has exited
-                if self._process is not None and self._process.returncode is not None:
-                    stderr_output = ""
-                    if self._process.stderr:
-                        try:
-                            stderr_data = await asyncio.wait_for(
-                                self._process.stderr.read(), timeout=1.0
-                            )
-                            stderr_output = stderr_data.decode()
-                        except asyncio.TimeoutError:
-                            pass
-                    raise ViteServerError(
-                        f"Vite dev server exited with code {self._process.returncode}: "
-                        f"{stderr_output}"
-                    )
-
-                try:
-                    response = await client.get(self.health_url)
-                    # Vite returns HTML, just check for any successful response
-                    if response.status_code == 200:
-                        return
-                except httpx.ConnectError:
-                    # Server not ready yet
-                    pass
-                except Exception as e:
-                    logger.debug(f"Vite health check failed: {e}")
-
-                await asyncio.sleep(0.1)
-
-    async def stop(self) -> None:
-        """Stop the Vite dev server subprocess gracefully."""
-        if self._process is None:
-            return
-
-        logger.info("Stopping Vite dev server...")
-
-        # Cancel the output logging task
-        if self._output_task:
-            self._output_task.cancel()
-            try:
-                await self._output_task
-            except asyncio.CancelledError:
-                pass
-            self._output_task = None
-
-        # Try graceful shutdown first
-        try:
-            if sys.platform == "win32":
-                self._process.terminate()
-            else:
-                self._process.send_signal(signal.SIGTERM)
-
-            try:
-                await asyncio.wait_for(self._process.wait(), timeout=5.0)
-            except asyncio.TimeoutError:
-                logger.warning("Vite dev server did not stop gracefully, forcing kill")
-                self._process.kill()
-                await self._process.wait()
-        except ProcessLookupError:
-            # Process already exited
-            pass
-        except Exception as e:
-            logger.error(f"Error stopping Vite dev server: {e}")
-
-        self._process = None
-        logger.info("Vite dev server stopped")
-
-    @property
-    def is_running(self) -> bool:
-        """Check if the Vite dev server is currently running."""
-        return self._process is not None and self._process.returncode is None
-
-
 @asynccontextmanager
 async def create_vite_lifespan(
     command: str | list[str] = "bun run dev",
-    health_url: str = "http://localhost:5173/@vite/client",
+    port: int = 5173,
     startup_timeout: float = 30.0,
     env: dict[str, str] | None = None,
-) -> AsyncGenerator[ViteDevServer, None]:
+) -> AsyncGenerator[AsyncViteProcess, None]:
     """
     Create an async context manager for Vite dev server lifecycle management.
 
@@ -464,12 +284,12 @@ async def create_vite_lifespan(
 
     Args:
         command: Command to start the Vite dev server. Defaults to "bun run dev".
-        health_url: URL to check for server health.
+        port: Port for the Vite dev server. Defaults to 5173.
         startup_timeout: Maximum time to wait for the server to become healthy.
         env: Additional environment variables for the subprocess.
 
     Yields:
-        The ViteDevServer instance managing the subprocess.
+        The AsyncViteProcess instance managing the subprocess.
 
     Example:
         @asynccontextmanager
@@ -480,9 +300,9 @@ async def create_vite_lifespan(
 
         app = FastAPI(lifespan=lifespan)
     """
-    server = ViteDevServer(
+    server = AsyncViteProcess(
         command=command,
-        health_url=health_url,
+        port=port,
         startup_timeout=startup_timeout,
         env=env,
     )
@@ -590,23 +410,18 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     dev_mode = is_dev_mode()
 
     # Vite dev server (only in dev mode)
-    vite_server: ViteDevServer | None = None
+    vite_server: AsyncViteProcess | None = None
     if dev_mode:
         # Use config values, fall back to env vars for backwards compatibility
-        vite_command = (
-            os.environ.get("INERTIA_VITE_COMMAND")
-            or config.get_vite_command_with_port()
-        )
-        vite_url = os.environ.get("INERTIA_VITE_URL") or config.vite_dev_url
-        # Health check uses /@vite/client endpoint which always returns 200
-        vite_health_url = f"{vite_url}/@vite/client"
+        vite_command = os.environ.get("INERTIA_VITE_COMMAND") or config.vite_command
+        vite_port = config.resolved_vite_port
         vite_timeout = float(
             os.environ.get("INERTIA_VITE_TIMEOUT") or config.vite_timeout
         )
 
-        vite_server = ViteDevServer(
+        vite_server = AsyncViteProcess(
             command=vite_command,
-            health_url=vite_health_url,
+            port=vite_port,
             startup_timeout=vite_timeout,
         )
         await vite_server.start()

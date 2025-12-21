@@ -20,6 +20,8 @@ SSR and Vite lifespan management:
     app = FastAPI(lifespan=lifespan)
 """
 
+from inertia._vite import AsyncViteProcess
+
 from .lifespan import (
     inertia_lifespan,
     create_ssr_lifespan,
@@ -27,7 +29,6 @@ from .lifespan import (
     is_dev_mode,
     SSRServer,
     SSRServerError,
-    ViteDevServer,
     ViteServerError,
 )
 
@@ -38,6 +39,6 @@ __all__ = [
     "is_dev_mode",
     "SSRServer",
     "SSRServerError",
-    "ViteDevServer",
+    "AsyncViteProcess",
     "ViteServerError",
 ]

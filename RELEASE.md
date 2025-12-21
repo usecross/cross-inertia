@@ -12,3 +12,4 @@ Add Django framework support
 - DRF-style settings pattern via `settings.CROSS_INERTIA` dict
 - Support all prop types: `optional()`, `always()`, `defer()`
 - Refactor core modules to avoid FastAPI imports when using Django
+- Add shared `SyncViteProcess` and `AsyncViteProcess` classes for Vite dev server management
