@@ -197,7 +197,9 @@ def inertia(component: str) -> Callable[[F], F]:
 
     def decorator(view_func: F) -> F:
         @wraps(view_func)
-        def wrapper(request: "HttpRequest", *args: Any, **kwargs: Any) -> "HttpResponse":
+        def wrapper(
+            request: "HttpRequest", *args: Any, **kwargs: Any
+        ) -> "HttpResponse":
             from django.http import HttpResponse
 
             result = view_func(request, *args, **kwargs)
@@ -274,7 +276,9 @@ class InertiaViewMixin:
 
     component: str = ""
 
-    def get_props(self, request: "HttpRequest", *args: Any, **kwargs: Any) -> dict[str, Any]:
+    def get_props(
+        self, request: "HttpRequest", *args: Any, **kwargs: Any
+    ) -> dict[str, Any]:
         """Return props dict for the component.
 
         Override this method to provide props to your component.

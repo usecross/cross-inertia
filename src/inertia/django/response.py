@@ -50,7 +50,9 @@ class DjangoInertiaResponse:
         self.vite_dev_url = vite_dev_url or inertia_settings.VITE_DEV_URL
         self.manifest_path = manifest_path or inertia_settings.MANIFEST_PATH
         self.vite_entry = vite_entry or inertia_settings.VITE_ENTRY
-        self.ssr_enabled = ssr_enabled if ssr_enabled is not None else inertia_settings.SSR_ENABLED
+        self.ssr_enabled = (
+            ssr_enabled if ssr_enabled is not None else inertia_settings.SSR_ENABLED
+        )
         self.ssr_url = ssr_url or inertia_settings.SSR_URL
 
         self._is_dev: bool | None = None
@@ -221,11 +223,15 @@ class DjangoInertiaResponse:
         reset_header = request.headers.get("X-Inertia-Reset")  # type: ignore[attr-defined]
         reset_props: list[str] = []
         if reset_header:
-            reset_props = [key.strip() for key in reset_header.split(",") if key.strip()]
+            reset_props = [
+                key.strip() for key in reset_header.split(",") if key.strip()
+            ]
             logger.info(f"Reset props requested: {reset_props}")
 
         # Track special prop types
-        optional_prop_keys = {key for key, val in props.items() if _is_optional_prop(val)}
+        optional_prop_keys = {
+            key for key, val in props.items() if _is_optional_prop(val)
+        }
         always_prop_keys = {key for key, val in props.items() if _is_always_prop(val)}
 
         # Build deferred props map
@@ -236,12 +242,16 @@ class DjangoInertiaResponse:
                 if group not in deferred_props_map:
                     deferred_props_map[group] = []
                 deferred_props_map[group].append(key)
-        deferred_prop_keys = {key for keys in deferred_props_map.values() for key in keys}
+        deferred_prop_keys = {
+            key for keys in deferred_props_map.values() for key in keys
+        }
 
         if partial_component == component and (partial_data or partial_except):
             if partial_data:
                 requested_keys = [key.strip() for key in partial_data.split(",")]
-                filtered_props = {key: props[key] for key in requested_keys if key in props}
+                filtered_props = {
+                    key: props[key] for key in requested_keys if key in props
+                }
                 always_props = {key: props[key] for key in always_prop_keys}
                 props = {**shared_data, **always_props, **filtered_props}
                 deferred_props_map = {}
@@ -270,14 +280,22 @@ class DjangoInertiaResponse:
             # No partial reload - merge all shared data with page props
             excluded_props = optional_prop_keys | deferred_prop_keys
             if excluded_props:
-                props = {key: val for key, val in props.items() if key not in excluded_props}
+                props = {
+                    key: val for key, val in props.items() if key not in excluded_props
+                }
                 if optional_prop_keys:
-                    logger.info(f"Excluding optional props from initial load: {optional_prop_keys}")
+                    logger.info(
+                        f"Excluding optional props from initial load: {optional_prop_keys}"
+                    )
                 if deferred_prop_keys:
-                    logger.info(f"Excluding deferred props from initial load: {deferred_prop_keys}")
+                    logger.info(
+                        f"Excluding deferred props from initial load: {deferred_prop_keys}"
+                    )
             if shared_data:
                 props = {**shared_data, **props}
-                logger.debug(f"Merged shared data keys {list(shared_data.keys())} with page props")
+                logger.debug(
+                    f"Merged shared data keys {list(shared_data.keys())} with page props"
+                )
 
         # Resolve callable props
         props = _resolve_props_sync(props)
@@ -291,7 +309,9 @@ class DjangoInertiaResponse:
                 )
             else:
                 props["errors"] = errors
-                logger.info(f"Rendering {component} with validation errors: {list(errors.keys())}")
+                logger.info(
+                    f"Rendering {component} with validation errors: {list(errors.keys())}"
+                )
 
         # Build page data
         page_data: dict[str, Any] = {
@@ -311,19 +331,27 @@ class DjangoInertiaResponse:
             return False
 
         if merge_props:
-            filtered_merge = [p for p in merge_props if not should_exclude_from_merge(p)]
+            filtered_merge = [
+                p for p in merge_props if not should_exclude_from_merge(p)
+            ]
             if filtered_merge:
                 page_data["mergeProps"] = filtered_merge
         if prepend_props:
-            filtered_prepend = [p for p in prepend_props if not should_exclude_from_merge(p)]
+            filtered_prepend = [
+                p for p in prepend_props if not should_exclude_from_merge(p)
+            ]
             if filtered_prepend:
                 page_data["prependProps"] = filtered_prepend
         if deep_merge_props:
-            filtered_deep = [p for p in deep_merge_props if not should_exclude_from_merge(p)]
+            filtered_deep = [
+                p for p in deep_merge_props if not should_exclude_from_merge(p)
+            ]
             if filtered_deep:
                 page_data["deepMergeProps"] = filtered_deep
         if match_props_on:
-            filtered_match = [p for p in match_props_on if not should_exclude_from_merge(p)]
+            filtered_match = [
+                p for p in match_props_on if not should_exclude_from_merge(p)
+            ]
             if filtered_match:
                 page_data["matchPropsOn"] = filtered_match
         if scroll_props:
@@ -349,7 +377,9 @@ class DjangoInertiaResponse:
             return response
         else:
             # Return HTML response for initial page load
-            logger.info(f"-> Initial page load: {component} (props: {list(props.keys())})")
+            logger.info(
+                f"-> Initial page load: {component} (props: {list(props.keys())})"
+            )
 
             # Escape single quotes in JSON for safe embedding in HTML attributes
             page_json = json.dumps(page_data).replace("'", "&#39;")

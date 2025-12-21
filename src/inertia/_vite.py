@@ -165,7 +165,10 @@ class SyncViteProcess(BaseViteProcess):
                     if response.status_code == 200:
                         # Wait a moment to ensure process didn't just crash
                         time.sleep(0.3)
-                        if self._process is not None and self._process.poll() is not None:
+                        if (
+                            self._process is not None
+                            and self._process.poll() is not None
+                        ):
                             raise RuntimeError(
                                 f"Vite exited with code {self._process.returncode}"
                             )
@@ -277,9 +280,7 @@ class AsyncViteProcess(BaseViteProcess):
         if self._process is None:
             return
 
-        async def read_stream(
-            stream: asyncio.StreamReader | None, prefix: str
-        ) -> None:
+        async def read_stream(stream: asyncio.StreamReader | None, prefix: str) -> None:
             if stream is None:
                 return
             while True:
