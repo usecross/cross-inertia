@@ -25,11 +25,9 @@ class InertiaMiddleware:
             'inertia.django.InertiaMiddleware',
         ]
 
-        # Option 1: Import path to a function
-        CROSS_INERTIA_SHARE = 'myapp.inertia.share_data'
-
-        # Option 2: Direct callable (not recommended for settings.py)
-        CROSS_INERTIA_SHARE = share_data
+        CROSS_INERTIA = {
+            'SHARE': 'myapp.inertia.share_data',  # Import path to share function
+        }
 
     Example share function:
         # myapp/inertia.py
@@ -71,10 +69,11 @@ class InertiaMiddleware:
     ) -> Callable[["HttpRequest"], dict[str, Any] | Awaitable[dict[str, Any]]] | None:
         """Lazy load the share function from settings."""
         if not self._share_func_loaded:
-            from django.conf import settings
             from django.utils.module_loading import import_string
 
-            share_setting = getattr(settings, "CROSS_INERTIA_SHARE", None)
+            from .conf import inertia_settings
+
+            share_setting = inertia_settings.SHARE
             if share_setting:
                 if callable(share_setting):
                     self._share_func = share_setting

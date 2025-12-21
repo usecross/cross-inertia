@@ -12,10 +12,8 @@ Usage in settings.py:
         'VITE_PORT': 5173,
         'MANIFEST_PATH': BASE_DIR / 'static/build/.vite/manifest.json',
         'SSR_ENABLED': False,
+        'SHARE': 'myapp.inertia.share_data',  # Optional: shared data function
     }
-
-    # For shared data (still a separate setting)
-    CROSS_INERTIA_SHARE = 'myapp.inertia.share_data'
 
 Then access settings via:
 
@@ -48,6 +46,8 @@ DEFAULTS: dict[str, Any] = {
     "SSR_COMMAND": "bun dist/ssr/ssr.js",
     "SSR_TIMEOUT": 10.0,
     "SSR_HEALTH_PATH": "/health",
+    # Shared data
+    "SHARE": None,  # Dotted path to share function, e.g. 'myapp.inertia.share_data'
 }
 
 

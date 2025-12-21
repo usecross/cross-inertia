@@ -24,10 +24,8 @@ Example usage:
         'VITE_PORT': 5173,               # Vite dev server port (or 'auto')
         'MANIFEST_PATH': 'static/build/.vite/manifest.json',
         'SSR_ENABLED': False,
+        'SHARE': 'myapp.inertia.share_data',  # Shared data for all pages
     }
-
-    # For shared data across all pages
-    CROSS_INERTIA_SHARE = 'myapp.inertia.share_data'
 
     # In views.py
     from inertia.django import render, optional
