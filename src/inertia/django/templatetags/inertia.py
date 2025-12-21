@@ -24,7 +24,7 @@ register = template.Library()
 
 
 @register.simple_tag
-def vite(entry: str | None = None) -> str:
+def vite() -> str:
     """
     Generate Vite script and style tags for the Inertia app.
 
@@ -32,8 +32,7 @@ def vite(entry: str | None = None) -> str:
     In production mode, this generates tags that load from the built assets
     using the Vite manifest.
 
-    Args:
-        entry: Optional custom entry point (defaults to configured vite_entry)
+    The entry point is configured via CROSS_INERTIA['VITE_ENTRY'] in settings.
 
     Returns:
         HTML string with script and link tags
@@ -41,24 +40,13 @@ def vite(entry: str | None = None) -> str:
     Example:
         {% load inertia %}
 
-        {# Use default entry point #}
-        {% vite %}
-
-        {# Use custom entry point #}
-        {% vite 'frontend/admin.tsx' %}
+        <head>
+            {% vite %}
+        </head>
     """
     from inertia.django.shortcuts import get_inertia_response
 
     response = get_inertia_response()
-
-    if entry:
-        # Temporarily override entry
-        original = response.vite_entry
-        response.vite_entry = entry
-        result = response.get_vite_tags()
-        response.vite_entry = original
-        return mark_safe(result)
-
     return mark_safe(response.get_vite_tags())
 
 
