@@ -48,10 +48,10 @@ Template example:
     <!DOCTYPE html>
     <html>
     <head>
-        {% vite %}
+        {% inertia_head %}
     </head>
     <body>
-        <div id="app" data-page='{{ page }}'></div>
+        {% inertia_body %}
     </body>
     </html>
 """
