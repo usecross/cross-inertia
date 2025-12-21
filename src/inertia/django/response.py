@@ -14,8 +14,8 @@ import httpx
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
 
-from .._config import get_config
 from .._exceptions import ManifestNotFoundError
+from .conf import inertia_settings
 from .._utils import (
     _is_always_prop,
     _is_deferred_prop,
@@ -39,20 +39,19 @@ class DjangoInertiaResponse:
 
     def __init__(
         self,
-        template_name: str = "app.html",
+        template_name: str | None = None,
         vite_dev_url: str | None = None,
         manifest_path: str | None = None,
         vite_entry: str | None = None,
         ssr_enabled: bool | None = None,
         ssr_url: str | None = None,
     ):
-        config = get_config()
-        self.template_name = template_name
-        self.vite_dev_url = vite_dev_url or config.vite_dev_url
-        self.manifest_path = manifest_path or config.manifest_path
-        self.vite_entry = vite_entry or config.vite_entry
-        self.ssr_enabled = ssr_enabled if ssr_enabled is not None else config.ssr_enabled
-        self.ssr_url = ssr_url or config.ssr_url
+        self.template_name = template_name or inertia_settings.LAYOUT
+        self.vite_dev_url = vite_dev_url or inertia_settings.VITE_DEV_URL
+        self.manifest_path = manifest_path or inertia_settings.MANIFEST_PATH
+        self.vite_entry = vite_entry or inertia_settings.VITE_ENTRY
+        self.ssr_enabled = ssr_enabled if ssr_enabled is not None else inertia_settings.SSR_ENABLED
+        self.ssr_url = ssr_url or inertia_settings.SSR_URL
 
         self._is_dev: bool | None = None
         self._manifest: dict[str, Any] | None = None

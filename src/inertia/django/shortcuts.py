@@ -22,21 +22,11 @@ F = TypeVar("F", bound=Callable[..., Any])
 def get_inertia_response() -> DjangoInertiaResponse:
     """Get or create the singleton DjangoInertiaResponse instance.
 
-    The instance is configured using settings from configure_inertia()
-    or Django settings (INERTIA_*).
+    The instance is configured using Django settings (settings.INERTIA dict).
     """
     global _inertia_response
     if _inertia_response is None:
-        # Check for Django settings
-        template_name = "app.html"
-        try:
-            from django.conf import settings
-
-            template_name = getattr(settings, "INERTIA_LAYOUT", "app.html")
-        except Exception:
-            pass
-
-        _inertia_response = DjangoInertiaResponse(template_name=template_name)
+        _inertia_response = DjangoInertiaResponse()
     return _inertia_response
 
 

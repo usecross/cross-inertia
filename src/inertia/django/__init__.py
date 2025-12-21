@@ -6,6 +6,29 @@ modern single-page applications using Django as your backend.
 
 Example usage:
 
+    # In settings.py
+    INSTALLED_APPS = [
+        ...
+        'inertia.django',
+    ]
+
+    MIDDLEWARE = [
+        ...
+        'inertia.django.InertiaMiddleware',
+    ]
+
+    # Configure Inertia (all settings are optional)
+    INERTIA = {
+        'LAYOUT': 'base.html',           # Template for initial page loads
+        'VITE_ENTRY': 'src/main.tsx',    # Vite entry point
+        'VITE_PORT': 5173,               # Vite dev server port (or 'auto')
+        'MANIFEST_PATH': 'static/build/.vite/manifest.json',
+        'SSR_ENABLED': False,
+    }
+
+    # For shared data across all pages
+    INERTIA_SHARE = 'myapp.inertia.share_data'
+
     # In views.py
     from inertia.django import render, optional
 
@@ -22,24 +45,7 @@ Example usage:
     def home(request):
         return {'message': 'Hello World'}
 
-    # In settings.py
-    INSTALLED_APPS = [
-        ...
-        'inertia.django',  # For template tags
-    ]
-
-    MIDDLEWARE = [
-        ...
-        'inertia.django.InertiaMiddleware',
-    ]
-
-    # Optional: Configure shared data
-    INERTIA_SHARE = 'myapp.inertia.share_data'
-
-    # Optional: Configure Inertia settings
-    INERTIA_LAYOUT = 'app.html'  # Default template
-
-Template tags:
+Template example:
     {% load inertia %}
     <!DOCTYPE html>
     <html>
@@ -61,7 +67,6 @@ from .shortcuts import (
     get_inertia_response,
 )
 from .._props import optional, always, defer
-from .._config import configure_inertia
 
 __all__ = [
     # Middleware
@@ -76,6 +81,4 @@ __all__ = [
     "optional",
     "always",
     "defer",
-    # Configuration
-    "configure_inertia",
 ]

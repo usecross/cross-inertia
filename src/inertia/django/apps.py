@@ -182,20 +182,11 @@ class InertiaConfig(AppConfig):
 
     def _start_vite_dev_server(self) -> None:
         """Start the Vite dev server for development."""
-        from inertia._config import get_config
+        from .conf import inertia_settings
 
-        config = get_config()
-
-        # Get Vite settings from config
-        vite_port = config.resolved_vite_port
-        base_command = config.vite_command
-
-        # Build command with port
-        if isinstance(base_command, list):
-            vite_command = [*base_command, "--port", str(vite_port)]
-        else:
-            vite_command = f"{base_command} --port {vite_port}"
-
+        # Get Vite settings
+        vite_port = inertia_settings.resolved_vite_port
+        vite_command = inertia_settings.get_vite_command_with_port()
         health_url = f"http://localhost:{vite_port}/@vite/client"
 
         # Check if Vite is already running (e.g., started manually)
@@ -211,7 +202,7 @@ class InertiaConfig(AppConfig):
         self._vite_process = ViteProcess(
             command=vite_command,
             health_url=health_url,
-            startup_timeout=config.vite_timeout,
+            startup_timeout=inertia_settings.VITE_TIMEOUT,
         )
 
         try:
