@@ -108,10 +108,10 @@ class InertiaMiddleware:
 
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             future = executor.submit(
-                                asyncio.run,
-                                share_func(request),  # type: ignore
+                                asyncio.run,  # type: ignore[arg-type]
+                                share_func(request),
                             )
-                            request._inertia_shared = future.result()  # type: ignore
+                            request._inertia_shared = future.result()  # type: ignore[attr-defined]
                     else:
                         request._inertia_shared = asyncio.run(share_func(request))  # type: ignore
                 else:
