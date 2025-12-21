@@ -22,7 +22,7 @@ F = TypeVar("F", bound=Callable[..., Any])
 def get_inertia_response() -> DjangoInertiaResponse:
     """Get or create the singleton DjangoInertiaResponse instance.
 
-    The instance is configured using Django settings (settings.INERTIA dict).
+    The instance is configured using Django settings (settings.CROSS_INERTIA dict).
     """
     global _inertia_response
     if _inertia_response is None:

@@ -26,10 +26,10 @@ class InertiaMiddleware:
         ]
 
         # Option 1: Import path to a function
-        INERTIA_SHARE = 'myapp.inertia.share_data'
+        CROSS_INERTIA_SHARE = 'myapp.inertia.share_data'
 
         # Option 2: Direct callable (not recommended for settings.py)
-        INERTIA_SHARE = share_data
+        CROSS_INERTIA_SHARE = share_data
 
     Example share function:
         # myapp/inertia.py
@@ -74,7 +74,7 @@ class InertiaMiddleware:
             from django.conf import settings
             from django.utils.module_loading import import_string
 
-            share_setting = getattr(settings, "INERTIA_SHARE", None)
+            share_setting = getattr(settings, "CROSS_INERTIA_SHARE", None)
             if share_setting:
                 if callable(share_setting):
                     self._share_func = share_setting

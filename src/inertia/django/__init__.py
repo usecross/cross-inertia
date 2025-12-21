@@ -18,7 +18,7 @@ Example usage:
     ]
 
     # Configure Inertia (all settings are optional)
-    INERTIA = {
+    CROSS_INERTIA = {
         'LAYOUT': 'base.html',           # Template for initial page loads
         'VITE_ENTRY': 'src/main.tsx',    # Vite entry point
         'VITE_PORT': 5173,               # Vite dev server port (or 'auto')
@@ -27,7 +27,7 @@ Example usage:
     }
 
     # For shared data across all pages
-    INERTIA_SHARE = 'myapp.inertia.share_data'
+    CROSS_INERTIA_SHARE = 'myapp.inertia.share_data'
 
     # In views.py
     from inertia.django import render, optional

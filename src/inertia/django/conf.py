@@ -6,7 +6,7 @@ in Django projects. Settings are read from Django's settings module.
 
 Usage in settings.py:
 
-    INERTIA = {
+    CROSS_INERTIA = {
         'LAYOUT': 'base.html',
         'VITE_ENTRY': 'src/main.tsx',
         'VITE_PORT': 5173,
@@ -15,7 +15,7 @@ Usage in settings.py:
     }
 
     # For shared data (still a separate setting)
-    INERTIA_SHARE = 'myapp.inertia.share_data'
+    CROSS_INERTIA_SHARE = 'myapp.inertia.share_data'
 
 Then access settings via:
 
@@ -67,7 +67,7 @@ class InertiaSettings:
     """
     A settings object that allows Inertia settings to be accessed as properties.
 
-    Settings are read from Django's settings.INERTIA dict, with fallback to defaults.
+    Settings are read from Django's settings.CROSS_INERTIA dict, with fallback to defaults.
     Values are cached after first access for performance.
 
     Example:
@@ -88,7 +88,7 @@ class InertiaSettings:
         if not hasattr(self, "_user_settings"):
             from django.conf import settings
 
-            self._user_settings = getattr(settings, "INERTIA", {})
+            self._user_settings = getattr(settings, "CROSS_INERTIA", {})
         return self._user_settings
 
     def __getattr__(self, attr: str) -> Any:
