@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import asyncio
+import concurrent.futures
+import hashlib
 import json
 import logging
 from pathlib import Path
 from typing import Annotated, Any
+from urllib.parse import urlparse
 
 import httpx
 from fastapi import Depends, Request
@@ -319,8 +323,6 @@ class InertiaResponse:
 
         manifest = self.get_manifest()
         # Use MD5 hash of manifest as version for deterministic, positive values
-        import hashlib
-
         manifest_str = json.dumps(manifest, sort_keys=True)
         return hashlib.md5(manifest_str.encode()).hexdigest()
 
@@ -462,9 +464,6 @@ class InertiaResponse:
                       Useful for server-side meta tags, page titles, etc.
         """
         # Extract path and query from full URL (lia returns full URL like http://testserver/test)
-        from urllib.parse import urlparse
-        from starlette.responses import Response
-
         parsed_url = urlparse(adapter.url)
         # Include query string in the URL so Inertia can update the browser's address bar
         if url is not None:
@@ -701,15 +700,11 @@ class InertiaResponse:
             head: list[str] = []
             body: str = ""
             if self._ssr_client and self.ssr_enabled:
-                import asyncio
-
                 try:
                     # Run SSR render (need to handle sync context)
                     loop = asyncio.get_event_loop()
                     if loop.is_running():
                         # We're in an async context, create a task
-                        import concurrent.futures
-
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             future = executor.submit(
                                 asyncio.run, self._ssr_client.render(page_data)

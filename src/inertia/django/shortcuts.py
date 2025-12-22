@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import logging
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import Any, Callable, TypeVar
 
-if TYPE_CHECKING:
-    from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse
 
 from .response import DjangoInertiaResponse
 
@@ -150,8 +149,6 @@ def location(url: str) -> "HttpResponse":
     Reference:
         https://inertiajs.com/redirects#external-redirects
     """
-    from django.http import HttpResponse
-
     logger.info(f"External redirect to: {url}")
     return HttpResponse(
         status=409,
@@ -197,11 +194,7 @@ def inertia(component: str) -> Callable[[F], F]:
 
     def decorator(view_func: F) -> F:
         @wraps(view_func)
-        def wrapper(
-            request: "HttpRequest", *args: Any, **kwargs: Any
-        ) -> "HttpResponse":
-            from django.http import HttpResponse
-
+        def wrapper(request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
             result = view_func(request, *args, **kwargs)
 
             # If view returns HttpResponse, pass through (for redirects, etc.)

@@ -6,13 +6,13 @@ import json
 import hashlib
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from urllib.parse import urlparse
 
 import httpx
 
-if TYPE_CHECKING:
-    from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.template.response import TemplateResponse
 
 from .._exceptions import ManifestNotFoundError
 from .conf import inertia_settings
@@ -182,11 +182,8 @@ class DjangoInertiaResponse:
         scroll_props: dict[str, Any] | None = None,
         url: str | None = None,
         view_data: dict[str, Any] | None = None,
-    ) -> "HttpResponse":
+    ) -> HttpResponse:
         """Render an Inertia response for Django."""
-        from django.http import HttpResponse, JsonResponse
-        from django.template.response import TemplateResponse
-
         # Extract path and query from request
         parsed_url = urlparse(request.build_absolute_uri())
         if url is not None:
