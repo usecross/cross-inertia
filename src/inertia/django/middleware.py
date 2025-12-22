@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
@@ -104,8 +105,6 @@ class InertiaMiddleware:
                         loop = None
 
                     if loop:
-                        import concurrent.futures
-
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             future: concurrent.futures.Future[Any] = executor.submit(
                                 asyncio.run,  # type: ignore[arg-type]
