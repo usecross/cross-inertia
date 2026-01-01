@@ -7,7 +7,9 @@ section: Core Concepts
 
 ## Rendering pages
 
-In Cross-Inertia, pages are rendered using the `inertia.render()` method. This method takes a component name and optional props.
+Pages are rendered by specifying a component name and optional props.
+
+### FastAPI
 
 ```python
 from inertia.fastapi import InertiaDep
@@ -18,6 +20,28 @@ async def home(inertia: InertiaDep):
         "title": "Welcome",
         "user": {"name": "John"}
     })
+```
+
+### Django
+
+```python
+from inertia.django import render
+
+def home(request):
+    return render(request, "Home", {
+        "title": "Welcome",
+        "user": {"name": "John"}
+    })
+
+# Or with the decorator
+from inertia.django import inertia
+
+@inertia("Home")
+def home(request):
+    return {
+        "title": "Welcome",
+        "user": {"name": "John"}
+    }
 ```
 
 ## Component naming
@@ -60,11 +84,31 @@ export default function Show({ user }: ShowProps) {
 
 You can pass additional data to your template (not included in page props) using the `view_data` parameter:
 
+### FastAPI
+
 ```python
 @app.get("/products/{id}")
 async def show_product(id: int, inertia: InertiaDep):
     product = await get_product(id)
     return inertia.render(
+        "Products/Show",
+        {"product": product},
+        view_data={
+            "page_title": product.name,
+            "meta_description": product.description[:160]
+        }
+    )
+```
+
+### Django
+
+```python
+from inertia.django import render
+
+def show_product(request, id):
+    product = Product.objects.get(id=id)
+    return render(
+        request,
         "Products/Show",
         {"product": product},
         view_data={

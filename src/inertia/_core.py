@@ -1,18 +1,30 @@
 from __future__ import annotations
 
 import asyncio
-import inspect
+import concurrent.futures
+import hashlib
 import json
 import logging
 from pathlib import Path
-from typing import Annotated, Any, Callable
+from typing import Annotated, Any
+from urllib.parse import urlparse
 
 import httpx
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from jinja2 import pass_context
 from starlette.responses import Response
 from fastapi.templating import Jinja2Templates
 from lia import StarletteRequestAdapter
+
+from ._props import optional, always, defer
+from ._exceptions import ManifestNotFoundError
+from ._utils import (
+    _is_optional_prop,
+    _is_always_prop,
+    _is_deferred_prop,
+    _resolve_props_sync,
+)
 
 # Configure logging with basic config if not already configured
 logging.basicConfig(
@@ -25,273 +37,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class ManifestNotFoundError(Exception):
-    """Raised when the Vite manifest file is not found in production mode."""
-
-    pass
-
-
-class optional:
-    """
-    Mark a prop as optional - only evaluated when explicitly requested.
-
-    Works like functools.partial - you can pass args and kwargs that will be
-    applied when the prop is evaluated.
-
-    Optional props are excluded from initial page loads. They are only included
-    and evaluated when requested via partial reloads with `only: ['prop_name']`.
-
-    This is useful for expensive queries that users may not always need.
-
-    Example:
-        @app.get("/dashboard")
-        async def dashboard(inertia: InertiaDep):
-            user = get_current_user()
-            return inertia.render("Dashboard", {
-                "user": user,
-                # These are only loaded when explicitly requested
-                "permissions": optional(get_permissions, user.id),
-                "activity": optional(get_activity, user_id=user.id, limit=100),
-                "billing": optional(get_billing_history, user.id),
-            })
-
-        # Frontend - load optional prop on demand:
-        router.reload({ only: ['permissions'] })
-
-        # Load multiple:
-        router.reload({ only: ['permissions', 'activity'] })
-    """
-
-    # TODO: Add proper typing with ParamSpec and TypeVar for better IDE support
-    def __init__(self, callback: Callable[..., Any], *args: Any, **kwargs: Any):
-        """
-        Create an optional prop.
-
-        Args:
-            callback: A callable that returns the prop value when invoked.
-            *args: Positional arguments to pass to the callback.
-            **kwargs: Keyword arguments to pass to the callback.
-        """
-        if not callable(callback):
-            raise ValueError("optional() requires a callable")
-        self.callback = callback
-        self.args = args
-        self.kwargs = kwargs
-
-    def __call__(self) -> Any:
-        """Invoke the callback with stored args/kwargs to get the value."""
-        return self.callback(*self.args, **self.kwargs)
-
-
-class always:
-    """
-    Mark a prop as always included - even during partial reloads.
-
-    Props wrapped with always() are always included in every Inertia response,
-    even during partial reloads when only specific props are requested.
-
-    Works like functools.partial - you can pass args and kwargs, or just a value.
-
-    Example:
-        @app.get("/dashboard")
-        async def dashboard(inertia: InertiaDep):
-            return inertia.render("Dashboard", {
-                "user": get_user(),
-                "flash": always(get_flash_messages),  # Always included
-                "notifications": always(get_notifications, user_id=user.id),
-            })
-
-        # Frontend partial reload - flash is STILL included:
-        router.reload({ only: ['user'] })  # flash is also returned
-    """
-
-    def __init__(self, value_or_callback: Any, *args: Any, **kwargs: Any):
-        """
-        Create an always prop.
-
-        Args:
-            value_or_callback: A value or callable that returns the prop value.
-            *args: Positional arguments to pass to the callback (if callable).
-            **kwargs: Keyword arguments to pass to the callback (if callable).
-        """
-        self.value_or_callback = value_or_callback
-        self.args = args
-        self.kwargs = kwargs
-
-    def __call__(self) -> Any:
-        """Get the value, invoking the callback if needed."""
-        if callable(self.value_or_callback):
-            return self.value_or_callback(*self.args, **self.kwargs)
-        return self.value_or_callback
-
-
-class defer:
-    """
-    Mark a prop as deferred - loaded after the initial page render.
-
-    Deferred props are excluded from the initial page load and loaded in a
-    subsequent request after the page renders. This improves perceived performance
-    by allowing the page to display immediately while slower data loads in the
-    background.
-
-    Unlike optional() props which require explicit requests from the frontend,
-    deferred props are automatically loaded by the Inertia client after mount.
-
-    Props can be grouped together to be loaded in the same request by providing
-    a group name. Props in different groups are loaded in parallel.
-
-    Example:
-        @app.get("/dashboard")
-        async def dashboard(inertia: InertiaDep):
-            user = get_current_user()
-            return inertia.render("Dashboard", {
-                "user": user,  # Loaded immediately
-                # These are loaded after page renders:
-                "analytics": defer(get_analytics),  # Default group
-                "notifications": defer(get_notifications, user.id),  # Default group
-                # Load permissions separately (parallel with default group):
-                "permissions": defer(get_permissions, user.id, group="permissions"),
-            })
-
-        # Frontend - use the Deferred component:
-        <Deferred data="analytics" fallback={<Loading />}>
-            <AnalyticsChart analytics={analytics} />
-        </Deferred>
-
-    Reference:
-        https://inertiajs.com/deferred-props
-    """
-
-    def __init__(
-        self,
-        callback: Callable[..., Any],
-        *args: Any,
-        group: str = "default",
-        **kwargs: Any,
-    ):
-        """
-        Create a deferred prop.
-
-        Args:
-            callback: A callable that returns the prop value when invoked.
-            *args: Positional arguments to pass to the callback.
-            group: Name of the group for batching requests. Props in the same
-                   group are loaded together; different groups load in parallel.
-                   Defaults to "default".
-            **kwargs: Keyword arguments to pass to the callback.
-        """
-        if not callable(callback):
-            raise ValueError("defer() requires a callable")
-        self.callback = callback
-        self.args = args
-        self.group = group
-        self.kwargs = kwargs
-
-    def __call__(self) -> Any:
-        """Invoke the callback with stored args/kwargs to get the value."""
-        return self.callback(*self.args, **self.kwargs)
-
-
-def _is_optional_prop(value: Any) -> bool:
-    """Check if a value is an optional prop (excluded on initial load)."""
-    return isinstance(value, optional)
-
-
-def _is_always_prop(value: Any) -> bool:
-    """Check if a value is an always prop (included even on partial reloads)."""
-    return isinstance(value, always)
-
-
-def _is_deferred_prop(value: Any) -> bool:
-    """Check if a value is a deferred prop (loaded after initial render)."""
-    return isinstance(value, defer)
-
-
-# Keep old function name for internal compatibility
-def _is_lazy_prop(value: Any) -> bool:
-    """Check if a value is an optional/lazy prop."""
-    return _is_optional_prop(value)
-
-
-def _is_callable_prop(value: Any) -> bool:
-    """Check if a value is a callable prop (function/lambda, not a class or special prop)."""
-    return (
-        callable(value)
-        and not inspect.isclass(value)
-        and not _is_optional_prop(value)
-        and not _is_always_prop(value)
-        and not _is_deferred_prop(value)
-    )
-
-
-async def _resolve_callable(value: Any) -> Any:
-    """Resolve a callable value, handling both sync and async callables.
-
-    Works with both lazy props and regular callables. Both are invoked the same
-    way - lazy props have a __call__ method that invokes their callback.
-    """
-    result = value()
-    if inspect.iscoroutine(result):
-        return await result
-    return result
-
-
-async def _resolve_props(props: dict[str, Any]) -> dict[str, Any]:
-    """
-    Recursively resolve all callable props in a dictionary.
-
-    Supports:
-    - Top-level callable props: {"user": lambda: get_user()}
-    - Nested callable props: {"data": {"user": lambda: get_user()}}
-    - Lists with callable props: {"items": [lambda: get_item(1), lambda: get_item(2)]}
-    - Async callables: {"user": async_get_user}
-
-    Non-callable values are passed through unchanged.
-    """
-    resolved: dict[str, Any] = {}
-
-    for key, value in props.items():
-        resolved[key] = await _resolve_value(value)
-
-    return resolved
-
-
-async def _resolve_value(value: Any) -> Any:
-    """Resolve a single value, which may be callable, optional, always, defer, dict, or list."""
-    if _is_optional_prop(value):
-        return await _resolve_callable(value)
-    elif _is_always_prop(value):
-        return await _resolve_callable(value)
-    elif _is_deferred_prop(value):
-        return await _resolve_callable(value)
-    elif _is_callable_prop(value):
-        return await _resolve_callable(value)
-    elif isinstance(value, dict):
-        return await _resolve_props(value)
-    elif isinstance(value, list):
-        return [await _resolve_value(item) for item in value]
-    else:
-        return value
-
-
-def _resolve_props_sync(props: dict[str, Any]) -> dict[str, Any]:
-    """
-    Synchronous wrapper for resolving callable props.
-    Uses asyncio.run() to execute the async resolution.
-    """
-    try:
-        # Try to get the running loop
-        asyncio.get_running_loop()
-        # If we're already in an async context, we need to handle this differently
-        # Create a new task in the existing loop
-        import concurrent.futures
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(asyncio.run, _resolve_props(props))
-            return future.result()
-    except RuntimeError:
-        # No running loop, we can use asyncio.run directly
-        return asyncio.run(_resolve_props(props))
+# Re-export for backwards compatibility
+__all__ = ["optional", "always", "defer", "ManifestNotFoundError"]
 
 
 class Inertia:
@@ -496,8 +243,10 @@ class InertiaResponse:
 
         # Initialize Jinja2 with custom functions
         self.templates = Jinja2Templates(directory=template_dir)
-        # Add the vite() function to the Jinja2 environment
+        # Add template functions to the Jinja2 environment
         self.templates.env.globals["vite"] = self._vite_template_function
+        self.templates.env.globals["inertia_head"] = self._make_inertia_head_function()
+        self.templates.env.globals["inertia_body"] = self._make_inertia_body_function()
 
     def is_inertia_request(self, adapter: StarletteRequestAdapter) -> bool:
         """Check if request is an Inertia XHR request"""
@@ -574,8 +323,6 @@ class InertiaResponse:
 
         manifest = self.get_manifest()
         # Use MD5 hash of manifest as version for deterministic, positive values
-        import hashlib
-
         manifest_str = json.dumps(manifest, sort_keys=True)
         return hashlib.md5(manifest_str.encode()).hexdigest()
 
@@ -592,6 +339,52 @@ class InertiaResponse:
             self.vite_entry = original_entry
             return result
         return self.get_vite_tags()
+
+    def _make_inertia_head_function(self) -> Any:
+        """Create the inertia_head template function with access to self."""
+        response = self
+
+        @pass_context
+        def inertia_head(context: dict) -> str:
+            """
+            Generate all head content needed for Inertia.
+
+            Includes Vite script/style tags and SSR head content if present.
+
+            Usage: {{ inertia_head() }}
+            """
+            parts = [response.get_vite_tags()]
+
+            # Add SSR head tags if present
+            head = context.get("head")
+            if head:
+                if isinstance(head, list):
+                    parts.extend(head)
+                else:
+                    parts.append(str(head))
+
+            return "\n".join(parts)
+
+        return inertia_head
+
+    def _make_inertia_body_function(self) -> Any:
+        """Create the inertia_body template function."""
+
+        @pass_context
+        def inertia_body(context: dict) -> str:
+            """
+            Generate the Inertia app container.
+
+            Renders the app div with data-page attribute and SSR body content.
+
+            Usage: {{ inertia_body() }}
+            """
+            page = context.get("page", "{}")
+            body = context.get("body", "")
+
+            return f"<div id=\"app\" data-page='{page}'>{body}</div>"
+
+        return inertia_body
 
     def get_vite_tags(self) -> str:
         """Generate script tags for Vite assets"""
@@ -671,9 +464,6 @@ class InertiaResponse:
                       Useful for server-side meta tags, page titles, etc.
         """
         # Extract path and query from full URL (lia returns full URL like http://testserver/test)
-        from urllib.parse import urlparse
-        from starlette.responses import Response
-
         parsed_url = urlparse(adapter.url)
         # Include query string in the URL so Inertia can update the browser's address bar
         if url is not None:
@@ -910,15 +700,11 @@ class InertiaResponse:
             head: list[str] = []
             body: str = ""
             if self._ssr_client and self.ssr_enabled:
-                import asyncio
-
                 try:
                     # Run SSR render (need to handle sync context)
                     loop = asyncio.get_event_loop()
                     if loop.is_running():
                         # We're in an async context, create a task
-                        import concurrent.futures
-
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             future = executor.submit(
                                 asyncio.run, self._ssr_client.render(page_data)

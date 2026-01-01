@@ -31,7 +31,8 @@ Prop types (following Laravel Inertia conventions):
 
 from importlib.metadata import version
 
-from inertia._core import optional, always, defer, ManifestNotFoundError
+from inertia._props import optional, always, defer
+from inertia._exceptions import ManifestNotFoundError
 from inertia._config import configure_inertia, get_config, InertiaConfig
 
 __version__ = version("cross-inertia")
