@@ -401,7 +401,7 @@ Report issues to: patrick.arminio@gmail.com
 
 ```
 cross-inertia/
-├── src/inertia/          # Main package code
+├── src/cross_inertia/    # Main package code
 │   ├── __init__.py       # Public API
 │   ├── _core.py          # Core Inertia implementation
 │   └── middleware.py     # Shared data middleware

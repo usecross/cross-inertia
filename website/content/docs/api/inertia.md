@@ -10,7 +10,7 @@ section: API Reference
 The `InertiaDep` type is a FastAPI dependency that provides access to the Inertia instance.
 
 ```python
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 @app.get("/")
 async def home(inertia: InertiaDep):

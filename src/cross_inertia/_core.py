@@ -233,7 +233,7 @@ class InertiaResponse:
         self.ssr_url = ssr_url or "http://127.0.0.1:13714"
         self._ssr_client: "InertiaSSR | None" = None
         if ssr_enabled:
-            from inertia._ssr import InertiaSSR
+            from cross_inertia._ssr import InertiaSSR
 
             self._ssr_client = InertiaSSR(url=self.ssr_url, enabled=True)
             logger.info(f"SSR enabled: {self.ssr_url}")
@@ -752,7 +752,7 @@ def get_inertia_response() -> InertiaResponse:
     """
     global _inertia_response
     if _inertia_response is None:
-        from inertia._config import get_config
+        from cross_inertia._config import get_config
 
         config = get_config()
         _inertia_response = InertiaResponse(

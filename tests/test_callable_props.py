@@ -122,7 +122,7 @@ class TestCallableProps:
 @pytest.fixture
 def callable_app(inertia_response):
     """Create a FastAPI test application with callable prop routes."""
-    from inertia._core import Inertia
+    from cross_inertia._core import Inertia
     from lia import StarletteRequestAdapter
 
     app = FastAPI()

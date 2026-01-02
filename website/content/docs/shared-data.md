@@ -22,7 +22,7 @@ Use the `InertiaMiddleware` to define shared data:
 
 ```python
 from fastapi import FastAPI, Request
-from inertia.fastapi import InertiaMiddleware
+from cross_inertia.fastapi import InertiaMiddleware
 
 app = FastAPI()
 
@@ -100,7 +100,7 @@ export default function Layout({ children }) {
 You can use `always()` to ensure data is always evaluated, even during partial reloads:
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 def share_data(request: Request) -> dict:
     return {

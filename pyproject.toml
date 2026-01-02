@@ -39,7 +39,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/inertia"]
+packages = ["src/cross_inertia"]
 
 [dependency-groups]
 dev = [

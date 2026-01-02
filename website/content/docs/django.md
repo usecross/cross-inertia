@@ -24,7 +24,7 @@ Add `inertia.django` to your installed apps and middleware:
 
 INSTALLED_APPS = [
     # ...
-    'inertia.django',
+    'cross_inertia.django',
 ]
 
 MIDDLEWARE = [
@@ -58,7 +58,7 @@ The simplest way to render Inertia pages:
 
 ```python
 # views.py
-from inertia.django import render
+from cross_inertia.django import render
 
 def home(request):
     return render(request, 'Home', {
@@ -72,7 +72,7 @@ def home(request):
 For cleaner views that just return props:
 
 ```python
-from inertia.django import inertia
+from cross_inertia.django import inertia
 
 @inertia('Home')
 def home(request):
@@ -88,7 +88,7 @@ Mix in `InertiaViewMixin` with your class-based views:
 
 ```python
 from django.views import View
-from inertia.django import InertiaViewMixin
+from cross_inertia.django import InertiaViewMixin
 
 class HomeView(InertiaViewMixin, View):
     component = 'Home'
@@ -129,8 +129,8 @@ The template tags:
 Use prop wrappers from the main `inertia` package (they're framework-agnostic):
 
 ```python
-from inertia import optional, always, defer
-from inertia.django import render
+from cross_inertia import optional, always, defer
+from cross_inertia.django import render
 
 def dashboard(request):
     return render(request, 'Dashboard', {
@@ -169,7 +169,7 @@ CROSS_INERTIA = {
 For redirects to external URLs (or forcing a full page reload):
 
 ```python
-from inertia.django import location
+from cross_inertia.django import location
 
 def logout(request):
     # ... logout logic ...
@@ -208,7 +208,7 @@ urlpatterns = [
 # settings.py
 INSTALLED_APPS = [
     'django.contrib.staticfiles',
-    'inertia.django',
+    'cross_inertia.django',
     'myapp',
 ]
 
@@ -225,8 +225,8 @@ CROSS_INERTIA = {
 }
 
 # views.py
-from inertia.django import render
-from inertia import optional
+from cross_inertia.django import render
+from cross_inertia import optional
 
 def home(request):
     return render(request, 'Home', {

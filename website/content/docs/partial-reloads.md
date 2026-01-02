@@ -62,7 +62,7 @@ However, for optimal performance, you can use **optional props** to avoid execut
 The `optional()` function marks props that should only be evaluated when requested. This follows Laravel Inertia conventions and provides better semantics:
 
 ```python
-from inertia import optional
+from cross_inertia import optional
 
 @app.get("/users/{user_id}")
 async def show_user(user_id: int, inertia: InertiaDep):
@@ -171,7 +171,7 @@ export default function UserList({ users }: { users: User[] }) {
 ### Dashboard with Real-Time Updates
 
 ```python
-from inertia import optional
+from cross_inertia import optional
 
 @app.get("/dashboard")
 async def dashboard(inertia: InertiaDep):
@@ -252,7 +252,7 @@ export default function ProductSearch({ products, categories, filters }) {
 ### Form Submission with Partial Reload
 
 ```python
-from inertia import optional
+from cross_inertia import optional
 
 @app.post("/settings/profile")
 async def update_profile(inertia: InertiaDep):
@@ -312,7 +312,7 @@ export default function Settings({ user, billing, usage }) {
 ### Nested Partial Reloads
 
 ```python
-from inertia import optional
+from cross_inertia import optional
 
 @app.get("/blog/{post_id}")
 async def show_post(post_id: int, inertia: InertiaDep):

@@ -43,7 +43,7 @@ def inertia_head(context: dict) -> SafeString:
             {% inertia_head %}
         </head>
     """
-    from inertia.django.shortcuts import get_inertia_response
+    from cross_inertia.django.shortcuts import get_inertia_response
 
     response = get_inertia_response()
     parts = [response.get_vite_tags()]

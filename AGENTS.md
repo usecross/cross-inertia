@@ -86,7 +86,7 @@ Use conventional commit style:
 ## Project Structure
 
 ```
-src/inertia/          # Main package code
+src/cross_inertia/    # Main package code
 tests/                # Unit tests
 tests/e2e/           # End-to-end tests
 examples/fastapi/    # Example application

@@ -60,7 +60,7 @@ Visit http://127.0.0.1:8000 to see Inertia.js + FastAPI in action!
 
 ```python
 from fastapi import FastAPI
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 app = FastAPI()
 
@@ -80,7 +80,7 @@ If you need to customize the Inertia configuration (e.g., different template dir
 
 ```python
 from fastapi import FastAPI, Request, Depends
-from inertia.fastapi import InertiaResponse, Inertia
+from cross_inertia.fastapi import InertiaResponse, Inertia
 
 # Create custom InertiaResponse instance
 inertia_response = InertiaResponse(

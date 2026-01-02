@@ -6,9 +6,9 @@ Built with Cross-Inertia, FastAPI, React, and Bun.
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from inertia import configure_inertia
-from inertia.fastapi import InertiaMiddleware
-from inertia.fastapi.experimental import inertia_lifespan
+from cross_inertia import configure_inertia
+from cross_inertia.fastapi import InertiaMiddleware
+from cross_inertia.fastapi.experimental import inertia_lifespan
 
 from cross_docs import CrossDocs
 

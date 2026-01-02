@@ -41,7 +41,7 @@ createInertiaApp({
 You can also enable encryption from the server side:
 
 ```python
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 @app.get("/sensitive-data")
 async def sensitive_page(inertia: InertiaDep):

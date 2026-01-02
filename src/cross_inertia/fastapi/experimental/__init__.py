@@ -5,7 +5,7 @@
     Use with caution in production environments.
 
 SSR and Vite lifespan management:
-    from inertia.fastapi.experimental import inertia_lifespan, create_ssr_lifespan
+    from cross_inertia.fastapi.experimental import inertia_lifespan, create_ssr_lifespan
 
     # Simple usage - auto-detects dev mode (fastapi dev) and starts Vite/SSR accordingly
     app = FastAPI(lifespan=inertia_lifespan)
@@ -20,7 +20,7 @@ SSR and Vite lifespan management:
     app = FastAPI(lifespan=lifespan)
 """
 
-from inertia._vite import AsyncViteProcess
+from cross_inertia._vite import AsyncViteProcess
 
 from .lifespan import (
     inertia_lifespan,

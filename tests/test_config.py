@@ -4,7 +4,7 @@ import socket
 
 import pytest
 
-from inertia._config import (
+from cross_inertia._config import (
     InertiaConfig,
     configure_inertia,
     find_available_port,

@@ -34,7 +34,7 @@ def temp_template_dir():
 @pytest.fixture
 def inertia_response(temp_template_dir):
     """Create an InertiaResponse instance for testing."""
-    from inertia._core import InertiaResponse
+    from cross_inertia._core import InertiaResponse
 
     response = InertiaResponse(
         template_dir=temp_template_dir,
@@ -53,7 +53,7 @@ def app(inertia_response):
 
     # Override the default inertia response with our test instance
     def get_test_inertia(request: Request):
-        from inertia._core import Inertia
+        from cross_inertia._core import Inertia
         from lia import StarletteRequestAdapter
 
         adapter = StarletteRequestAdapter(request)

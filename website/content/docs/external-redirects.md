@@ -17,7 +17,7 @@ Regular Inertia navigation is designed for single-page app transitions within yo
 
 ```python
 from fastapi import FastAPI
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 app = FastAPI()
 
@@ -145,7 +145,7 @@ Here's a complete example from a cat adoption platform:
 
 ```python
 from fastapi import FastAPI
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 app = FastAPI()
 

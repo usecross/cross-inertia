@@ -11,7 +11,7 @@ The `InertiaMiddleware` handles Inertia-specific request/response processing.
 
 ```python
 from fastapi import FastAPI
-from inertia.fastapi import InertiaMiddleware
+from cross_inertia.fastapi import InertiaMiddleware
 
 app = FastAPI()
 app.add_middleware(InertiaMiddleware, share=share_data)
@@ -29,7 +29,7 @@ If you don't need to share data across all pages, you can add the middleware wit
 
 ```python
 from fastapi import FastAPI
-from inertia.fastapi import InertiaMiddleware
+from cross_inertia.fastapi import InertiaMiddleware
 
 app = FastAPI()
 app.add_middleware(InertiaMiddleware)  # No share function needed
@@ -80,7 +80,7 @@ export default function Layout({ children }) {
 Use `always()` to ensure data is always evaluated, even during partial reloads:
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 def share_data(request: Request) -> dict:
     return {

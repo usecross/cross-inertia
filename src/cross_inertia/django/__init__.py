@@ -9,12 +9,12 @@ Example usage:
     # In settings.py
     INSTALLED_APPS = [
         ...
-        'inertia.django',
+        'cross_inertia.django',
     ]
 
     MIDDLEWARE = [
         ...
-        'inertia.django.InertiaMiddleware',
+        'cross_inertia.django.InertiaMiddleware',
     ]
 
     # Configure Inertia (all settings are optional)
@@ -28,8 +28,8 @@ Example usage:
     }
 
     # In views.py
-    from inertia.django import render
-    from inertia import optional  # Prop wrappers are framework-agnostic
+    from cross_inertia.django import render
+    from cross_inertia import optional  # Prop wrappers are framework-agnostic
 
     def home(request):
         return render(request, 'Home', {
@@ -38,7 +38,7 @@ Example usage:
         })
 
     # Or with decorator
-    from inertia.django import inertia
+    from cross_inertia.django import inertia
 
     @inertia('Home')
     def home(request):

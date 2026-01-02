@@ -5,7 +5,7 @@ import asyncio
 import httpx
 from unittest.mock import AsyncMock, patch, MagicMock
 
-from inertia._ssr import InertiaSSR, SSRResponse
+from cross_inertia._ssr import InertiaSSR, SSRResponse
 
 
 class TestSSRResponse:

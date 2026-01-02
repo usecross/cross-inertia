@@ -8,8 +8,8 @@ and Vite dev server with FastAPI's lifespan context manager.
 
 Example - Simple usage with configure_inertia:
     from fastapi import FastAPI
-    from inertia import configure_inertia
-    from inertia.fastapi.experimental import inertia_lifespan
+    from cross_inertia import configure_inertia
+    from cross_inertia.fastapi.experimental import inertia_lifespan
 
     configure_inertia(
         vite_port="auto",  # Finds an available port automatically
@@ -21,7 +21,7 @@ Example - Simple usage with configure_inertia:
 Example - Composable approach:
     from contextlib import asynccontextmanager
     from fastapi import FastAPI
-    from inertia.fastapi.experimental import create_ssr_lifespan, create_vite_lifespan
+    from cross_inertia.fastapi.experimental import create_ssr_lifespan, create_vite_lifespan
 
     @asynccontextmanager
     async def lifespan(app):
@@ -44,8 +44,8 @@ import sys
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, AsyncGenerator
 
-from inertia._config import get_config
-from inertia._vite import AsyncViteProcess
+from cross_inertia._config import get_config
+from cross_inertia._vite import AsyncViteProcess
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -380,8 +380,8 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     to environment variables for backwards compatibility.
 
     Recommended usage with configure_inertia():
-        from inertia import configure_inertia
-        from inertia.fastapi.experimental import inertia_lifespan
+        from cross_inertia import configure_inertia
+        from cross_inertia.fastapi.experimental import inertia_lifespan
 
         configure_inertia(
             vite_port="auto",  # Finds an available port

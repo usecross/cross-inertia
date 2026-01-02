@@ -24,10 +24,10 @@ def pytest_configure():
             INSTALLED_APPS=[
                 "django.contrib.contenttypes",
                 "django.contrib.auth",
-                "inertia.django",
+                "cross_inertia.django",
             ],
             MIDDLEWARE=[
-                "inertia.django.InertiaMiddleware",
+                "cross_inertia.django.InertiaMiddleware",
             ],
             ROOT_URLCONF="tests.django.urls",
             TEMPLATES=[
@@ -74,7 +74,7 @@ def temp_template_dir():
 @pytest.fixture
 def django_inertia_response(temp_template_dir):
     """Create a DjangoInertiaResponse instance for testing."""
-    from inertia.django.response import DjangoInertiaResponse
+    from cross_inertia.django.response import DjangoInertiaResponse
 
     # Update Django template dirs
     from django.conf import settings

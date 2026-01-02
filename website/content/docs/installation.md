@@ -58,7 +58,7 @@ Django works out of the box with its built-in template engine. Just add to your 
 ```python
 INSTALLED_APPS = [
     # ...
-    'inertia.django',
+    'cross_inertia.django',
 ]
 ```
 
@@ -85,7 +85,7 @@ You can verify your installation by importing Cross-Inertia:
 ### FastAPI
 
 ```python
-from inertia.fastapi import InertiaDep, InertiaMiddleware
+from cross_inertia.fastapi import InertiaDep, InertiaMiddleware
 
 print("Cross-Inertia installed successfully!")
 ```
@@ -93,7 +93,7 @@ print("Cross-Inertia installed successfully!")
 ### Django
 
 ```python
-from inertia.django import render, InertiaMiddleware
+from cross_inertia.django import render, InertiaMiddleware
 
 print("Cross-Inertia installed successfully!")
 ```

@@ -4,11 +4,11 @@ Inertia.js adapter for Python web frameworks.
 This package provides server-side adapters for Inertia.js.
 
 Framework-specific imports:
-    from inertia.fastapi import InertiaDep, InertiaMiddleware
+    from cross_inertia.fastapi import InertiaDep, InertiaMiddleware
 
 Configuration (single source of truth):
-    from inertia import configure_inertia
-    from inertia.fastapi.experimental import inertia_lifespan
+    from cross_inertia import configure_inertia
+    from cross_inertia.fastapi.experimental import inertia_lifespan
 
     configure_inertia(
         vite_port="auto",  # Finds an available port automatically
@@ -19,7 +19,7 @@ Configuration (single source of truth):
     app = FastAPI(lifespan=inertia_lifespan)
 
 Prop types (following Laravel Inertia conventions):
-    from inertia import optional, always, defer
+    from cross_inertia import optional, always, defer
 
     return inertia.render("Page", {
         "user": get_user(),                        # Regular prop
@@ -31,9 +31,9 @@ Prop types (following Laravel Inertia conventions):
 
 from importlib.metadata import version
 
-from inertia._props import optional, always, defer
-from inertia._exceptions import ManifestNotFoundError
-from inertia._config import configure_inertia, get_config, InertiaConfig
+from cross_inertia._props import optional, always, defer
+from cross_inertia._exceptions import ManifestNotFoundError
+from cross_inertia._config import configure_inertia, get_config, InertiaConfig
 
 __version__ = version("cross-inertia")
 __all__ = [

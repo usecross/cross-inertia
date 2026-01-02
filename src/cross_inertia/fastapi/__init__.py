@@ -5,7 +5,7 @@ This module contains FastAPI-specific classes, functions, and type aliases
 for integrating Inertia.js with FastAPI applications.
 
 Example:
-    from inertia.fastapi import InertiaDep, InertiaMiddleware
+    from cross_inertia.fastapi import InertiaDep, InertiaMiddleware
 
     app = FastAPI()
     app.add_middleware(InertiaMiddleware, share=share_data)
@@ -15,7 +15,7 @@ Example:
         return inertia.render("Home", {"message": "Hello World"})
 
 Experimental SSR lifespan management:
-    from inertia.fastapi.experimental import inertia_lifespan, create_ssr_lifespan
+    from cross_inertia.fastapi.experimental import inertia_lifespan, create_ssr_lifespan
 
     # Simple usage
     app = FastAPI(lifespan=inertia_lifespan)

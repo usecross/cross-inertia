@@ -38,8 +38,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 from fastapi import FastAPI, Query, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from inertia.fastapi import InertiaDep, InertiaMiddleware
-from inertia import optional, always, defer
+from cross_inertia.fastapi import InertiaDep, InertiaMiddleware
+from cross_inertia import optional, always, defer
 import mock_data
 
 # Configure logging for this module

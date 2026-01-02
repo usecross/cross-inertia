@@ -20,7 +20,7 @@ View data is only available during initial page loads (HTML responses), not in I
 Pass view data directly to the `render()` method using the `view_data` parameter:
 
 ```python
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 @app.get("/products/{id}")
 async def product_page(id: int, inertia: InertiaDep):
@@ -160,7 +160,7 @@ View data works with any Python web framework:
 ### FastAPI
 
 ```python
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 @app.get("/page")
 async def page(inertia: InertiaDep):
@@ -174,7 +174,7 @@ async def page(inertia: InertiaDep):
 ### Django (without dependency injection)
 
 ```python
-from inertia import inertia
+from cross_inertia import inertia
 
 def page_view(request):
     return inertia.render(

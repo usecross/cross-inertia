@@ -6,7 +6,7 @@ import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
-from inertia import defer
+from cross_inertia import defer
 
 
 class TestDeferredPropsCore:
@@ -297,7 +297,7 @@ class TestMixedDeferredProps:
 @pytest.fixture
 def deferred_core_app(inertia_response):
     """Create a FastAPI test application with deferred prop routes."""
-    from inertia._core import Inertia
+    from cross_inertia._core import Inertia
     from lia import StarletteRequestAdapter
 
     app = FastAPI()
@@ -393,8 +393,8 @@ def deferred_core_client(deferred_core_app):
 @pytest.fixture
 def mixed_deferred_app(inertia_response):
     """Create a FastAPI test application with mixed prop types including deferred."""
-    from inertia._core import Inertia
-    from inertia import optional, always
+    from cross_inertia._core import Inertia
+    from cross_inertia import optional, always
     from lia import StarletteRequestAdapter
 
     app = FastAPI()
