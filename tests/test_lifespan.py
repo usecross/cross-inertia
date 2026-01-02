@@ -86,7 +86,9 @@ class TestSSRServer:
             mock_process.returncode = None
             server._process = mock_process
 
-            with patch("cross_inertia.fastapi.experimental.lifespan.logger") as mock_logger:
+            with patch(
+                "cross_inertia.fastapi.experimental.lifespan.logger"
+            ) as mock_logger:
                 await server.start()
                 mock_logger.warning.assert_called_once_with(
                     "SSR server is already running"
