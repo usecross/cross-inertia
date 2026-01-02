@@ -1,24 +1,38 @@
 
 
-0.12.0 - 2026-01-01
+0.13.0 - 2026-01-02
 -------------------
 
-Add Django framework support
+Rename Python module from `inertia` to `cross_inertia`
 
-- Add `inertia.django` module with full Inertia.js protocol support
-- Implement `render()`, `location()`, `@inertia` decorator, and `InertiaViewMixin` for Django views
-- Add `InertiaMiddleware` for shared data injection
-- DRF-style settings pattern via `settings.CROSS_INERTIA` dict
-- Support all prop types: `optional()`, `always()`, `defer()`
-- Automatic Vite dev server startup when using `runserver`
+**BREAKING CHANGE**: All imports must be updated to use the new module name.
 
-Aligned template API between frameworks:
+### Migration Guide
 
-- Add `inertia_head()` and `inertia_body()` Jinja2 functions for FastAPI
-- Add `{% inertia_head %}` and `{% inertia_body %}` Django template tags
-- Both output Vite tags, SSR content, and app container consistently
+Update your imports:
 
-Internal improvements:
+```python
+# Before
+from inertia import optional, always, defer
+from inertia.fastapi import InertiaDep, InertiaMiddleware
+from inertia.django import render, inertia
 
-- Add shared `SyncViteProcess` and `AsyncViteProcess` classes for Vite dev server management
-- Refactor core modules to avoid FastAPI imports when using Django
+# After
+from cross_inertia import optional, always, defer
+from cross_inertia.fastapi import InertiaDep, InertiaMiddleware
+from cross_inertia.django import render, inertia
+```
+
+Update Django settings:
+
+```python
+# Before
+INSTALLED_APPS = ['inertia.django']
+MIDDLEWARE = ['inertia.django.InertiaMiddleware']
+
+# After
+INSTALLED_APPS = ['cross_inertia.django']
+MIDDLEWARE = ['cross_inertia.django.InertiaMiddleware']
+```
+
+This rename aligns the Python module name with the package name (`cross-inertia`) for consistency.
