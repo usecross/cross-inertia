@@ -2,7 +2,7 @@
 
 from django.views import View
 
-from inertia.django import render, location, inertia, InertiaViewMixin
+from cross_inertia.django import render, location, inertia, InertiaViewMixin
 
 
 def test_route(request):

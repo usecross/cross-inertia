@@ -18,7 +18,7 @@ Cross-Inertia provides a `create_ssr_lifespan` context manager that automaticall
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from inertia.fastapi.experimental import create_ssr_lifespan
+from cross_inertia.fastapi.experimental import create_ssr_lifespan
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -50,7 +50,7 @@ You can combine `create_ssr_lifespan` with other lifespan managers:
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from inertia.fastapi.experimental import create_ssr_lifespan
+from cross_inertia.fastapi.experimental import create_ssr_lifespan
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

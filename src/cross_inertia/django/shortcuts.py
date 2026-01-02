@@ -76,7 +76,7 @@ def render(
         HttpResponse (JsonResponse for XHR, TemplateResponse for initial loads)
 
     Example:
-        from inertia.django import render
+        from cross_inertia.django import render
 
         def home(request):
             return render(request, 'Home', {
@@ -137,7 +137,7 @@ def location(url: str) -> "HttpResponse":
         HttpResponse with 409 status code and X-Inertia-Location header
 
     Example:
-        from inertia.django import location
+        from cross_inertia.django import location
 
         def oauth_redirect(request):
             return location('https://github.com/login/oauth/authorize?...')
@@ -170,7 +170,7 @@ def inertia(component: str) -> Callable[[F], F]:
         A decorator function
 
     Example:
-        from inertia.django import inertia
+        from cross_inertia.django import inertia
 
         @inertia('Home')
         def home(request):
@@ -222,7 +222,7 @@ class InertiaViewMixin:
 
     Example:
         from django.views import View
-        from inertia.django import InertiaViewMixin
+        from cross_inertia.django import InertiaViewMixin
 
         class HomeView(InertiaViewMixin, View):
             component = 'Home'

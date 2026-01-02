@@ -32,7 +32,7 @@ router.reload({ only: ['stats'] })
 Wrap props with `always()` to ensure they're included in every response:
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 @app.get("/dashboard")
 async def dashboard(inertia: InertiaDep):
@@ -55,7 +55,7 @@ router.reload({ only: ['stats'] })
 ### With a Callable
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 @app.get("/dashboard")
 async def dashboard(inertia: InertiaDep):
@@ -70,7 +70,7 @@ async def dashboard(inertia: InertiaDep):
 Pass arguments to the callable:
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 @app.get("/dashboard")
 async def dashboard(inertia: InertiaDep):
@@ -90,7 +90,7 @@ async def dashboard(inertia: InertiaDep):
 You can also use `always()` with static values:
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 @app.get("/dashboard")
 async def dashboard(inertia: InertiaDep):
@@ -107,7 +107,7 @@ async def dashboard(inertia: InertiaDep):
 Flash messages should always be delivered, even during partial reloads:
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 def get_flash(request: Request) -> dict | None:
     """Get and clear flash message from session."""
@@ -128,7 +128,7 @@ async def users_list(request: Request, inertia: InertiaDep):
 User notifications should always be fresh:
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 @app.get("/dashboard")
 async def dashboard(inertia: InertiaDep):
@@ -163,7 +163,7 @@ export default function Dashboard({ user, stats, notifications }) {
 Security tokens should always be current:
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 @app.get("/settings")
 async def settings(request: Request, inertia: InertiaDep):
@@ -178,7 +178,7 @@ async def settings(request: Request, inertia: InertiaDep):
 Data that must always reflect the latest state:
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 @app.get("/chat/{room_id}")
 async def chat_room(room_id: int, inertia: InertiaDep):
@@ -194,7 +194,7 @@ async def chat_room(room_id: int, inertia: InertiaDep):
 Always props cannot be excluded using the `except` header:
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 @app.get("/dashboard")
 async def dashboard(inertia: InertiaDep):
@@ -217,7 +217,7 @@ router.reload({ except: ['flash'] })
 Always props work alongside [optional](/guides/partial-reloads/) and [deferred](/guides/partial-reloads/) props:
 
 ```python
-from inertia import always, optional, defer
+from cross_inertia import always, optional, defer
 
 @app.get("/dashboard")
 async def dashboard(inertia: InertiaDep):
@@ -246,7 +246,7 @@ async def dashboard(inertia: InertiaDep):
 ## API Reference
 
 ```python
-from inertia import always
+from cross_inertia import always
 
 # With callable
 always(callable)

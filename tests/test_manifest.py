@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from inertia import ManifestNotFoundError
-from inertia._core import InertiaResponse
+from cross_inertia import ManifestNotFoundError
+from cross_inertia._core import InertiaResponse
 
 
 class TestManifestNotFound:
@@ -100,13 +100,13 @@ class TestManifestNotFoundErrorExport:
 
     def test_import_from_inertia(self):
         """Should be importable from main inertia module."""
-        from inertia import ManifestNotFoundError
+        from cross_inertia import ManifestNotFoundError
 
         assert ManifestNotFoundError is not None
         assert issubclass(ManifestNotFoundError, Exception)
 
     def test_import_from_core(self):
         """Should be importable from _core module."""
-        from inertia._core import ManifestNotFoundError
+        from cross_inertia._core import ManifestNotFoundError
 
         assert ManifestNotFoundError is not None

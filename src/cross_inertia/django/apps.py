@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class InertiaConfig(AppConfig):
-    """Django app configuration for inertia.django."""
+    """Django app configuration for cross_inertia.django."""
 
-    name = "inertia.django"
+    name = "cross_inertia.django"
     label = "inertia"
     verbose_name = "Inertia.js"
 

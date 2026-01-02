@@ -10,7 +10,7 @@ section: API Reference
 The `configure_inertia()` function is the single source of truth for all Cross-Inertia configuration. It sets up both template rendering and server lifecycle management with consistent settings.
 
 ```python
-from inertia import configure_inertia
+from cross_inertia import configure_inertia
 
 configure_inertia(
     vite_port="auto",
@@ -57,7 +57,7 @@ Returns an `InertiaConfig` instance with all configuration values.
 ### Basic Configuration
 
 ```python
-from inertia import configure_inertia
+from cross_inertia import configure_inertia
 
 # Uses sensible defaults
 configure_inertia()
@@ -68,7 +68,7 @@ configure_inertia()
 When running multiple projects or in CI environments, use `"auto"` to find an available port:
 
 ```python
-from inertia import configure_inertia
+from cross_inertia import configure_inertia
 
 configure_inertia(
     vite_port="auto",  # Finds unused port in range 5173-5273
@@ -78,7 +78,7 @@ configure_inertia(
 ### Full Configuration
 
 ```python
-from inertia import configure_inertia
+from cross_inertia import configure_inertia
 
 configure_inertia(
     # Vite settings
@@ -107,8 +107,8 @@ Combine `configure_inertia()` with the experimental lifespan for automatic serve
 
 ```python
 from fastapi import FastAPI
-from inertia import configure_inertia
-from inertia.fastapi.experimental import inertia_lifespan
+from cross_inertia import configure_inertia
+from cross_inertia.fastapi.experimental import inertia_lifespan
 
 configure_inertia(
     vite_port="auto",
@@ -123,7 +123,7 @@ app = FastAPI(lifespan=inertia_lifespan)
 Retrieve the current configuration. Returns a default configuration if `configure_inertia()` hasn't been called.
 
 ```python
-from inertia import get_config
+from cross_inertia import get_config
 
 config = get_config()
 print(config.vite_dev_url)  # http://localhost:5173
@@ -200,7 +200,7 @@ export default defineConfig({
 Raised when the Vite manifest file is missing in production mode:
 
 ```python
-from inertia import ManifestNotFoundError
+from cross_inertia import ManifestNotFoundError
 
 try:
     # Render in production without building first
@@ -229,7 +229,7 @@ inertia._core._inertia_response = inertia_response
 **After (recommended):**
 
 ```python
-from inertia import configure_inertia
+from cross_inertia import configure_inertia
 
 configure_inertia(
     template_dir="templates",

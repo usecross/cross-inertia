@@ -6,8 +6,8 @@ import pytest
 @pytest.fixture
 def setup_inertia(django_inertia_response):
     """Set up and tear down Inertia response for tests."""
-    from inertia.django.shortcuts import reset_inertia_response
-    import inertia.django.shortcuts as shortcuts
+    from cross_inertia.django.shortcuts import reset_inertia_response
+    import cross_inertia.django.shortcuts as shortcuts
 
     shortcuts._inertia_response = django_inertia_response
     yield

@@ -4,7 +4,7 @@ This module provides a single source of truth for all Inertia configuration,
 including Vite dev server, SSR, and template settings.
 
 Example:
-    from inertia import configure_inertia
+    from cross_inertia import configure_inertia
 
     # Basic configuration (uses default vite_entry="frontend/app.tsx")
     configure_inertia(
@@ -192,7 +192,7 @@ def configure_inertia(
         The InertiaConfig instance.
 
     Example:
-        from inertia import configure_inertia
+        from cross_inertia import configure_inertia
 
         # Auto port selection - finds unused port automatically
         configure_inertia(

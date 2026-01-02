@@ -12,7 +12,7 @@ Pages are rendered by specifying a component name and optional props.
 ### FastAPI
 
 ```python
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 @app.get("/")
 async def home(inertia: InertiaDep):
@@ -25,7 +25,7 @@ async def home(inertia: InertiaDep):
 ### Django
 
 ```python
-from inertia.django import render
+from cross_inertia.django import render
 
 def home(request):
     return render(request, "Home", {
@@ -34,7 +34,7 @@ def home(request):
     })
 
 # Or with the decorator
-from inertia.django import inertia
+from cross_inertia.django import inertia
 
 @inertia("Home")
 def home(request):
@@ -103,7 +103,7 @@ async def show_product(id: int, inertia: InertiaDep):
 ### Django
 
 ```python
-from inertia.django import render
+from cross_inertia.django import render
 
 def show_product(request, id):
     product = Product.objects.get(id=id)

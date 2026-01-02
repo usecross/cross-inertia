@@ -22,7 +22,7 @@ def tests(session: nox.Session) -> None:
         "tests/",
         "--ignore=tests/e2e/",
         "-v",
-        "--cov=src/inertia",
+        "--cov=src/cross_inertia",
         "--cov-report=xml",
         "--cov-report=term",
     )

@@ -17,7 +17,7 @@ The easiest way to get started is with `inertia_lifespan`:
 
 ```python
 from fastapi import FastAPI
-from inertia.fastapi.experimental import inertia_lifespan
+from cross_inertia.fastapi.experimental import inertia_lifespan
 
 app = FastAPI(lifespan=inertia_lifespan)
 ```
@@ -31,7 +31,7 @@ This automatically:
 The `is_dev_mode()` function determines the current mode:
 
 ```python
-from inertia.fastapi.experimental import is_dev_mode
+from cross_inertia.fastapi.experimental import is_dev_mode
 
 if is_dev_mode():
     print("Running in development mode")
@@ -50,7 +50,7 @@ For more control, use the individual lifespan managers:
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from inertia.fastapi.experimental import create_ssr_lifespan, create_vite_lifespan
+from cross_inertia.fastapi.experimental import create_ssr_lifespan, create_vite_lifespan
 
 @asynccontextmanager
 async def lifespan(app):
@@ -120,7 +120,7 @@ When using `inertia_lifespan`, you can configure behavior via environment variab
 Both servers raise specific exceptions on failure:
 
 ```python
-from inertia.fastapi.experimental import SSRServerError, ViteServerError
+from cross_inertia.fastapi.experimental import SSRServerError, ViteServerError
 
 try:
     async with create_ssr_lifespan():
@@ -139,7 +139,7 @@ Common error scenarios:
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from inertia.fastapi.experimental import create_ssr_lifespan, is_dev_mode
+from cross_inertia.fastapi.experimental import create_ssr_lifespan, is_dev_mode
 
 @asynccontextmanager
 async def lifespan(app):
@@ -164,7 +164,7 @@ app = FastAPI(lifespan=lifespan)
 For advanced use cases, you can use the server classes directly:
 
 ```python
-from inertia.fastapi.experimental import SSRServer, ViteDevServer
+from cross_inertia.fastapi.experimental import SSRServer, ViteDevServer
 
 # Manual SSR server management
 ssr = SSRServer(command="bun dist/ssr/ssr.js")

@@ -11,7 +11,7 @@ Here's a simple example of form validation:
 
 ```python
 from fastapi import FastAPI
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 app = FastAPI()
 
@@ -109,7 +109,7 @@ You can use Pydantic models for more robust validation:
 ```python
 from pydantic import BaseModel, EmailStr, field_validator
 from fastapi import FastAPI
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 class UserCreate(BaseModel):
     name: str

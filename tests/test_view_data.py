@@ -39,7 +39,7 @@ def temp_template_dir_with_view_data():
 @pytest.fixture
 def app_with_view_data(temp_template_dir_with_view_data):
     """Create a FastAPI test application with view_data routes."""
-    from inertia._core import Inertia, InertiaResponse
+    from cross_inertia._core import Inertia, InertiaResponse
     from lia import StarletteRequestAdapter
 
     app = FastAPI()

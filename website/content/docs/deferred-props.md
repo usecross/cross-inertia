@@ -14,8 +14,8 @@ Deferred props allow you to load slow or expensive data after the initial page r
 Wrap slow data with the `defer` function:
 
 ```python
-from inertia import defer
-from inertia.fastapi import InertiaDep
+from cross_inertia import defer
+from cross_inertia.fastapi import InertiaDep
 
 @app.get("/dashboard")
 async def dashboard(inertia: InertiaDep):

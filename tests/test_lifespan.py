@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from inertia._config import reset_config
-from inertia.fastapi.experimental import (
+from cross_inertia._config import reset_config
+from cross_inertia.fastapi.experimental import (
     SSRServer,
     SSRServerError,
     create_ssr_lifespan,
@@ -86,7 +86,9 @@ class TestSSRServer:
             mock_process.returncode = None
             server._process = mock_process
 
-            with patch("inertia.fastapi.experimental.lifespan.logger") as mock_logger:
+            with patch(
+                "cross_inertia.fastapi.experimental.lifespan.logger"
+            ) as mock_logger:
                 await server.start()
                 mock_logger.warning.assert_called_once_with(
                     "SSR server is already running"
@@ -435,7 +437,7 @@ class TestInertiaLifespan:
 
     def test_inertia_lifespan_uses_defaults(self):
         """Test that inertia_lifespan uses defaults when env vars not set."""
-        from inertia import configure_inertia
+        from cross_inertia import configure_inertia
 
         async def run_test():
             # Enable SSR via config (since env var defaults won't enable it)
@@ -497,7 +499,7 @@ class TestImports:
 
     def test_import_from_inertia_fastapi_experimental(self):
         """Test importing from the inertia.fastapi.experimental module."""
-        from inertia.fastapi.experimental import (
+        from cross_inertia.fastapi.experimental import (
             inertia_lifespan,
             create_ssr_lifespan,
             SSRServer,
@@ -511,7 +513,7 @@ class TestImports:
 
     def test_import_from_lifespan_module(self):
         """Test importing from the lifespan module directly."""
-        from inertia.fastapi.experimental.lifespan import (
+        from cross_inertia.fastapi.experimental.lifespan import (
             inertia_lifespan,
             create_ssr_lifespan,
             SSRServer,

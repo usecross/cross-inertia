@@ -7,7 +7,7 @@ dev server subprocess. Use the appropriate class based on your framework:
 - AsyncViteProcess: For async contexts (FastAPI, Litestar, Django ASGI)
 
 Example (sync):
-    from inertia._vite import SyncViteProcess
+    from cross_inertia._vite import SyncViteProcess
 
     vite = SyncViteProcess(port=5173)
     vite.start()
@@ -15,7 +15,7 @@ Example (sync):
     vite.stop()
 
 Example (async):
-    from inertia._vite import AsyncViteProcess
+    from cross_inertia._vite import AsyncViteProcess
 
     vite = AsyncViteProcess(port=5173)
     await vite.start()

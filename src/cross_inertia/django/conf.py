@@ -17,7 +17,7 @@ Usage in settings.py:
 
 Then access settings via:
 
-    from inertia.django.conf import inertia_settings
+    from cross_inertia.django.conf import inertia_settings
 
     template = inertia_settings.LAYOUT
     port = inertia_settings.VITE_PORT
@@ -71,7 +71,7 @@ class InertiaSettings:
     Values are cached after first access for performance.
 
     Example:
-        from inertia.django.conf import inertia_settings
+        from cross_inertia.django.conf import inertia_settings
 
         # Access settings as attributes
         template = inertia_settings.LAYOUT

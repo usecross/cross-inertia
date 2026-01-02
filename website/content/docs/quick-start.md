@@ -93,8 +93,8 @@ Create a `main.py` file with the experimental lifespan for automatic Vite dev se
 ```python
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from inertia.fastapi import InertiaDep
-from inertia.fastapi.experimental import inertia_lifespan
+from cross_inertia.fastapi import InertiaDep
+from cross_inertia.fastapi.experimental import inertia_lifespan
 
 app = FastAPI(lifespan=inertia_lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")

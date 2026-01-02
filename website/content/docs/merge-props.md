@@ -180,7 +180,7 @@ Here's a full implementation from our demo app:
 
 ```python
 from fastapi import FastAPI, Query
-from inertia.fastapi import InertiaDep
+from cross_inertia.fastapi import InertiaDep
 
 @app.get("/browse")
 async def browse_cats(

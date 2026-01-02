@@ -20,7 +20,7 @@ class InertiaMiddleware(BaseHTTPMiddleware):
 
     Example usage:
         ```python
-        from inertia.middleware import InertiaMiddleware
+        from cross_inertia.middleware import InertiaMiddleware
 
         def share_data(request: Request) -> dict:
             return {

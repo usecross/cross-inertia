@@ -76,7 +76,7 @@ Add a build script to your `package.json`:
 Update your FastAPI app to enable SSR:
 
 ```python
-from inertia.fastapi import InertiaMiddleware
+from cross_inertia.fastapi import InertiaMiddleware
 import inertia._core
 
 inertia_response = inertia._core.InertiaResponse(
