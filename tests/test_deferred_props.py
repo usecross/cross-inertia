@@ -298,7 +298,7 @@ class TestMixedDeferredProps:
 def deferred_core_app(inertia_response):
     """Create a FastAPI test application with deferred prop routes."""
     from cross_inertia._core import Inertia
-    from lia import StarletteRequestAdapter
+    from cross_web import StarletteRequestAdapter
 
     app = FastAPI()
 
@@ -395,7 +395,7 @@ def mixed_deferred_app(inertia_response):
     """Create a FastAPI test application with mixed prop types including deferred."""
     from cross_inertia._core import Inertia
     from cross_inertia import optional, always
-    from lia import StarletteRequestAdapter
+    from cross_web import StarletteRequestAdapter
 
     app = FastAPI()
 

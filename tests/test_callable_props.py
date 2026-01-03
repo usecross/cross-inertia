@@ -123,7 +123,7 @@ class TestCallableProps:
 def callable_app(inertia_response):
     """Create a FastAPI test application with callable prop routes."""
     from cross_inertia._core import Inertia
-    from lia import StarletteRequestAdapter
+    from cross_web import StarletteRequestAdapter
 
     app = FastAPI()
 

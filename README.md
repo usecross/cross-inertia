@@ -94,7 +94,7 @@ inertia_response = InertiaResponse(
 app = FastAPI()
 
 def get_custom_inertia(request: Request) -> Inertia:
-    from lia import StarletteRequestAdapter
+    from cross_web import StarletteRequestAdapter
     adapter = StarletteRequestAdapter(request)
     return Inertia(request, adapter, inertia_response)
 

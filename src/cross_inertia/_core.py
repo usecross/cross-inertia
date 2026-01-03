@@ -15,7 +15,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from jinja2 import pass_context
 from starlette.responses import Response
 from fastapi.templating import Jinja2Templates
-from lia import StarletteRequestAdapter
+from cross_web import StarletteRequestAdapter
 
 from ._props import optional, always, defer
 from ._exceptions import ManifestNotFoundError
