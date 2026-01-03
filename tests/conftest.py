@@ -54,7 +54,7 @@ def app(inertia_response):
     # Override the default inertia response with our test instance
     def get_test_inertia(request: Request):
         from cross_inertia._core import Inertia
-        from lia import StarletteRequestAdapter
+        from cross_web import StarletteRequestAdapter
 
         adapter = StarletteRequestAdapter(request)
         return Inertia(request, adapter, inertia_response)

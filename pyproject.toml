@@ -12,7 +12,7 @@ authors = [
 requires-python = ">=3.10"
 dependencies = [
     "itsdangerous>=2.2.0",
-    "lia-web>=0.2.3",
+    "cross-web>=0.4.0",
     "httpx>=0.28.0",
 ]
 

@@ -40,7 +40,7 @@ def temp_template_dir_with_view_data():
 def app_with_view_data(temp_template_dir_with_view_data):
     """Create a FastAPI test application with view_data routes."""
     from cross_inertia._core import Inertia, InertiaResponse
-    from lia import StarletteRequestAdapter
+    from cross_web import StarletteRequestAdapter
 
     app = FastAPI()
 

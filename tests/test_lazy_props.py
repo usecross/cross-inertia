@@ -208,7 +208,7 @@ class TestOptionalPropValidation:
 def optional_core_app(inertia_response):
     """Create a FastAPI test application with optional prop routes."""
     from cross_inertia._core import Inertia
-    from lia import StarletteRequestAdapter
+    from cross_web import StarletteRequestAdapter
 
     app = FastAPI()
 
@@ -488,7 +488,7 @@ class TestMixedPropTypes:
 def optional_app(inertia_response):
     """Create a FastAPI test application with optional prop routes."""
     from cross_inertia._core import Inertia
-    from lia import StarletteRequestAdapter
+    from cross_web import StarletteRequestAdapter
 
     app = FastAPI()
 
@@ -523,7 +523,7 @@ def optional_client(optional_app):
 def always_app(inertia_response):
     """Create a FastAPI test application with always prop routes."""
     from cross_inertia._core import Inertia
-    from lia import StarletteRequestAdapter
+    from cross_web import StarletteRequestAdapter
 
     app = FastAPI()
 
@@ -580,7 +580,7 @@ def always_client(always_app):
 def mixed_app(inertia_response):
     """Create a FastAPI test application with mixed prop types."""
     from cross_inertia._core import Inertia
-    from lia import StarletteRequestAdapter
+    from cross_web import StarletteRequestAdapter
 
     app = FastAPI()
 
