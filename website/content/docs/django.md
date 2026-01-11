@@ -1,7 +1,7 @@
 ---
 title: Django
 description: Use Cross-Inertia with Django.
-order: 2.5
+order: 3
 section: Getting Started
 ---
 

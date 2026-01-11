@@ -1,7 +1,7 @@
 ---
 title: Installation
 description: Install Cross-Inertia and set up your project.
-order: 3
+order: 4
 section: Getting Started
 ---
 
