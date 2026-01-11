@@ -66,15 +66,15 @@ wheels = [
 
 [[package]]
 name = "cross-docs"
-version = "0.11.0"
+version = "0.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cross-inertia" },
     { name = "fastapi" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/09/2a/413222f6c4eee3903a9227cbf71497d5a8321a76c32348f6226bf5712e10/cross_docs-0.11.0.tar.gz", hash = "sha256:c35158e63d3edc52cc926b1169d992e8cadc1944c6f2872c55dec602c7aa1867", size = 26479, upload-time = "2026-01-05T22:14:29.895Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/48/1ecf2f4d26973404f23836347e191edc5d29025808e9537be6b3e22fa2dd/cross_docs-0.12.0.tar.gz", hash = "sha256:b94dcd7d5620546c278fa0d2c46c0b3992c1645c7460cb02ae1e22be4451fc72", size = 40023, upload-time = "2026-01-11T13:08:58.027Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/df/77d3f6122dfe0eb7fefdac713dd25731a9481ac8298b0374abb0d4a1f514/cross_docs-0.11.0-py3-none-any.whl", hash = "sha256:a9050261ac16fc9b052ae8b7aecbd025ec59680ecfa3fe0fecc31cddf95907c4", size = 10477, upload-time = "2026-01-05T22:14:30.976Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/d7/e00ca321f76a56d5a92e3f7830a93aa988de92456c50fb025c016685c93c/cross_docs-0.12.0-py3-none-any.whl", hash = "sha256:8c14e4c337cc3ecb30b73137e24f913000ff2bf0766fa01f2b83edd30d74d256", size = 23754, upload-time = "2026-01-11T13:08:56.752Z" },
 ]
 
 [[package]]
