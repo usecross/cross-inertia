@@ -1,28 +1,22 @@
 version: 2
 updates:
-  # Main Python package
-  - package-ecosystem: "pip"
+  # Main Python package (uv)
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
     commit-message:
       prefix: "deps"
 
-  # Website Python dependencies
-  - package-ecosystem: "pip"
+  # Website Python dependencies (uv)
+  - package-ecosystem: "uv"
     directory: "/website"
     schedule:
       interval: "weekly"
     commit-message:
       prefix: "deps(website)"
 
-  # Website npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/website"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "deps(website)"
+  # Note: Website uses bun for npm dependencies, which Dependabot doesn't support yet
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
