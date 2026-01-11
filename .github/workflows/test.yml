@@ -17,7 +17,7 @@ jobs:
     outputs:
       sessions: ${{ steps.set-matrix.outputs.sessions }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -50,7 +50,7 @@ jobs:
         session: ${{ fromJson(needs.generate-jobs-tests.outputs.sessions) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - uses: actions/setup-python@v5
         with:
