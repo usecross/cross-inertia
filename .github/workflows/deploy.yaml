@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     concurrency:
-      group: ${{ github.actor }}-deploy
+      group: deploy
       cancel-in-progress: true
 
     steps:
