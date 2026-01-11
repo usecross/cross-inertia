@@ -11,7 +11,6 @@ dist/
 
 # Build artifacts
 static/build/
-uv.lock
 
 # IDE
 .idea/
