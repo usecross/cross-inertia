@@ -6,19 +6,19 @@ including Vite dev server, SSR, and template settings.
 Example:
     from cross_inertia import configure_inertia
 
-    # Basic configuration (uses default vite_entry="frontend/app.tsx")
+    # Basic configuration (uses default vite_port="auto" and vite_entry="frontend/app.tsx")
     configure_inertia(
         template_dir="templates",
     )
 
-    # With auto port selection (finds an unused port)
+    # With explicit port
     configure_inertia(
-        vite_port="auto",
+        vite_port=5173,
     )
 
     # Full configuration
     configure_inertia(
-        vite_port=5173,
+        vite_port=5188,
         vite_entry="frontend/app.tsx",
         vite_command="bun run dev",
         template_dir="templates",
@@ -37,6 +37,40 @@ from typing import Literal
 logger = logging.getLogger(__name__)
 
 
+def _is_port_in_use(port: int) -> bool:
+    """Check if a port is in use by trying to connect to it.
+
+    This is more reliable than binding because it detects servers
+    listening on any interface (IPv4, IPv6, or both).
+    """
+    # Try connecting - if it succeeds, something is listening
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.1)
+        try:
+            s.connect(("127.0.0.1", port))
+            return True  # Connection succeeded, port is in use
+        except (ConnectionRefusedError, OSError):
+            pass  # Nothing listening on IPv4
+
+    # Also check IPv6
+    with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as s:
+        s.settimeout(0.1)
+        try:
+            s.connect(("::1", port))
+            return True  # Connection succeeded, port is in use
+        except (ConnectionRefusedError, OSError):
+            pass  # Nothing listening on IPv6
+
+    # Also try binding to make sure we can actually use the port
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", port))
+    except OSError:
+        return True  # Can't bind, port is in use
+
+    return False
+
+
 def find_available_port(start: int = 5173, end: int = 5273) -> int:
     """Find an available port in the given range.
 
@@ -51,13 +85,9 @@ def find_available_port(start: int = 5173, end: int = 5273) -> int:
         RuntimeError: If no available port is found in the range
     """
     for port in range(start, end):
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind(("127.0.0.1", port))
-                logger.debug(f"Found available port: {port}")
-                return port
-        except OSError:
-            continue
+        if not _is_port_in_use(port):
+            logger.debug(f"Found available port: {port}")
+            return port
     raise RuntimeError(f"No available port found in range {start}-{end}")
 
 
@@ -71,8 +101,8 @@ class InertiaConfig:
     """
 
     # Vite settings
-    vite_port: int | Literal["auto"] = 5173
-    """Port for Vite dev server. Use "auto" to find an available port."""
+    vite_port: int | Literal["auto"] = "auto"
+    """Port for Vite dev server. Defaults to "auto" to find an available port."""
 
     vite_host: str = "localhost"
     """Host for Vite dev server."""
@@ -156,7 +186,7 @@ _config: InertiaConfig | None = None
 
 def configure_inertia(
     *,
-    vite_port: int | Literal["auto"] = 5173,
+    vite_port: int | Literal["auto"] = "auto",
     vite_host: str = "localhost",
     vite_entry: str = "frontend/app.tsx",
     vite_command: str | list[str] = "bun run dev",
@@ -175,7 +205,7 @@ def configure_inertia(
     lifespan managers (Vite/SSR servers) with consistent configuration.
 
     Args:
-        vite_port: Port for Vite dev server. Use "auto" to find an available port.
+        vite_port: Port for Vite dev server. Defaults to "auto" to find an available port.
         vite_host: Host for Vite dev server.
         vite_entry: Entry point for Vite (e.g., 'frontend/app.tsx', 'src/main.tsx').
         vite_command: Command to start Vite dev server.
@@ -194,12 +224,10 @@ def configure_inertia(
     Example:
         from cross_inertia import configure_inertia
 
-        # Auto port selection - finds unused port automatically
-        configure_inertia(
-            vite_port="auto",
-        )
+        # Default configuration - auto port selection finds unused port automatically
+        configure_inertia()
 
-        # Explicit configuration
+        # Explicit port configuration
         configure_inertia(
             vite_port=5188,
             vite_entry="src/main.tsx",

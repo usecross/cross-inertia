@@ -9,7 +9,8 @@ dev server subprocess. Use the appropriate class based on your framework:
 Example (sync):
     from cross_inertia._vite import SyncViteProcess
 
-    vite = SyncViteProcess(port=5173)
+    # Port defaults to "auto" (finds available port)
+    vite = SyncViteProcess()
     vite.start()
     # ... app runs ...
     vite.stop()
@@ -17,7 +18,8 @@ Example (sync):
 Example (async):
     from cross_inertia._vite import AsyncViteProcess
 
-    vite = AsyncViteProcess(port=5173)
+    # Port defaults to "auto" (finds available port)
+    vite = AsyncViteProcess()
     await vite.start()
     # ... app runs ...
     await vite.stop()
@@ -55,7 +57,7 @@ class BaseViteProcess:
     def __init__(
         self,
         command: str | list[str] = "bun run dev",
-        port: int = 5173,
+        port: int | None = None,
         startup_timeout: float = 30.0,
     ):
         """
@@ -63,13 +65,15 @@ class BaseViteProcess:
 
         Args:
             command: Command to start Vite dev server.
-            port: Port for the Vite dev server.
+            port: Port for the Vite dev server. If None, reads from config (default: "auto").
             startup_timeout: Maximum time to wait for server to become healthy.
         """
+        from cross_inertia._config import get_config
+
         self.command = command
-        self.port = port
+        self.port = port if port is not None else get_config().resolved_vite_port
         self.startup_timeout = startup_timeout
-        self.health_url = f"http://localhost:{port}/@vite/client"
+        self.health_url = f"http://localhost:{self.port}/@vite/client"
 
     def get_command_with_port(self) -> str | list[str]:
         """Get the command with port argument appended."""
@@ -84,7 +88,7 @@ class SyncViteProcess(BaseViteProcess):
     def __init__(
         self,
         command: str | list[str] = "bun run dev",
-        port: int = 5173,
+        port: int | None = None,
         startup_timeout: float = 30.0,
     ):
         super().__init__(command, port, startup_timeout)
@@ -222,7 +226,7 @@ class AsyncViteProcess(BaseViteProcess):
     def __init__(
         self,
         command: str | list[str] = "bun run dev",
-        port: int = 5173,
+        port: int | None = None,
         startup_timeout: float = 30.0,
         env: dict[str, str] | None = None,
     ):

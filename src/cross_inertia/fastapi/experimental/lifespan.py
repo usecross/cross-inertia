@@ -11,8 +11,8 @@ Example - Simple usage with configure_inertia:
     from cross_inertia import configure_inertia
     from cross_inertia.fastapi.experimental import inertia_lifespan
 
+    # Default: vite_port="auto" finds an available port automatically
     configure_inertia(
-        vite_port="auto",  # Finds an available port automatically
         vite_entry="frontend/app.tsx",
     )
 
@@ -272,7 +272,7 @@ class SSRServer:
 @asynccontextmanager
 async def create_vite_lifespan(
     command: str | list[str] = "bun run dev",
-    port: int = 5173,
+    port: int | None = None,
     startup_timeout: float = 30.0,
     env: dict[str, str] | None = None,
 ) -> AsyncGenerator[AsyncViteProcess, None]:
@@ -284,7 +284,7 @@ async def create_vite_lifespan(
 
     Args:
         command: Command to start the Vite dev server. Defaults to "bun run dev".
-        port: Port for the Vite dev server. Defaults to 5173.
+        port: Port for the Vite dev server. Defaults to "auto" (finds available port).
         startup_timeout: Maximum time to wait for the server to become healthy.
         env: Additional environment variables for the subprocess.
 
@@ -300,9 +300,12 @@ async def create_vite_lifespan(
 
         app = FastAPI(lifespan=lifespan)
     """
+    # Port defaults to config value (which defaults to "auto")
+    resolved_port = port if port is not None else get_config().resolved_vite_port
+
     server = AsyncViteProcess(
         command=command,
-        port=port,
+        port=resolved_port,
         startup_timeout=startup_timeout,
         env=env,
     )
@@ -383,8 +386,8 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         from cross_inertia import configure_inertia
         from cross_inertia.fastapi.experimental import inertia_lifespan
 
+        # Default: vite_port="auto" finds an available port automatically
         configure_inertia(
-            vite_port="auto",  # Finds an available port
             vite_entry="frontend/app.tsx",
         )
 
