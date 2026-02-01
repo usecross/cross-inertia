@@ -571,14 +571,14 @@ wheels = [
 
 [[package]]
 name = "pybun"
-version = "1.3.5"
+version = "1.3.8"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/57/20/92ed23e766f6eaf2a83faf854903440d536ded67fab50bfe69de68b02690/pybun-1.3.5-py3-none-macosx_12_0_arm64.whl", hash = "sha256:68c09efd7356570fa47370f5ce8fc68f5ed34045b85cbf6e9288cbd856964d7e", size = 22120617, upload-time = "2025-12-18T14:08:37.984Z" },
-    { url = "https://files.pythonhosted.org/packages/ff/fd/042c29d7ce4fc8102eb50db56c94d5ec7c6a5433b6be641f6d3a795ba934/pybun-1.3.5-py3-none-macosx_12_0_x86_64.whl", hash = "sha256:212994afed996704dc8c62ad70075fbf648c3642f9532af4e36f3e752af7a70e", size = 24662645, upload-time = "2025-12-18T14:08:40.79Z" },
-    { url = "https://files.pythonhosted.org/packages/e8/23/492eb1634a8f8e8fc73c02c40c516d2d3d90947d2adb77b3f2bc3489de09/pybun-1.3.5-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.musllinux_1_1_x86_64.whl", hash = "sha256:19007bb51acc66cfc13c29386f76c102bf5ad72a07da4a2898803838438adb6c", size = 39451301, upload-time = "2025-12-18T14:08:43.352Z" },
-    { url = "https://files.pythonhosted.org/packages/68/00/a7699d8da53983a27052d44f9425ed5d9ef6573a8c66e7fb59f3f4ee22a4/pybun-1.3.5-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.musllinux_1_1_aarch64.whl", hash = "sha256:49295d16f4c3946d60f665d07b5fe2c76834a70c943b67540e3ccbdb98ba40f2", size = 37800736, upload-time = "2025-12-18T14:08:45.867Z" },
-    { url = "https://files.pythonhosted.org/packages/68/f5/471d3cdcff047a5cd517a37eb25a112c5e1e7502b5807abc65e838d93aec/pybun-1.3.5-py3-none-win_amd64.whl", hash = "sha256:4df60afd07eff9509987add20db3f5a962bfa85af71247bf55f2dc6ab4581162", size = 41092715, upload-time = "2025-12-18T14:08:48.86Z" },
+    { url = "https://files.pythonhosted.org/packages/24/35/e6155799efea212e07db8b02e25d67ca4fcd5c6df2e75ab0808e0730d7bd/pybun-1.3.8-py3-none-macosx_12_0_arm64.whl", hash = "sha256:35f32bac4e0c9cefa13a4f0856296a04c9f66d887ee0eff7403de82f306cabf0", size = 21908526, upload-time = "2026-01-29T14:19:43.653Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/20/eea3f8b69ffcee4d6d65570aceb3dcf4b30145cd2c0341cdd8410969b4ff/pybun-1.3.8-py3-none-macosx_12_0_x86_64.whl", hash = "sha256:95766a95d69844f33f6846c085128a6b60a5d856937a84fe5bf21b4601113d58", size = 24096341, upload-time = "2026-01-29T14:19:46.243Z" },
+    { url = "https://files.pythonhosted.org/packages/74/f7/4f203ce3e5513128fb4a0f202ba837a0e93e576b9ef90437cb56a4f73738/pybun-1.3.8-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.musllinux_1_1_x86_64.whl", hash = "sha256:d8678fb91333eefb5da160c34bd2cb631669655a955c1e13f0691379c833f816", size = 38692214, upload-time = "2026-01-29T14:19:49.206Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/50/b4187b5db1b65a22f62b19e2e9f5f86bf3957cc891837cb09eb3965b5058/pybun-1.3.8-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.musllinux_1_1_aarch64.whl", hash = "sha256:3468e815b10bbfe127c9524653e6bfcdfec7646f1eb82e4e506d4473312d364a", size = 37572870, upload-time = "2026-01-29T14:19:52.912Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/b5/db56e45294252737300bc7b4e6894693cbd3d3382ad5a73f7b99a3f64c41/pybun-1.3.8-py3-none-win_amd64.whl", hash = "sha256:82461815ccb1cb7cd9184099234b38fa0f681af9b02e1bf805ed745f2f60ba24", size = 40681223, upload-time = "2026-01-29T14:19:56.655Z" },
 ]
 
 [[package]]
