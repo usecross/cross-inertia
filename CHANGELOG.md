@@ -1,9 +1,10 @@
 
 
-0.13.1 - 2026-01-03
+0.14.0 - 2026-02-03
 -------------------
 
-Rename lia-web dependency to cross-web
+Make `vite_port="auto"` the default
 
-- Update dependency from `lia-web` to `cross-web>=0.4.0`
-- Update all imports from `lia` to `cross_web`
+- Change default `vite_port` from `5173` to `"auto"` so Vite automatically finds an available port
+- Fix port detection to check both IPv4 and IPv6, preventing false positives when servers listen on IPv6
+- All Vite-related classes and functions now read from config when port is not specified
