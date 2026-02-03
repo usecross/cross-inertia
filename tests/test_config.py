@@ -58,7 +58,7 @@ class TestInertiaConfig:
     def test_default_values(self):
         """Should have sensible defaults."""
         config = InertiaConfig()
-        assert config.vite_port == 5173
+        assert config.vite_port == "auto"
         assert config.vite_host == "localhost"
         assert config.vite_entry == "frontend/app.tsx"
         assert config.vite_command == "bun run dev"
@@ -169,7 +169,7 @@ class TestGetConfig:
         """Should return default config if configure_inertia wasn't called."""
         config = get_config()
         assert isinstance(config, InertiaConfig)
-        assert config.vite_port == 5173
+        assert config.vite_port == "auto"
 
     def test_returns_configured_config(self):
         """Should return the configured config."""
@@ -186,4 +186,4 @@ class TestResetConfig:
         configure_inertia(vite_port=5400)
         reset_config()
         config = get_config()
-        assert config.vite_port == 5173
+        assert config.vite_port == "auto"

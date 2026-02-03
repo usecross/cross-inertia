@@ -216,13 +216,17 @@ class InertiaResponse:
     def __init__(
         self,
         template_dir: str = "templates",
-        vite_dev_url: str = "http://localhost:5173",
+        vite_dev_url: str | None = None,
         manifest_path: str = "static/build/.vite/manifest.json",
         vite_entry: str = "frontend/app.tsx",
         ssr_url: str | None = None,
         ssr_enabled: bool = False,
     ):
-        self.vite_dev_url = vite_dev_url
+        # Import here to avoid circular imports
+        from cross_inertia._config import get_config
+
+        config = get_config()
+        self.vite_dev_url = vite_dev_url or config.vite_dev_url
         self.manifest_path = manifest_path
         self._is_dev: bool | None = None
         self._manifest: dict[str, Any] | None = None
