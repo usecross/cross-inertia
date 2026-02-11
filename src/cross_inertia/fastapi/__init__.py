@@ -37,6 +37,7 @@ from .._core import (
     get_inertia_response,
 )
 from ..middleware import InertiaMiddleware
+from .share import inertia_share
 
 __all__ = [
     "Inertia",
@@ -45,4 +46,5 @@ __all__ = [
     "InertiaDep",
     "get_inertia",
     "get_inertia_response",
+    "inertia_share",
 ]
