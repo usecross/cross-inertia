@@ -7,10 +7,14 @@ dependency-based shared data. Instead of manually constructing resources in
 middleware, you can now use FastAPI's `Depends()` naturally:
 
 ```python
+from typing import Annotated
+from fastapi import Depends, Request
 from cross_inertia.fastapi import inertia_share
 
+DB = Annotated[Session, Depends(get_db)]
+
 @inertia_share
-async def share_auth(request: Request, db: Session = Depends(get_db)):
+async def share_auth(request: Request, db: DB):
     return {"auth": {"user": get_user(db, request)}}
 
 @inertia_share
@@ -19,7 +23,7 @@ async def share_flash(request: Request):
 
 # request: Request is optional — auto-injected if missing
 @inertia_share
-async def share_counts(db: Session = Depends(get_db)):
+async def share_counts(db: DB):
     return {"count": db.query(Cat).count()}
 
 app = FastAPI(dependencies=[Depends(share_auth), Depends(share_flash), Depends(share_counts)])
