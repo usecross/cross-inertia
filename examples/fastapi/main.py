@@ -35,10 +35,10 @@ from pathlib import Path
 # Add parent package to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from fastapi import FastAPI, Query, Request
+from fastapi import Depends, FastAPI, Query, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from cross_inertia.fastapi import InertiaDep, InertiaMiddleware
+from cross_inertia.fastapi import InertiaDep, inertia_share
 from cross_inertia import optional, always, defer
 import mock_data
 
@@ -46,13 +46,15 @@ import mock_data
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
 
-app = FastAPI(title="PurrfectHome - Cat Adoption Demo")
+app = FastAPI(
+    title="PurrfectHome - Cat Adoption Demo", dependencies=[Depends(share_data)]
+)
 
 # Serve static files (built assets in production)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-# Shared data function for Inertia
+@inertia_share
 def share_data(request: Request) -> dict:
     """
     Shared data that is automatically included in all Inertia responses.
@@ -97,9 +99,6 @@ def share_data(request: Request) -> dict:
     }
 
 
-# Add middleware (order matters: last added = first executed in FastAPI)
-# InertiaMiddleware should be added BEFORE SessionMiddleware so Session runs first
-app.add_middleware(InertiaMiddleware, share=share_data)
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key-change-in-production")
 
 

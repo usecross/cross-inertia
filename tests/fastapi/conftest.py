@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from starlette.responses import Response
 
 from cross_inertia._core import Inertia, InertiaResponse
-from cross_inertia.fastapi import InertiaMiddleware, inertia_share
+from cross_inertia.fastapi import inertia_share
 
 
 @inertia_share
@@ -52,15 +52,6 @@ async def share_with_dep(value: int = Depends(get_value)) -> dict[str, Any]:
 @inertia_share
 def share_sync_no_request() -> dict[str, Any]:
     return {"sync_auto": True}
-
-
-def middleware_share(request: Request) -> dict[str, Any]:
-    return {"from_middleware": True}
-
-
-@inertia_share
-async def share_extra(request: Request) -> dict[str, Any]:
-    return {"from_decorator": True}
 
 
 @pytest.fixture
@@ -125,25 +116,3 @@ def share_app(inertia_response: InertiaResponse) -> FastAPI:
 @pytest.fixture
 def share_client(share_app: FastAPI) -> TestClient:
     return TestClient(share_app)
-
-
-@pytest.fixture
-def middleware_with_share_app(inertia_response: InertiaResponse) -> FastAPI:
-    app = FastAPI(dependencies=[Depends(share_extra)])
-    app.add_middleware(InertiaMiddleware, share=middleware_share)
-
-    def get_test_inertia(request: Request) -> Inertia:
-        adapter = StarletteRequestAdapter(request)
-        return Inertia(request, adapter, inertia_response)
-
-    @app.get("/test-both")
-    def test_both(request: Request) -> Response:
-        inertia = get_test_inertia(request)
-        return inertia.render("TestComponent", {})
-
-    return app
-
-
-@pytest.fixture
-def middleware_with_share_client(middleware_with_share_app: FastAPI) -> TestClient:
-    return TestClient(middleware_with_share_app)

@@ -97,7 +97,7 @@ def test_sync_auto_inject(share_client: TestClient) -> None:
     assert data["props"]["sync_auto"] is True
 
 
-def test_middleware_without_share(share_client: TestClient) -> None:
+def test_decorator_only(share_client: TestClient) -> None:
     response: Response = share_client.get(
         "/test-decorator-only",
         headers={"X-Inertia": "true"},
@@ -105,18 +105,4 @@ def test_middleware_without_share(share_client: TestClient) -> None:
     data: dict[str, Any] = response.json()
 
     assert response.status_code == 200
-    assert data["props"]["from_decorator"] is True
-
-
-def test_middleware_with_share_plus_decorator(
-    middleware_with_share_client: TestClient,
-) -> None:
-    response: Response = middleware_with_share_client.get(
-        "/test-both",
-        headers={"X-Inertia": "true"},
-    )
-    data: dict[str, Any] = response.json()
-
-    assert response.status_code == 200
-    assert data["props"]["from_middleware"] is True
     assert data["props"]["from_decorator"] is True

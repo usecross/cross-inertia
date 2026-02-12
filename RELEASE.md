@@ -3,8 +3,8 @@ release type: minor
 ---
 
 This release adds the `@inertia_share` decorator for FastAPI, enabling
-dependency-based shared data. Instead of manually constructing resources in
-middleware, you can now use FastAPI's `Depends()` naturally:
+dependency-based shared data, and removes `InertiaMiddleware` for FastAPI.
+Use FastAPI's `Depends()` naturally instead:
 
 ```python
 from typing import Annotated
@@ -27,8 +27,10 @@ async def share_counts(db: DB):
     return {"count": db.query(Cat).count()}
 
 app = FastAPI(dependencies=[Depends(share_auth), Depends(share_flash), Depends(share_counts)])
-app.add_middleware(InertiaMiddleware)  # no share= needed
 ```
 
 Multiple `@inertia_share` functions compose by merging their return values.
-Works alongside the existing `InertiaMiddleware(share=...)` pattern.
+
+**Breaking:** `InertiaMiddleware` has been removed for FastAPI. Replace
+`app.add_middleware(InertiaMiddleware, share=fn)` with `@inertia_share` +
+`Depends()`. The Django `InertiaMiddleware` is unchanged.

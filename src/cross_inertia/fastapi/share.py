@@ -25,12 +25,11 @@ def inertia_share(fn: F) -> F:
 
     sig: inspect.Signature = inspect.signature(fn)
 
-    has_request: bool = any(
-        p.annotation is Request for p in sig.parameters.values()
-    )
+    has_request: bool = any(p.annotation is Request for p in sig.parameters.values())
     is_async: bool = inspect.iscoroutinefunction(fn)
 
     if is_async:
+
         @functools.wraps(fn)
         async def async_wrapper(**kwargs: Any) -> None:
             request: Request = kwargs["request"]
@@ -42,6 +41,7 @@ def inertia_share(fn: F) -> F:
 
         wrapper: F = async_wrapper  # type: ignore[assignment]
     else:
+
         @functools.wraps(fn)
         def sync_wrapper(**kwargs: Any) -> None:
             request: Request = kwargs["request"]

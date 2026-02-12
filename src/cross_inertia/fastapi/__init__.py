@@ -5,10 +5,13 @@ This module contains FastAPI-specific classes, functions, and type aliases
 for integrating Inertia.js with FastAPI applications.
 
 Example:
-    from cross_inertia.fastapi import InertiaDep, InertiaMiddleware
+    from cross_inertia.fastapi import InertiaDep, inertia_share
 
-    app = FastAPI()
-    app.add_middleware(InertiaMiddleware, share=share_data)
+    @inertia_share
+    async def share_auth(request: Request):
+        return {"auth": {"user": get_user(request)}}
+
+    app = FastAPI(dependencies=[Depends(share_auth)])
 
     @app.get("/")
     async def home(inertia: InertiaDep):
@@ -36,13 +39,11 @@ from .._core import (
     get_inertia,
     get_inertia_response,
 )
-from ..middleware import InertiaMiddleware
 from .share import inertia_share
 
 __all__ = [
     "Inertia",
     "InertiaResponse",
-    "InertiaMiddleware",
     "InertiaDep",
     "get_inertia",
     "get_inertia_response",

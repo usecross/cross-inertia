@@ -85,7 +85,7 @@ You can verify your installation by importing Cross-Inertia:
 ### FastAPI
 
 ```python
-from cross_inertia.fastapi import InertiaDep, InertiaMiddleware
+from cross_inertia.fastapi import InertiaDep, inertia_share
 
 print("Cross-Inertia installed successfully!")
 ```

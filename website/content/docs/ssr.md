@@ -76,16 +76,12 @@ Add a build script to your `package.json`:
 Update your FastAPI app to enable SSR:
 
 ```python
-from cross_inertia.fastapi import InertiaMiddleware
-import inertia._core
+from cross_inertia import configure_inertia
 
-inertia_response = inertia._core.InertiaResponse(
-    template_dir="templates",
-    manifest_path="static/build/.vite/manifest.json",
+configure_inertia(
     vite_entry="frontend/app.tsx",
-    ssr_url="http://localhost:13714",  # SSR server URL
+    ssr_enabled=True,
 )
-inertia._core._inertia_response = inertia_response
 ```
 
 ### 5. Run the SSR server

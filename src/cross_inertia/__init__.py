@@ -4,7 +4,7 @@ Inertia.js adapter for Python web frameworks.
 This package provides server-side adapters for Inertia.js.
 
 Framework-specific imports:
-    from cross_inertia.fastapi import InertiaDep, InertiaMiddleware
+    from cross_inertia.fastapi import InertiaDep, inertia_share
 
 Configuration (single source of truth):
     from cross_inertia import configure_inertia

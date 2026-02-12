@@ -7,7 +7,6 @@ Built with Cross-Inertia, FastAPI, React, and Bun.
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from cross_inertia import configure_inertia
-from cross_inertia.fastapi import InertiaMiddleware
 from cross_inertia.fastapi.experimental import inertia_lifespan
 
 from cross_docs import CrossDocs
@@ -21,9 +20,6 @@ app = FastAPI(
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Add Inertia middleware
-app.add_middleware(InertiaMiddleware)
 
 # Mount docs (includes homepage from config)
 docs = CrossDocs()
