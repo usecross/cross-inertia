@@ -1,59 +1,68 @@
 ---
-title: Middleware
-description: API reference for InertiaMiddleware.
+title: Shared Data (FastAPI)
+description: API reference for @inertia_share decorator.
 order: 13
 section: API Reference
 ---
 
-## InertiaMiddleware
+## @inertia_share
 
-The `InertiaMiddleware` handles Inertia-specific request/response processing.
-
-```python
-from fastapi import FastAPI
-from cross_inertia.fastapi import InertiaMiddleware
-
-app = FastAPI()
-app.add_middleware(InertiaMiddleware, share=share_data)
-```
-
-## Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `share` | `Callable[[Request], dict] \| None` | Function that returns shared props (optional) |
-
-## Basic Usage (No Shared Data)
-
-If you don't need to share data across all pages, you can add the middleware without a share function:
+The `@inertia_share` decorator marks a function as an Inertia shared data provider. Use it with FastAPI's `Depends()` to share data across all pages.
 
 ```python
-from fastapi import FastAPI
-from cross_inertia.fastapi import InertiaMiddleware
+from fastapi import Depends, FastAPI, Request
+from cross_inertia.fastapi import inertia_share
 
-app = FastAPI()
-app.add_middleware(InertiaMiddleware)  # No share function needed
-```
-
-When no share function is provided, no shared data is added to requests. You can still pass props directly to your Inertia responses.
-
-## Share Function
-
-The `share` parameter accepts a function that receives the request and returns a dictionary of props to share across all pages.
-
-```python
-from fastapi import Request
-
+@inertia_share
 def share_data(request: Request) -> dict:
     return {
-        "auth": {
-            "user": get_current_user(request)
-        },
+        "auth": {"user": get_current_user(request)},
         "flash": get_flash_messages(request),
         "app_name": "My App",
     }
 
-app.add_middleware(InertiaMiddleware, share=share_data)
+app = FastAPI(dependencies=[Depends(share_data)])
+```
+
+## How it works
+
+The decorator wraps your function so that its return value is merged into `request.state.inertia_shared`. This data is then automatically included in every Inertia response.
+
+## Multiple share functions
+
+You can compose multiple share functions. Their return values are merged:
+
+```python
+@inertia_share
+async def share_auth(request: Request) -> dict:
+    return {"auth": {"user": get_current_user(request)}}
+
+@inertia_share
+async def share_flash(request: Request) -> dict:
+    return {"flash": get_flash_messages(request)}
+
+app = FastAPI(dependencies=[Depends(share_auth), Depends(share_flash)])
+```
+
+## Auto-injection of request
+
+If your function doesn't declare a `request: Request` parameter, one is automatically injected so FastAPI's dependency injection still works:
+
+```python
+@inertia_share
+async def share_counts(db: DB) -> dict:
+    # request is auto-injected behind the scenes
+    return {"count": db.query(Cat).count()}
+```
+
+## Route-level dependencies
+
+You can also use `@inertia_share` at the route level instead of globally:
+
+```python
+@app.get("/dashboard", dependencies=[Depends(share_dashboard_stats)])
+async def dashboard(inertia: InertiaDep):
+    return inertia.render("Dashboard", {})
 ```
 
 ## Accessing Shared Data
@@ -82,6 +91,7 @@ Use `always()` to ensure data is always evaluated, even during partial reloads:
 ```python
 from cross_inertia import always
 
+@inertia_share
 def share_data(request: Request) -> dict:
     return {
         # Always evaluated (even on partial reloads)

@@ -497,8 +497,8 @@ class InertiaResponse:
                     },
                 )
 
-        # Merge shared data from middleware (if available)
-        # Shared data is set by InertiaMiddleware in request.state.inertia_shared
+        # Merge shared data (if available)
+        # Shared data is set by @inertia_share in request.state.inertia_shared
         shared_data = getattr(request.state, "inertia_shared", {})
 
         # Handle partial reloads - filter props if requested

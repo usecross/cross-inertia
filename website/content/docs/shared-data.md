@@ -1,6 +1,6 @@
 ---
 title: Shared Data
-description: Share data across all pages using middleware.
+description: Share data across all pages using the @inertia_share decorator.
 order: 5
 section: Core Concepts
 ---
@@ -18,14 +18,13 @@ Shared data is data that is automatically included in every Inertia response. Th
 
 ### FastAPI
 
-Use the `InertiaMiddleware` to define shared data:
+Use the `@inertia_share` decorator to define shared data providers as FastAPI dependencies:
 
 ```python
-from fastapi import FastAPI, Request
-from cross_inertia.fastapi import InertiaMiddleware
+from fastapi import Depends, FastAPI, Request
+from cross_inertia.fastapi import inertia_share
 
-app = FastAPI()
-
+@inertia_share
 def share_data(request: Request) -> dict:
     return {
         "auth": {
@@ -35,7 +34,29 @@ def share_data(request: Request) -> dict:
         "app_name": "My App"
     }
 
-app.add_middleware(InertiaMiddleware, share=share_data)
+app = FastAPI(dependencies=[Depends(share_data)])
+```
+
+You can split shared data into multiple functions:
+
+```python
+@inertia_share
+async def share_auth(request: Request) -> dict:
+    return {"auth": {"user": get_current_user(request)}}
+
+@inertia_share
+async def share_flash(request: Request) -> dict:
+    return {"flash": get_flash_messages(request)}
+
+app = FastAPI(dependencies=[Depends(share_auth), Depends(share_flash)])
+```
+
+The `request: Request` parameter is optional — if omitted, it is auto-injected:
+
+```python
+@inertia_share
+async def share_counts(db: DB) -> dict:
+    return {"count": db.query(Cat).count()}
 ```
 
 ### Django
@@ -102,6 +123,7 @@ You can use `always()` to ensure data is always evaluated, even during partial r
 ```python
 from cross_inertia import always
 
+@inertia_share
 def share_data(request: Request) -> dict:
     return {
         # Always evaluated (even on partial reloads)
