@@ -46,13 +46,6 @@ import mock_data
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
 
-app = FastAPI(
-    title="PurrfectHome - Cat Adoption Demo", dependencies=[Depends(share_data)]
-)
-
-# Serve static files (built assets in production)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 
 @inertia_share
 def share_data(request: Request) -> dict:
@@ -98,6 +91,13 @@ def share_data(request: Request) -> dict:
         "flash": flash_data,
     }
 
+
+app = FastAPI(
+    title="PurrfectHome - Cat Adoption Demo", dependencies=[Depends(share_data)]
+)
+
+# Serve static files (built assets in production)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key-change-in-production")
 
