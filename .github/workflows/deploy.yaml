@@ -37,6 +37,10 @@ jobs:
         working-directory: website
         run: bun run build
 
+      - name: Build SSR
+        working-directory: website
+        run: bun run build:ssr
+
       - name: Deploy to production
         working-directory: website
         run: uv run fastapi deploy
