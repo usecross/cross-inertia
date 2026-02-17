@@ -66,15 +66,16 @@ wheels = [
 
 [[package]]
 name = "cross-docs"
-version = "0.13.0"
+version = "0.13.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cross-inertia" },
     { name = "fastapi" },
+    { name = "pybun" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/45/ea/edf0d464ee32fc32376ec50af445d60b5087eb7394b80d12c5c2c2b096b0/cross_docs-0.13.0.tar.gz", hash = "sha256:e594e5e2983a4bb23071e0d9e8beabac695ca34529512e811868da2532fc1a0c", size = 18843, upload-time = "2026-02-17T05:41:20.76Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c0/9b/c933ce045d44b3da00836594c0f6a61e687a34d403e3aa5fdd8ffa7989d6/cross_docs-0.13.1.tar.gz", hash = "sha256:f10d742ab167803ded19fa6ba9ac1321488a6b8827f5a34dbb2c0f9edb302f54", size = 18880, upload-time = "2026-02-17T07:49:23.888Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/7d/a25e62fa99c8ab5657aebaa56a5edddae59eecbabbb8e9821ac2d773c237/cross_docs-0.13.0-py3-none-any.whl", hash = "sha256:f16819ee5cbe1c2824475870fc152496a521fa98f2f09f42c5f4db861e2a0e0b", size = 24673, upload-time = "2026-02-17T05:41:21.945Z" },
+    { url = "https://files.pythonhosted.org/packages/2d/5e/091d605e6bde00006da9a8015a9460058f817f3938cea31563c26febf2a9/cross_docs-0.13.1-py3-none-any.whl", hash = "sha256:b1991319378d8979d7152b7406b08022cfdc6dd3296e53c37489e311b6213292", size = 24704, upload-time = "2026-02-17T07:49:22.464Z" },
 ]
 
 [[package]]
@@ -107,7 +108,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cross-docs", specifier = ">=0.13.0" },
+    { name = "cross-docs", specifier = ">=0.13.1" },
     { name = "cross-inertia", specifier = ">=0.10.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.0" },
     { name = "httpx", specifier = ">=0.27.0" },

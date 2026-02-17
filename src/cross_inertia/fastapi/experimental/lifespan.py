@@ -452,7 +452,12 @@ async def inertia_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             health_url=ssr_health_url,
             startup_timeout=ssr_timeout,
         )
-        await ssr_server.start()
+        try:
+            await ssr_server.start()
+        except SSRServerError as e:
+            logger.warning(f"SSR server failed to start: {e}")
+            logger.warning("Continuing without SSR (pages will render client-side)")
+            ssr_server = None
 
     try:
         yield
