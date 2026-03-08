@@ -7,6 +7,7 @@ nox.options.error_on_external_run = True
 nox.options.default_venv_backend = "uv"
 
 PYTHON_VERSIONS = ["3.10", "3.11", "3.12", "3.13", "3.14"]
+RUFF_VERSION = "0.14.3"
 
 
 @nox.session(python=PYTHON_VERSIONS, name="tests", tags=["tests"])
@@ -77,7 +78,7 @@ def e2e_tests(session: nox.Session) -> None:
 @nox.session(python=["3.14"], name="lint")
 def lint(session: nox.Session) -> None:
     """Run linting with ruff."""
-    session.install("ruff")
+    session.install(f"ruff=={RUFF_VERSION}")
     session.run("python", "-m", "ruff", "check", ".")
     session.run("python", "-m", "ruff", "format", "--check", ".")
 
@@ -85,7 +86,7 @@ def lint(session: nox.Session) -> None:
 @nox.session(python=["3.14"], name="format")
 def format_code(session: nox.Session) -> None:
     """Format code with ruff."""
-    session.install("ruff")
+    session.install(f"ruff=={RUFF_VERSION}")
     session.run("python", "-m", "ruff", "format", ".")
     session.run("python", "-m", "ruff", "check", "--fix", ".")
 
