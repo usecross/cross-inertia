@@ -1,8 +1,8 @@
 """Tests for history encryption feature."""
 
-import json
-
 from fastapi.testclient import TestClient
+
+from tests.page_html import extract_page_data
 
 
 class TestHistoryEncryption:
@@ -25,16 +25,8 @@ class TestHistoryEncryption:
         response = client.get("/test-encrypt-history")
 
         assert response.status_code == 200
-        # For HTML responses, parse the data-page attribute
-        assert "data-page=" in response.text
-
-        # Extract and parse the page data
-        import re
-
-        match = re.search(r"data-page='([^']+)'", response.text)
-        assert match is not None
-        page_data_json = match.group(1).replace("&apos;", "'")
-        page_data = json.loads(page_data_json)
+        assert 'script data-page="app"' in response.text
+        page_data = extract_page_data(response.text)
 
         assert page_data["encryptHistory"] is True
         assert page_data["clearHistory"] is False

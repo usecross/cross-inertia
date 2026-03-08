@@ -21,7 +21,7 @@ def test_initial_page_load_returns_html(client, setup_inertia):
     assert "text/html" in response["Content-Type"]
 
     content = response.content.decode()
-    assert "data-page=" in content
+    assert 'script data-page="app"' in content
     assert "TestComponent" in content
 
 

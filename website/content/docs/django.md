@@ -122,7 +122,7 @@ Create your base template with Inertia template tags:
 
 The template tags:
 - `{% inertia_head %}` - Outputs Vite script/style tags and SSR head content
-- `{% inertia_body %}` - Outputs the app container div with page data
+- `{% inertia_body %}` - Outputs the initial page JSON script and app container
 
 ## Prop Types
 

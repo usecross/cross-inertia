@@ -1,12 +1,11 @@
 """Tests for optional/always props functionality."""
 
-import json
-
 import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 from cross_inertia import optional, always
+from tests.page_html import extract_page_data
 
 
 class TestOptionalPropsCore:
@@ -135,12 +134,7 @@ class TestOptionalPropsCore:
         response = optional_core_client.get("/test-optional")
         assert response.status_code == 200
 
-        # Extract page data from HTML
-        html = response.text
-        start = html.find("data-page='") + len("data-page='")
-        end = html.find("'", start)
-        page_json = html[start:end]
-        page_data = json.loads(page_json)
+        page_data = extract_page_data(response.text)
 
         # Regular prop should be there
         assert page_data["props"]["user"] == "John"

@@ -244,7 +244,7 @@ def build_inertia_page(
         is_inertia=context.is_inertia,
         is_prefetch=context.is_prefetch,
         page_data=page_data,
-        page_json=json.dumps(page_data).replace("'", "&#39;"),
+        page_json=serialize_page_for_html(page_data),
     )
 
 
@@ -257,6 +257,22 @@ def _resolve_page_url(current_url: str, override_url: str | None) -> str:
         return f"{parsed_url.path}?{parsed_url.query}"
 
     return parsed_url.path
+
+
+def serialize_page_for_html(page_data: Mapping[str, Any]) -> str:
+    """Serialize page data for embedding in an HTML JSON script tag."""
+    return json.dumps(page_data).replace("/", "\\/")
+
+
+def render_inertia_body(page_json: str, body: str = "", *, app_id: str = "app") -> str:
+    """Render the initial Inertia script/app container markup."""
+    if body:
+        return body
+
+    return (
+        f'<script data-page="{app_id}" type="application/json">{page_json}</script>'
+        f'<div id="{app_id}"></div>'
+    )
 
 
 def _walk_node(

@@ -91,7 +91,7 @@ class TestPrefetchSupport:
         assert response.status_code == 200
         # Should return HTML, not JSON
         assert "text/html" in response.headers.get("Content-Type")
-        assert "data-page=" in response.text
+        assert 'script data-page="app"' in response.text
 
     def test_prefetch_with_errors(self, client: TestClient):
         """Test that prefetch requests handle errors correctly."""

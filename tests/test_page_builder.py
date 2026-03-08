@@ -81,6 +81,19 @@ def test_partial_except_takes_precedence_when_both_headers_are_present() -> None
     }
 
 
+def test_page_json_is_safe_to_embed_in_script_tag() -> None:
+    result = build_result(
+        {
+            "content": {"html": "</script><div>safe</div>"},
+        },
+        headers={"X-Inertia": "true"},
+    )
+
+    assert result.page_json is not None
+    assert "</script>" not in result.page_json
+    assert "<\\/script>" in result.page_json
+
+
 def test_build_page_request_context_normalizes_url_and_inertia_headers() -> None:
     context = build_page_request_context(
         adapter=TestingRequestAdapter(

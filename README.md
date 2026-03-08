@@ -145,7 +145,8 @@ Create a template file (default: `templates/app.html`):
     {{ vite()|safe }}
 </head>
 <body>
-    <div id="app" data-page='{{ page }}'></div>
+    <script data-page="app" type="application/json">{{ page|safe }}</script>
+    <div id="app"></div>
 </body>
 </html>
 ```
@@ -155,6 +156,19 @@ The `{{ vite() }}` function will automatically include:
 - Vite client scripts (dev mode)
 - Your entry point script
 - Built CSS and JS files (production mode)
+
+When using `@inertiajs/react` 2.3+, enable the matching client-side bootstrap format:
+
+```tsx
+createInertiaApp({
+  defaults: {
+    future: {
+      useScriptElementForInitialPage: true,
+    },
+  },
+  // ...
+})
+```
 
 ### Using Custom Entry Points
 

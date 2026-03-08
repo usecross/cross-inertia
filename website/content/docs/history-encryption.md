@@ -19,14 +19,18 @@ When users navigate through your app, Inertia stores page props in the browser h
 
 ## Enabling Encryption
 
-Enable history encryption in your Inertia client setup:
+No special client-side encryption setup is required. If you're using the script-element bootstrap, enable it once in your Inertia client setup:
 
 ```tsx
 import { createInertiaApp } from '@inertiajs/react'
 
 createInertiaApp({
+  defaults: {
+    future: {
+      useScriptElementForInitialPage: true,
+    },
+  },
   // ... other options
-  encryptHistory: true,
 })
 ```
 

@@ -1,7 +1,5 @@
 """Tests for once props."""
 
-import json
-
 import pytest
 from fastapi import Depends, FastAPI, Request
 from fastapi.testclient import TestClient
@@ -10,6 +8,7 @@ from cross_web import StarletteRequestAdapter
 from cross_inertia import defer, once
 from cross_inertia._core import Inertia
 from cross_inertia.fastapi import inertia_share
+from tests.page_html import extract_page_data
 
 
 @inertia_share
@@ -110,10 +109,7 @@ class TestOnceProps:
     ) -> None:
         response = once_client.get("/test-once")
 
-        html = response.text
-        start = html.find("data-page='") + len("data-page='")
-        end = html.find("'", start)
-        page_data = json.loads(html[start:end])
+        page_data = extract_page_data(response.text)
 
         assert page_data["onceProps"]["plans-cache"]["prop"] == "plans"
         assert page_data["onceProps"]["permissions-cache"]["prop"] == "permissions"

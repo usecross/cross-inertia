@@ -24,6 +24,11 @@ const pages = import.meta.glob('./pages/**/*.tsx', { eager: true })
 export default function render(page: any) {
   return createInertiaApp({
     page,
+    defaults: {
+      future: {
+        useScriptElementForInitialPage: true,
+      },
+    },
     render: ReactDOMServer.renderToString,
     resolve: (name) => {
       const resolved = pages[`./pages/${name}.tsx`]

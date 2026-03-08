@@ -1,10 +1,10 @@
 """Tests for callable props (auto-invoke) functionality."""
 
-import json
-
 import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
+
+from tests.page_html import extract_page_data
 
 
 class TestCallableProps:
@@ -108,12 +108,7 @@ class TestCallableProps:
         response = callable_client.get("/test-lambda-prop")
         assert response.status_code == 200
 
-        # Extract page data from HTML
-        html = response.text
-        start = html.find("data-page='") + len("data-page='")
-        end = html.find("'", start)
-        page_json = html[start:end]
-        page_data = json.loads(page_json)
+        page_data = extract_page_data(response.text)
 
         # Callable should have been invoked
         assert page_data["props"]["computed"] == "computed value"

@@ -1,8 +1,8 @@
 """Tests for core Inertia protocol implementation."""
 
-import json
-
 from fastapi.testclient import TestClient
+
+from tests.page_html import extract_page_data
 
 
 class TestInertiaProtocol:
@@ -22,11 +22,11 @@ class TestInertiaProtocol:
         assert response.headers.get("Content-Type") == "application/json"
 
     def test_initial_page_load_returns_html(self, client: TestClient):
-        """Test that initial page load returns HTML with data-page attribute."""
+        """Test that initial page load returns HTML with embedded page data."""
         response = client.get("/test")
         assert response.status_code == 200
         assert response.headers.get("Content-Type").startswith("text/html")
-        assert "data-page=" in response.text
+        assert 'script data-page="app"' in response.text
         assert 'id="app"' in response.text
 
     def test_vary_header_present(self, client: TestClient):
@@ -64,20 +64,13 @@ class TestInertiaProtocol:
         assert data["url"] == "/test"
         assert isinstance(data["version"], str)
 
-    def test_page_object_in_html_data_attribute(self, client: TestClient):
-        """Test that HTML response includes page object in data-page attribute."""
+    def test_page_object_in_html_script(self, client: TestClient):
+        """Test that HTML response includes page object in the JSON script."""
         response = client.get("/test")
         assert response.status_code == 200
 
-        # Extract the data-page attribute value
         html = response.text
-        assert "data-page=" in html
-
-        # Parse the JSON from data-page
-        start = html.find("data-page='") + len("data-page='")
-        end = html.find("'", start)
-        page_json = html[start:end]
-        page_data = json.loads(page_json)
+        page_data = extract_page_data(html)
 
         # Verify structure
         assert page_data["component"] == "TestComponent"
@@ -122,15 +115,11 @@ class TestValidationErrors:
         assert "errors" in data["props"]
 
     def test_errors_in_html_response(self, client: TestClient):
-        """Test that errors are included in HTML data-page for initial loads."""
+        """Test that errors are included in HTML page data for initial loads."""
         response = client.get("/with-errors")
         assert response.status_code == 200  # HTML responses still return 200
 
-        html = response.text
-        start = html.find("data-page='") + len("data-page='")
-        end = html.find("'", start)
-        page_json = html[start:end]
-        page_data = json.loads(page_json)
+        page_data = extract_page_data(response.text)
 
         assert "errors" in page_data["props"]
         assert page_data["props"]["errors"]["field"] == "This field is required"

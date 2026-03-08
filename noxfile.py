@@ -18,6 +18,8 @@ def tests(session: nox.Session) -> None:
     # Install in editable mode so coverage can track the source
     session.install("-e", ".")
     session.run(
+        "python",
+        "-m",
         "pytest",
         "tests/",
         "--ignore=tests/e2e/",
@@ -62,8 +64,10 @@ def e2e_tests(session: nox.Session) -> None:
     )
 
     # Install Playwright browsers
-    session.run("playwright", "install", "--with-deps", "chromium")
+    session.run("python", "-m", "playwright", "install", "--with-deps", "chromium")
     session.run(
+        "python",
+        "-m",
         "pytest",
         "tests/e2e/",
         "-v",
@@ -74,20 +78,20 @@ def e2e_tests(session: nox.Session) -> None:
 def lint(session: nox.Session) -> None:
     """Run linting with ruff."""
     session.install("ruff")
-    session.run("ruff", "check", ".")
-    session.run("ruff", "format", "--check", ".")
+    session.run("python", "-m", "ruff", "check", ".")
+    session.run("python", "-m", "ruff", "format", "--check", ".")
 
 
 @nox.session(python=["3.14"], name="format")
 def format_code(session: nox.Session) -> None:
     """Format code with ruff."""
     session.install("ruff")
-    session.run("ruff", "format", ".")
-    session.run("ruff", "check", "--fix", ".")
+    session.run("python", "-m", "ruff", "format", ".")
+    session.run("python", "-m", "ruff", "check", "--fix", ".")
 
 
 @nox.session(python=["3.14"], name="typecheck")
 def typecheck(session: nox.Session) -> None:
     """Run type checking with mypy."""
     session.install(".", "mypy", "fastapi", "httpx")
-    session.run("mypy", "src/", "--ignore-missing-imports")
+    session.run("python", "-m", "mypy", "src/", "--ignore-missing-imports")

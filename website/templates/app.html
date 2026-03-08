@@ -10,6 +10,6 @@
     {{ vite() | safe }}
 </head>
 <body class="h-full bg-white dark:bg-gray-950">
-    {% if body %}{{ body|safe }}{% else %}<div id="app" data-page='{{ page | safe }}'></div>{% endif %}
+    {% if body %}{{ body|safe }}{% else %}<script data-page="app" type="application/json">{{ page | safe }}</script><div id="app"></div>{% endif %}
 </body>
 </html>

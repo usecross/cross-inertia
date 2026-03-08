@@ -132,3 +132,25 @@ def share_data(request: Request) -> dict:
         "user": get_current_user(request)
     }
 ```
+
+## Remembered shared data
+
+You can also wrap shared data in `once()` so Inertia can remember it across visits and skip re-sending it until it expires:
+
+```python
+from datetime import timedelta
+
+from cross_inertia import once
+
+@inertia_share
+def share_data(request: Request) -> dict:
+    return {
+        "countries": once(load_countries, key="countries", until=timedelta(days=1)),
+        "feature_flags": once(
+            load_flags,
+            fresh=request.query_params.get("refresh") == "1",
+        ),
+    }
+```
+
+See [Once Props](/docs/once-props) for the full API.

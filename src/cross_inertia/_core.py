@@ -24,6 +24,7 @@ from ._page import (
     build_inertia_page,
     is_inertia_request_headers,
     is_prefetch_request_headers,
+    render_inertia_body,
 )
 
 # Configure logging with basic config if not already configured
@@ -376,14 +377,15 @@ class InertiaResponse:
             """
             Generate the Inertia app container.
 
-            Renders the app div with data-page attribute and SSR body content.
+            Renders the initial page JSON script and app container, or passes
+            through the SSR body when server rendering is enabled.
 
             Usage: {{ inertia_body() }}
             """
             page = context.get("page", "{}")
             body = context.get("body", "")
 
-            return f"<div id=\"app\" data-page='{page}'>{body}</div>"
+            return render_inertia_body(page, body)
 
         return inertia_body
 

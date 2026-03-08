@@ -51,7 +51,7 @@ Create a `package.json` with the required dependencies:
     "preview": "vite preview"
   },
   "dependencies": {
-    "@inertiajs/react": "^2.0.0",
+    "@inertiajs/react": "^2.3.17",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -167,6 +167,11 @@ const pages: Record<string, React.ComponentType<any>> = {
 }
 
 createInertiaApp({
+  defaults: {
+    future: {
+      useScriptElementForInitialPage: true,
+    },
+  },
   resolve: (name) => {
     const page = pages[name]
     if (!page) {
@@ -190,6 +195,11 @@ import { createRoot } from 'react-dom/client'
 import './globals.css'
 
 createInertiaApp({
+  defaults: {
+    future: {
+      useScriptElementForInitialPage: true,
+    },
+  },
   resolve: (name) => {
     const pages = import.meta.glob('./pages/**/*.tsx', { eager: true })
     const page = pages[`./pages/${name}.tsx`]
@@ -218,10 +228,13 @@ Create `templates/app.html`:
     {{ vite() | safe }}
 </head>
 <body>
-    <div id="app" data-page='{{ page | safe }}'></div>
+    <script data-page="app" type="application/json">{{ page | safe }}</script>
+    <div id="app"></div>
 </body>
 </html>
 ```
+
+This template matches Inertia's script-element bootstrap. Be sure your client setup enables `future.useScriptElementForInitialPage`.
 
 The `{{ vite() }}` function automatically includes:
 - React Fast Refresh scripts (dev mode)
@@ -245,7 +258,8 @@ For dynamic page titles and meta tags, use [view data](/guides/view-data/):
     {{ vite() | safe }}
 </head>
 <body>
-    <div id="app" data-page='{{ page | safe }}'></div>
+    <script data-page="app" type="application/json">{{ page | safe }}</script>
+    <div id="app"></div>
 </body>
 </html>
 ```
