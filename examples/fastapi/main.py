@@ -39,12 +39,38 @@ from fastapi import Depends, FastAPI, Query, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from cross_inertia.fastapi import InertiaDep, inertia_share
-from cross_inertia import optional, always, defer
+from cross_inertia import optional, always, defer, once
 import mock_data
 
 # Configure logging for this module
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
+
+ONCE_DEMO_REQUEST_COUNT = 0
+ONCE_DEMO_VALUE_COUNT = 0
+
+
+def generate_once_demo_offer() -> dict[str, str]:
+    """Generate a new once-demo value so the UI can prove when it refreshed."""
+    global ONCE_DEMO_VALUE_COUNT
+    ONCE_DEMO_VALUE_COUNT += 1
+    return {
+        "code": f"WELCOME-{ONCE_DEMO_VALUE_COUNT:03d}",
+        "description": "A remembered once() prop that only refreshes when requested.",
+    }
+
+
+def get_once_demo_value_count() -> int:
+    """Return how many times the once-demo value has been computed."""
+    return ONCE_DEMO_VALUE_COUNT
+
+
+def reset_demo_state() -> None:
+    """Reset in-memory state used by the example app tests."""
+    global ONCE_DEMO_REQUEST_COUNT, ONCE_DEMO_VALUE_COUNT
+    ONCE_DEMO_REQUEST_COUNT = 0
+    ONCE_DEMO_VALUE_COUNT = 0
+    mock_data.reset_demo_state()
 
 
 @inertia_share
@@ -126,6 +152,15 @@ async def home(inertia: InertiaDep):
     from fastapi.responses import RedirectResponse
 
     return RedirectResponse(url="/browse")
+
+
+@app.post("/__test/reset")
+async def reset_test_state():
+    """Reset demo state so Playwright tests do not leak into one another."""
+    from fastapi.responses import Response
+
+    reset_demo_state()
+    return Response(status_code=204)
 
 
 @app.get("/browse")
@@ -217,7 +252,7 @@ async def show_cat(cat_id: int, inertia: InertiaDep):
         },
         view_data={
             "page_title": f"Meet {cat['name']} - {cat['breed']} Available for Adoption | PurrfectHome",
-            "meta_description": f"Meet {cat['name']}, a {cat['age']} year old {cat['breed']} looking for a loving home. {cat['description'][:150]}...",
+            "meta_description": f"Meet {cat['name']}, a {cat['age']} year old {cat['breed']} looking for a loving home. {cat['short_description'][:150]}...",
         },
     )
 
@@ -294,6 +329,7 @@ async def toggle_favorite(
                 "cat": cat,
                 "shelter": shelter,
                 "similar_cats": similar_cats,
+                "favorites_count": len(mock_data.get_favorited_cats()),
                 "flash": flash_message,  # Manually include flash
             },
             url=f"/cats/{cat_id}",
@@ -341,6 +377,7 @@ async def toggle_favorite(
                     "breed": breed,
                     "age_range": age_range,
                 },
+                "favorites_count": len(mock_data.get_favorited_cats()),
                 "flash": flash_message,  # Manually include flash
             },
             merge_props=["cats.data"],
@@ -670,6 +707,37 @@ async def deferred_demo(inertia: InertiaDep):
             "recommendations": defer(
                 get_recommendations, group="sidebar"
             ),  # Separate group (loads in parallel)
+        },
+    )
+
+
+@app.get("/once-demo")
+async def once_demo(inertia: InertiaDep):
+    """
+    Once props demo page.
+
+    This demonstrates the once() prop type. The offer is included on the initial
+    visit and remembered by the Inertia client on later visits until it is
+    explicitly requested again.
+    """
+    from datetime import datetime
+
+    global ONCE_DEMO_REQUEST_COUNT
+    ONCE_DEMO_REQUEST_COUNT += 1
+
+    return inertia.render(
+        "OnceDemo",
+        {
+            "title": "Once Props Demo",
+            "message": "This page demonstrates how once() props are remembered between visits and refreshed only when requested.",
+            "request_count": ONCE_DEMO_REQUEST_COUNT,
+            "timestamp": datetime.now().isoformat(),
+            "offer": once(
+                generate_once_demo_offer,
+                key="welcome-offer-cache",
+                until=60,
+            ),
+            "once_evaluations": get_once_demo_value_count,
         },
     )
 

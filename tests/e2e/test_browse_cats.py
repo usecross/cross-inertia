@@ -1,5 +1,7 @@
 """E2E tests for browsing and favoriting cats."""
 
+import re
+
 from playwright.sync_api import Page, expect
 
 
@@ -8,7 +10,7 @@ def test_browse_page_loads(page: Page, fastapi_server: str) -> None:
     page.goto(f"{fastapi_server}/browse")
 
     # Check page title
-    expect(page).to_have_title("Inertia FastAPI Demo")
+    expect(page).to_have_title("Browse Adoptable Cats - PurrfectHome")
 
     # Check heading (use more specific selector)
     expect(page.locator("main h1")).to_contain_text("Browse Cats")
@@ -18,8 +20,8 @@ def test_browse_page_loads(page: Page, fastapi_server: str) -> None:
     expect(page.locator("text=adorable cats available for adoption")).to_be_visible()
 
     # Should have cat cards
-    cat_cards = page.locator("img[alt]")
-    expect(cat_cards).to_have_count(12)  # Default page size
+    cat_cards = page.locator('[data-testid^="view-profile-"]')
+    expect(cat_cards).to_have_count(6)
 
 
 def test_favorite_cat(page: Page, fastapi_server: str) -> None:
@@ -27,21 +29,19 @@ def test_favorite_cat(page: Page, fastapi_server: str) -> None:
     page.goto(f"{fastapi_server}/browse")
 
     # Initially, favorites count should be 0 (or empty)
-    favorites_link = page.locator("text=Favorites")
+    favorites_link = page.locator('[data-testid="favorites-link"]')
     expect(favorites_link).to_be_visible()
 
     # Click the first favorite button (heart icon)
-    first_favorite_button = page.locator("button").filter(has=page.locator("svg")).first
-    first_favorite_button.click()
-
-    # Wait for navigation (Inertia page transition)
-    page.wait_for_timeout(500)
+    page.locator('[data-testid="favorite-1"]').click()
 
     # Flash message should appear
-    expect(page.locator("text=to your favorites!")).to_be_visible()
+    expect(page.locator('[data-testid="flash-message"]')).to_contain_text(
+        "to your favorites!"
+    )
 
     # Favorites count should update
-    expect(page.locator("text=Favorites").locator("text=1")).to_be_visible()
+    expect(page.locator('[data-testid="favorites-badge"]')).to_have_text("1")
 
 
 def test_navigation_header(page: Page, fastapi_server: str) -> None:
@@ -58,8 +58,7 @@ def test_navigation_header(page: Page, fastapi_server: str) -> None:
     expect(nav.locator("text=John Doe")).to_be_visible()
 
     # Click favorites link
-    nav.locator("text=Favorites").click()
-    page.wait_for_timeout(500)
+    nav.locator('[data-testid="favorites-link"]').click()
 
     # Should navigate to favorites page
     expect(page).to_have_url(f"{fastapi_server}/favorites")
@@ -70,18 +69,10 @@ def test_cat_profile_navigation(page: Page, fastapi_server: str) -> None:
     page.goto(f"{fastapi_server}/browse")
 
     # Click "View Profile" on first cat
-    first_profile_link = page.locator("text=View Profile").first
-    first_profile_link.click()
-
-    # Wait for navigation
-    page.wait_for_timeout(500)
+    page.locator('[data-testid="view-profile-1"]').click()
 
     # Should be on a cat profile page (check URL pattern)
-    import re
-
-    assert re.match(r".*/cats/\d+$", page.url), (
-        f"Expected cat profile URL, got {page.url}"
-    )
+    expect(page).to_have_url(re.compile(r".*/cats/1$"))
 
     # Should have personality section
     expect(page.locator("text=Personality")).to_be_visible()
@@ -95,13 +86,12 @@ def test_inertia_page_transitions(page: Page, fastapi_server: str) -> None:
     page.goto(f"{fastapi_server}/browse")
 
     # Navigate to a cat profile
-    page.locator("text=View Profile").first.click()
-    page.wait_for_timeout(300)
+    page.locator('[data-testid="view-profile-1"]').click()
+    expect(page).to_have_url(re.compile(r".*/cats/1$"))
 
     # Navigate back to browse
-    nav = page.locator("nav")
-    nav.locator("text=Browse").click()
-    page.wait_for_timeout(300)
+    page.locator('[data-testid="browse-link"]').click(force=True)
+    expect(page).to_have_url(f"{fastapi_server}/browse")
 
     # Check that we're back on browse page
     expect(page.locator("main h1")).to_contain_text("Browse Cats")

@@ -16,6 +16,7 @@ import Favorites from './pages/Favorites'
 import ApplicationForm from './pages/ApplicationForm'
 import LazyDemo from './pages/LazyDemo'
 import DeferredDemo from './pages/DeferredDemo'
+import OnceDemo from './pages/OnceDemo'
 import ErrorBagsDemo from './pages/ErrorBagsDemo'
 
 const pages: Record<string, React.ComponentType<any>> = {
@@ -31,6 +32,7 @@ const pages: Record<string, React.ComponentType<any>> = {
   ApplicationForm,
   LazyDemo,
   DeferredDemo,
+  OnceDemo,
   ErrorBagsDemo,
 }
 

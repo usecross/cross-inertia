@@ -391,3 +391,8 @@ def get_favorited_cats() -> list[dict]:
 def is_favorited(cat_id: int) -> bool:
     """Check if a cat is favorited"""
     return cat_id in USER_FAVORITES
+
+
+def reset_demo_state() -> None:
+    """Reset in-memory demo state for repeatable tests."""
+    USER_FAVORITES.clear()

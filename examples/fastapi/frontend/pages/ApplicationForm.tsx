@@ -204,6 +204,7 @@ export default function ApplicationForm({ cat }: ApplicationFormPageProps) {
                     type="button"
                     variant="outline"
                     onClick={() => window.history.back()}
+                    data-testid="cancel-application"
                   >
                     Cancel
                   </Button>

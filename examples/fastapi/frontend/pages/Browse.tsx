@@ -72,6 +72,7 @@ function CatCard({ cat, onToggleFavorite }: CatCardProps) {
             size="icon"
             className={cat.is_favorited ? 'text-red-500' : 'text-gray-400'}
             onClick={() => onToggleFavorite(cat.id)}
+            data-testid={`favorite-${cat.id}`}
           >
             <Heart className={cat.is_favorited ? 'fill-current' : ''} />
           </Button>
@@ -97,7 +98,7 @@ function CatCard({ cat, onToggleFavorite }: CatCardProps) {
       </CardContent>
       <CardFooter>
         <Button asChild className="w-full">
-          <Link href={`/cats/${cat.id}`}>
+          <Link href={`/cats/${cat.id}`} data-testid={`view-profile-${cat.id}`}>
             View Profile
           </Link>
         </Button>
