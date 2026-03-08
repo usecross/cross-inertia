@@ -16,11 +16,11 @@ from django.template.response import TemplateResponse
 
 from .._exceptions import ManifestNotFoundError
 from .conf import inertia_settings
-from .._utils import (
-    _is_always_prop,
-    _is_deferred_prop,
-    _is_optional_prop,
-    _resolve_props_sync,
+from .._page import (
+    PageRenderOptions,
+    PageRequestContext,
+    build_inertia_page,
+    parse_header_list,
 )
 
 logger = logging.getLogger(__name__)
@@ -193,196 +193,79 @@ class DjangoInertiaResponse:
         else:
             url_path = parsed_url.path
 
-        # Check for asset version mismatch (only for Inertia requests)
-        if self.is_inertia_request(request):
-            client_version = request.headers.get("X-Inertia-Version")  # type: ignore[attr-defined]
-            server_version = self.get_asset_version()
-
-            if client_version and client_version != server_version:
-                logger.info(
-                    f"Asset version mismatch: client={client_version}, server={server_version}. "
-                    f"Returning 409 to force reload."
-                )
-                return HttpResponse(
-                    status=409,
-                    headers={"X-Inertia-Location": request.build_absolute_uri()},
-                )
-
-        # Get shared data from middleware
-        shared_data = getattr(request, "_inertia_shared", {})
-
-        # Handle partial reloads
-        partial_component = request.headers.get("X-Inertia-Partial-Component")  # type: ignore[attr-defined]
-        partial_data = request.headers.get("X-Inertia-Partial-Data")  # type: ignore[attr-defined]
-        partial_except = request.headers.get("X-Inertia-Partial-Except")  # type: ignore[attr-defined]
-
-        # Parse X-Inertia-Reset header
-        reset_header = request.headers.get("X-Inertia-Reset")  # type: ignore[attr-defined]
-        reset_props: list[str] = []
-        if reset_header:
-            reset_props = [
-                key.strip() for key in reset_header.split(",") if key.strip()
-            ]
-            logger.info(f"Reset props requested: {reset_props}")
-
-        # Track special prop types
-        optional_prop_keys = {
-            key for key, val in props.items() if _is_optional_prop(val)
-        }
-        always_prop_keys = {key for key, val in props.items() if _is_always_prop(val)}
-
-        # Build deferred props map
-        deferred_props_map: dict[str, list[str]] = {}
-        for key, val in props.items():
-            if _is_deferred_prop(val):
-                group = val.group
-                if group not in deferred_props_map:
-                    deferred_props_map[group] = []
-                deferred_props_map[group].append(key)
-        deferred_prop_keys = {
-            key for keys in deferred_props_map.values() for key in keys
-        }
-
-        if partial_component == component and (partial_data or partial_except):
-            if partial_data:
-                requested_keys = [key.strip() for key in partial_data.split(",")]
-                filtered_props = {
-                    key: props[key] for key in requested_keys if key in props
-                }
-                always_props = {key: props[key] for key in always_prop_keys}
-                props = {**shared_data, **always_props, **filtered_props}
-                deferred_props_map = {}
-                logger.info(
-                    f"Partial reload: requested props {requested_keys} + shared data {list(shared_data.keys())} + always props {list(always_prop_keys)} for {component}"
-                )
-            elif partial_except:
-                except_keys = [key.strip() for key in partial_except.split(",")]
-                shared_data_keys = set(shared_data.keys())
-                filtered_props = {
-                    key: val
-                    for key, val in props.items()
-                    if (
-                        key not in except_keys
-                        or key in shared_data_keys
-                        or key in always_prop_keys
+        build_result = build_inertia_page(
+            PageRequestContext(
+                method=request.method,
+                headers=request.headers,  # type: ignore[arg-type]
+                current_url=request.build_absolute_uri(),
+                page_url=url_path,
+                shared_data=getattr(request, "_inertia_shared", {}),
+                asset_version=self.get_asset_version(),
+                is_inertia=self.is_inertia_request(request),
+                is_prefetch=self.is_prefetch_request(request),
+                partial_component=request.headers.get("X-Inertia-Partial-Component"),  # type: ignore[attr-defined]
+                partial_only=parse_header_list(
+                    request.headers.get("X-Inertia-Partial-Data")  # type: ignore[attr-defined]
+                ),
+                partial_except=parse_header_list(
+                    request.headers.get("X-Inertia-Partial-Except")  # type: ignore[attr-defined]
+                ),
+                reset_props=parse_header_list(
+                    request.headers.get("X-Inertia-Reset")  # type: ignore[attr-defined]
+                ),
+                except_once_props=set(
+                    parse_header_list(
+                        request.headers.get("X-Inertia-Except-Once-Props")  # type: ignore[attr-defined]
                     )
-                    and key not in optional_prop_keys
-                    and key not in deferred_prop_keys
-                }
-                props = {**shared_data, **filtered_props}
-                logger.info(
-                    f"Partial reload: excluding props {except_keys} (preserving shared data and always props) for {component}"
-                )
-        else:
-            # No partial reload - merge all shared data with page props
-            excluded_props = optional_prop_keys | deferred_prop_keys
-            if excluded_props:
-                props = {
-                    key: val for key, val in props.items() if key not in excluded_props
-                }
-                if optional_prop_keys:
-                    logger.info(
-                        f"Excluding optional props from initial load: {optional_prop_keys}"
-                    )
-                if deferred_prop_keys:
-                    logger.info(
-                        f"Excluding deferred props from initial load: {deferred_prop_keys}"
-                    )
-            if shared_data:
-                props = {**shared_data, **props}
-                logger.debug(
-                    f"Merged shared data keys {list(shared_data.keys())} with page props"
-                )
+                ),
+                error_bag=request.headers.get("X-Inertia-Error-Bag"),  # type: ignore[attr-defined]
+                version_conflict_location=request.build_absolute_uri(),
+            ),
+            PageRenderOptions(
+                component=component,
+                props=props,
+                errors=errors,
+                encrypt_history=encrypt_history,
+                clear_history=clear_history,
+                merge_props=merge_props,
+                prepend_props=prepend_props,
+                deep_merge_props=deep_merge_props,
+                match_props_on=match_props_on,
+                scroll_props=scroll_props,
+            ),
+        )
 
-        # Resolve callable props
-        props = _resolve_props_sync(props)
+        if build_result.version_conflict_location is not None:
+            logger.info(
+                "Asset version mismatch detected for GET Inertia request. Returning 409 to force reload."
+            )
+            return HttpResponse(
+                status=409,
+                headers={"X-Inertia-Location": build_result.version_conflict_location},
+            )
 
-        # Add errors to props
-        if errors:
-            if error_bag := request.headers.get("X-Inertia-Error-Bag"):  # type: ignore[attr-defined]
-                props["errors"] = {error_bag: errors}
-                logger.info(
-                    f"Rendering {component} with validation errors in bag '{error_bag}': {list(errors.keys())}"
-                )
-            else:
-                props["errors"] = errors
-                logger.info(
-                    f"Rendering {component} with validation errors: {list(errors.keys())}"
-                )
+        assert build_result.page_data is not None
+        assert build_result.page_json is not None
 
-        # Build page data
-        page_data: dict[str, Any] = {
-            "component": component,
-            "props": props,
-            "url": url_path,
-            "version": self.get_asset_version(),
-            "encryptHistory": encrypt_history,
-            "clearHistory": clear_history,
-        }
-
-        # Add merge/prepend props (filter out reset props)
-        def should_exclude_from_merge(prop: str) -> bool:
-            for reset_prop in reset_props:
-                if prop == reset_prop or prop.startswith(f"{reset_prop}."):
-                    return True
-            return False
-
-        if merge_props:
-            filtered_merge = [
-                p for p in merge_props if not should_exclude_from_merge(p)
-            ]
-            if filtered_merge:
-                page_data["mergeProps"] = filtered_merge
-        if prepend_props:
-            filtered_prepend = [
-                p for p in prepend_props if not should_exclude_from_merge(p)
-            ]
-            if filtered_prepend:
-                page_data["prependProps"] = filtered_prepend
-        if deep_merge_props:
-            filtered_deep = [
-                p for p in deep_merge_props if not should_exclude_from_merge(p)
-            ]
-            if filtered_deep:
-                page_data["deepMergeProps"] = filtered_deep
-        if match_props_on:
-            filtered_match = [
-                p for p in match_props_on if not should_exclude_from_merge(p)
-            ]
-            if filtered_match:
-                page_data["matchPropsOn"] = filtered_match
-        if scroll_props:
-            page_data["scrollProps"] = scroll_props
-
-        if reset_props:
-            page_data["resetProps"] = reset_props
-            logger.info(f"Including resetProps in response: {reset_props}")
-
-        if deferred_props_map:
-            page_data["deferredProps"] = deferred_props_map
-            logger.info(f"Deferred props: {deferred_props_map}")
-
-        if self.is_inertia_request(request):
+        if build_result.is_inertia:
             # Return JSON response for Inertia XHR requests
-            is_prefetch = self.is_prefetch_request(request)
-            request_type = "Prefetch" if is_prefetch else "Inertia XHR"
-            logger.info(f"-> {request_type}: {component} (props: {list(props.keys())})")
+            request_type = "Prefetch" if build_result.is_prefetch else "Inertia XHR"
+            logger.info(
+                f"-> {request_type}: {component} (props: {list(build_result.page_data['props'].keys())})"
+            )
 
-            response = JsonResponse(page_data)
+            response = JsonResponse(build_result.page_data)
             response["X-Inertia"] = "true"
             response["Vary"] = "X-Inertia"
             return response
         else:
             # Return HTML response for initial page load
             logger.info(
-                f"-> Initial page load: {component} (props: {list(props.keys())})"
+                f"-> Initial page load: {component} (props: {list(build_result.page_data['props'].keys())})"
             )
 
-            # Escape single quotes in JSON for safe embedding in HTML attributes
-            page_json = json.dumps(page_data).replace("'", "&#39;")
-
             template_context = {
-                "page": page_json,
+                "page": build_result.page_json,
                 "vite_tags": self.get_vite_tags(),
             }
 

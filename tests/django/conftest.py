@@ -44,6 +44,9 @@ def pytest_configure():
             ],
             USE_TZ=True,
             SECRET_KEY="test-secret-key",
+            CROSS_INERTIA={
+                "SHARE": "tests.django.views.share_data",
+            },
         )
         django.setup()
 
