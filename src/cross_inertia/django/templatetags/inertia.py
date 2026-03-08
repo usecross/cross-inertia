@@ -20,6 +20,8 @@ Usage:
 from django import template
 from django.utils.safestring import SafeString, mark_safe
 
+from ..._page import render_inertia_body
+
 register = template.Library()
 
 
@@ -65,8 +67,8 @@ def inertia_body(context: dict) -> SafeString:
     Generate the Inertia app container.
 
     This renders:
-    - The app div with data-page attribute containing page data
-    - SSR body content inside the div if SSR is enabled
+    - The initial page JSON script and app container on normal page loads
+    - The raw SSR body content when server rendering is enabled
 
     Returns:
         HTML string with the app container
@@ -81,4 +83,4 @@ def inertia_body(context: dict) -> SafeString:
     page = context.get("page", "{}")
     ssr_body = context.get("ssr_body", "")
 
-    return mark_safe(f"<div id=\"app\" data-page='{page}'>{ssr_body}</div>")  # type: ignore[return-value]
+    return mark_safe(render_inertia_body(page, ssr_body))  # type: ignore[return-value]

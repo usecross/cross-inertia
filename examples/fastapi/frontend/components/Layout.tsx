@@ -56,6 +56,7 @@ export default function Layout({ children, title }: LayoutProps) {
             <Link 
               href="/browse" 
               className="text-sm hover:text-zinc-300 transition-colors flex items-center gap-2"
+              data-testid="browse-link"
             >
               <Home className="h-4 w-4" />
               Browse
@@ -63,11 +64,15 @@ export default function Layout({ children, title }: LayoutProps) {
             <Link 
               href="/favorites" 
               className="text-sm hover:text-zinc-300 transition-colors flex items-center gap-2"
+              data-testid="favorites-link"
             >
               <Heart className="h-4 w-4" />
               Favorites
               {favorites_count > 0 && (
-                <span className="bg-white text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span
+                  className="bg-white text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                  data-testid="favorites-badge"
+                >
                   {favorites_count}
                 </span>
               )}
@@ -84,10 +89,11 @@ export default function Layout({ children, title }: LayoutProps) {
       {showFlash && flash.message && (
         <div className="container mx-auto max-w-7xl px-6 mt-4">
           <div className={`flex items-center justify-between p-4 rounded-lg border ${flashColors[flash.category || 'info']}`}>
-            <p className="font-medium">{flash.message}</p>
+            <p className="font-medium" data-testid="flash-message">{flash.message}</p>
             <button 
               onClick={() => setShowFlash(false)}
               className="ml-4 hover:opacity-70 transition-opacity"
+              data-testid="flash-close"
             >
               <X className="h-4 w-4" />
             </button>

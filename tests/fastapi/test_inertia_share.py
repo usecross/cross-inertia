@@ -1,8 +1,9 @@
-import json
 from typing import Any
 
 from fastapi.testclient import TestClient
 from httpx import Response
+
+from tests.page_html import extract_page_data
 
 
 def test_single_share_sets_data(share_client: TestClient) -> None:
@@ -55,10 +56,7 @@ def test_shared_data_in_html_response(share_client: TestClient) -> None:
     response: Response = share_client.get("/test-single")
     assert response.status_code == 200
 
-    html: str = response.text
-    start: int = html.find("data-page='") + len("data-page='")
-    end: int = html.find("'", start)
-    page_data: dict[str, Any] = json.loads(html[start:end])
+    page_data: dict[str, Any] = extract_page_data(response.text)
 
     assert page_data["props"]["auth"] == {"user": "alice"}
     assert page_data["props"]["title"] == "Hi"

@@ -14,7 +14,6 @@ def test_application_form_validation(page: Page, fastapi_server: str) -> None:
 
     # Submit empty form
     page.locator("button:has-text('Submit Application')").click()
-    page.wait_for_timeout(500)
 
     # Should show validation errors (using more specific selectors for error messages)
     expect(
@@ -57,16 +56,13 @@ def test_application_form_submission(page: Page, fastapi_server: str) -> None:
     # Submit the form
     page.locator("button:has-text('Submit Application')").click()
 
-    # Wait for navigation
-    page.wait_for_timeout(500)
-
     # Should redirect to cat profile
-    assert re.match(r".*/cats/1$", page.url), (
-        f"Expected URL to match /cats/1, got {page.url}"
-    )
+    expect(page).to_have_url(re.compile(r".*/cats/1$"))
 
     # Should show success flash message
-    expect(page.locator("text=Application submitted successfully!")).to_be_visible()
+    expect(page.locator('[data-testid="flash-message"]')).to_contain_text(
+        "Application submitted successfully!"
+    )
     expect(page.locator("text=jane@example.com")).to_be_visible()
 
 
@@ -93,20 +89,15 @@ def test_form_cancel_button(page: Page, fastapi_server: str) -> None:
     """Test that cancel button navigates back."""
     # First go to a cat profile
     page.goto(f"{fastapi_server}/cats/1")
-    page.wait_for_timeout(300)
 
     # Click "Apply to Adopt"
-    page.locator("text=Apply to Adopt").click()
-    page.wait_for_timeout(300)
+    page.locator('[data-testid="apply-to-adopt"]').click()
 
     # Should be on application form
     expect(page.locator("main h1")).to_contain_text("Adoption Application")
 
     # Click cancel
-    page.locator("button:has-text('Cancel')").click()
-    page.wait_for_timeout(300)
+    page.locator('[data-testid="cancel-application"]').click()
 
     # Should go back to cat profile
-    assert re.match(r".*/cats/1$", page.url), (
-        f"Expected URL to match /cats/1, got {page.url}"
-    )
+    expect(page).to_have_url(re.compile(r".*/cats/1$"))

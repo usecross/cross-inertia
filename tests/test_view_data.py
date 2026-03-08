@@ -1,12 +1,13 @@
 """Tests for view data feature."""
 
-import json
 import tempfile
 from pathlib import Path
 
 import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
+
+from tests.page_html import extract_page_data
 
 
 @pytest.fixture
@@ -29,7 +30,8 @@ def temp_template_dir_with_view_data():
     {{ vite_tags | safe }}
 </head>
 <body>
-    <div id="app" data-page='{{ page | safe }}'></div>
+    <script data-page="app" type="application/json">{{ page | safe }}</script>
+    <div id="app"></div>
 </body>
 </html>"""
         )
@@ -124,11 +126,7 @@ class TestViewData:
         response = view_data_client.get("/test-view-data")
         assert response.status_code == 200
 
-        html = response.text
-        start = html.find("data-page='") + len("data-page='")
-        end = html.find("'", start)
-        page_json = html[start:end]
-        page_data = json.loads(page_json)
+        page_data = extract_page_data(response.text)
 
         # Check that view_data is NOT in page props
         assert "page_title" not in page_data["props"]
@@ -161,10 +159,7 @@ class TestViewData:
         assert '<meta property="og:title" content="Complex OG">' in html
 
         # Verify view_data is not in page props
-        start = html.find("data-page='") + len("data-page='")
-        end = html.find("'", start)
-        page_json = html[start:end]
-        page_data = json.loads(page_json)
+        page_data = extract_page_data(html)
 
         assert "page_title" not in page_data["props"]
         assert "og_meta" not in page_data["props"]
@@ -180,10 +175,7 @@ class TestViewData:
         assert "<title>Chained Title</title>" in html
 
         # Verify both encryption and view_data worked
-        start = html.find("data-page='") + len("data-page='")
-        end = html.find("'", start)
-        page_json = html[start:end]
-        page_data = json.loads(page_json)
+        page_data = extract_page_data(html)
 
         assert page_data["encryptHistory"] is True
         assert "page_title" not in page_data["props"]

@@ -19,19 +19,20 @@ Configuration (single source of truth):
     app = FastAPI(lifespan=inertia_lifespan)
 
 Prop types (following Laravel Inertia conventions):
-    from cross_inertia import optional, always, defer
+    from cross_inertia import optional, always, defer, once
 
     return inertia.render("Page", {
         "user": get_user(),                        # Regular prop
         "permissions": optional(get_permissions),  # Only when explicitly requested
         "flash": always(get_flash),                # Always included, even in partial reloads
         "analytics": defer(get_analytics),         # Loaded after initial render
+        "plans": once(load_plans),                 # Remembered across navigations
     })
 """
 
 from importlib.metadata import version
 
-from cross_inertia._props import optional, always, defer
+from cross_inertia._props import optional, always, defer, once
 from cross_inertia._exceptions import ManifestNotFoundError
 from cross_inertia._config import configure_inertia, get_config, InertiaConfig
 
@@ -40,6 +41,7 @@ __all__ = [
     "optional",
     "always",
     "defer",
+    "once",
     "configure_inertia",
     "get_config",
     "InertiaConfig",

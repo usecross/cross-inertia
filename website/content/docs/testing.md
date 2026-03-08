@@ -289,6 +289,7 @@ For initial page loads (without X-Inertia header), the response is HTML with emb
 
 ```python
 import json
+import re
 
 
 def test_initial_page_load_returns_html(client: TestClient):
@@ -298,7 +299,7 @@ def test_initial_page_load_returns_html(client: TestClient):
     assert response.status_code == 200
     assert response.headers.get("Content-Type").startswith("text/html")
     assert 'id="app"' in response.text
-    assert "data-page=" in response.text
+    assert 'script data-page="app"' in response.text
 
 
 def test_page_data_embedded_in_html(client: TestClient):
@@ -307,10 +308,13 @@ def test_page_data_embedded_in_html(client: TestClient):
 
     # Extract page data from HTML
     html = response.text
-    start = html.find("data-page='") + len("data-page='")
-    end = html.find("'", start)
-    page_json = html[start:end]
-    page_data = json.loads(page_json)
+    match = re.search(
+        r'<script data-page="app" type="application/json">(.*?)</script>',
+        html,
+        re.DOTALL,
+    )
+    assert match is not None
+    page_data = json.loads(match.group(1))
 
     # Verify structure
     assert page_data["component"] == "Browse"

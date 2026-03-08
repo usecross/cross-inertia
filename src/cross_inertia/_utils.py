@@ -6,7 +6,7 @@ import asyncio
 import inspect
 from typing import Any
 
-from ._props import optional, always, defer
+from ._props import optional, always, defer, once
 
 
 def _is_optional_prop(value: Any) -> bool:
@@ -24,6 +24,11 @@ def _is_deferred_prop(value: Any) -> bool:
     return isinstance(value, defer)
 
 
+def _is_once_prop(value: Any) -> bool:
+    """Check if a value is a once prop (remembered by the client)."""
+    return isinstance(value, once)
+
+
 # Keep old function name for internal compatibility
 def _is_lazy_prop(value: Any) -> bool:
     """Check if a value is an optional/lazy prop."""
@@ -38,6 +43,7 @@ def _is_callable_prop(value: Any) -> bool:
         and not _is_optional_prop(value)
         and not _is_always_prop(value)
         and not _is_deferred_prop(value)
+        and not _is_once_prop(value)
     )
 
 
@@ -80,6 +86,8 @@ async def _resolve_value(value: Any) -> Any:
     elif _is_always_prop(value):
         return await _resolve_callable(value)
     elif _is_deferred_prop(value):
+        return await _resolve_callable(value)
+    elif _is_once_prop(value):
         return await _resolve_callable(value)
     elif _is_callable_prop(value):
         return await _resolve_callable(value)

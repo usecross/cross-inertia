@@ -4,6 +4,7 @@ import subprocess
 import time
 from typing import Generator
 
+import httpx
 import pytest
 from playwright.sync_api import Page
 
@@ -62,5 +63,6 @@ def fastapi_server() -> Generator[str, None, None]:
 @pytest.fixture
 def page(page: Page, fastapi_server: str) -> Page:
     """Configure page with base URL."""
+    httpx.post(f"{fastapi_server}/__test/reset", timeout=2.0)
     page.set_default_timeout(10000)  # 10 second timeout
     return page

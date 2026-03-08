@@ -64,7 +64,8 @@ View data variables are available directly in your root template (typically `app
     {{ vite() | safe }}
 </head>
 <body>
-    <div id="app" data-page='{{ page | safe }}'></div>
+    <script data-page="app" type="application/json">{{ page | safe }}</script>
+    <div id="app"></div>
 </body>
 </html>
 ```

@@ -185,7 +185,7 @@ export default function CatProfile({ cat, shelter, similar_cats = [] }: CatProfi
               </div>
 
               <Button asChild className="w-full" size="lg">
-                <Link href={`/cats/${cat.id}/apply`}>
+                <Link href={`/cats/${cat.id}/apply`} data-testid="apply-to-adopt">
                   Apply to Adopt {cat.name}
                 </Link>
               </Button>

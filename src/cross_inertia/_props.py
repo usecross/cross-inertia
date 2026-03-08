@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any, Callable
 
 
@@ -164,3 +165,48 @@ class defer:
     def __call__(self) -> Any:
         """Invoke the callback with stored args/kwargs to get the value."""
         return self.callback(*self.args, **self.kwargs)
+
+
+class once:
+    """
+    Mark a prop as remembered by the client across navigations.
+
+    Once props are resolved on the first Inertia visit, then skipped on
+    subsequent non-partial Inertia responses when the client indicates it
+    already has a remembered value.
+
+    The wrapped value can be a plain value, a callable, or another prop
+    wrapper such as defer(), optional(), or always().
+    """
+
+    def __init__(
+        self,
+        value_or_callback: Any,
+        *,
+        key: str | None = None,
+        fresh: bool = False,
+        until: datetime | timedelta | int | None = None,
+    ):
+        self.value_or_callback = value_or_callback
+        self.key = key
+        self.fresh = fresh
+        self.until = until
+
+    def __call__(self) -> Any:
+        """Get the value, invoking the callback if needed."""
+        if callable(self.value_or_callback):
+            return self.value_or_callback()
+        return self.value_or_callback
+
+    def expires_at(self) -> int | None:
+        """Return the expiration timestamp in milliseconds, if configured."""
+        if self.until is None:
+            return None
+
+        if isinstance(self.until, datetime):
+            return int(self.until.timestamp() * 1000)
+
+        if isinstance(self.until, timedelta):
+            return int((datetime.now().timestamp() + self.until.total_seconds()) * 1000)
+
+        return int((datetime.now().timestamp() + self.until) * 1000)

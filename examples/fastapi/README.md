@@ -376,7 +376,7 @@ const pages = {
 
 Make sure `templates/app.html` exists and contains:
 - `{{ vite() | safe }}`
-- `<div id="app" data-page='{{ page | safe }}'></div>`
+- `{{ inertia_body() | safe }}`
 
 ## UI Components
 

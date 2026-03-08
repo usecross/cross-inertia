@@ -128,7 +128,7 @@ Create a `templates/app.html` file:
 ```
 
 The `inertia_head()` function outputs Vite script/style tags and SSR head content.
-The `inertia_body()` function outputs the app container div with page data.
+The `inertia_body()` function outputs the initial page JSON script and app container.
 
 ## Step 7: Create your React app
 
@@ -141,6 +141,11 @@ import { createRoot } from 'react-dom/client'
 const pages = import.meta.glob('./pages/**/*.tsx', { eager: true })
 
 createInertiaApp({
+  defaults: {
+    future: {
+      useScriptElementForInitialPage: true,
+    },
+  },
   resolve: (name) => {
     const page = pages[`./pages/${name}.tsx`]
     if (!page) throw new Error(`Page ${name} not found`)
