@@ -7,9 +7,9 @@ import hashlib
 import logging
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx
+from cross_web import DjangoHTTPRequestAdapter
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.template.response import TemplateResponse
@@ -18,9 +18,10 @@ from .._exceptions import ManifestNotFoundError
 from .conf import inertia_settings
 from .._page import (
     PageRenderOptions,
-    PageRequestContext,
+    build_page_request_context,
     build_inertia_page,
-    parse_header_list,
+    is_inertia_request_headers,
+    is_prefetch_request_headers,
 )
 
 logger = logging.getLogger(__name__)
@@ -60,14 +61,11 @@ class DjangoInertiaResponse:
 
     def is_inertia_request(self, request: "HttpRequest") -> bool:
         """Check if request is an Inertia XHR request."""
-        return request.headers.get("X-Inertia") == "true"  # type: ignore[attr-defined]
+        return is_inertia_request_headers(request.headers)  # type: ignore[arg-type]
 
     def is_prefetch_request(self, request: "HttpRequest") -> bool:
         """Check if request is an Inertia prefetch request."""
-        return (
-            self.is_inertia_request(request)
-            and request.headers.get("Purpose") == "prefetch"  # type: ignore[attr-defined]
-        )
+        return is_prefetch_request_headers(request.headers)  # type: ignore[arg-type]
 
     def is_dev_mode(self) -> bool:
         """Check if Vite dev server is running."""
@@ -184,42 +182,14 @@ class DjangoInertiaResponse:
         view_data: dict[str, Any] | None = None,
     ) -> HttpResponse:
         """Render an Inertia response for Django."""
-        # Extract path and query from request
-        parsed_url = urlparse(request.build_absolute_uri())
-        if url is not None:
-            url_path = url
-        elif parsed_url.query:
-            url_path = f"{parsed_url.path}?{parsed_url.query}"
-        else:
-            url_path = parsed_url.path
+        adapter = DjangoHTTPRequestAdapter(request)
 
         build_result = build_inertia_page(
-            PageRequestContext(
-                method=request.method,
-                headers=request.headers,  # type: ignore[arg-type]
-                current_url=request.build_absolute_uri(),
-                page_url=url_path,
+            build_page_request_context(
+                adapter=adapter,
                 shared_data=getattr(request, "_inertia_shared", {}),
                 asset_version=self.get_asset_version(),
-                is_inertia=self.is_inertia_request(request),
-                is_prefetch=self.is_prefetch_request(request),
-                partial_component=request.headers.get("X-Inertia-Partial-Component"),  # type: ignore[attr-defined]
-                partial_only=parse_header_list(
-                    request.headers.get("X-Inertia-Partial-Data")  # type: ignore[attr-defined]
-                ),
-                partial_except=parse_header_list(
-                    request.headers.get("X-Inertia-Partial-Except")  # type: ignore[attr-defined]
-                ),
-                reset_props=parse_header_list(
-                    request.headers.get("X-Inertia-Reset")  # type: ignore[attr-defined]
-                ),
-                except_once_props=set(
-                    parse_header_list(
-                        request.headers.get("X-Inertia-Except-Once-Props")  # type: ignore[attr-defined]
-                    )
-                ),
-                error_bag=request.headers.get("X-Inertia-Error-Bag"),  # type: ignore[attr-defined]
-                version_conflict_location=request.build_absolute_uri(),
+                url=url,
             ),
             PageRenderOptions(
                 component=component,

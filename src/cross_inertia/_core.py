@@ -7,7 +7,6 @@ import json
 import logging
 from pathlib import Path
 from typing import Annotated, Any
-from urllib.parse import urlparse
 
 import httpx
 from fastapi import Depends, Request
@@ -21,9 +20,10 @@ from ._props import optional, always, defer, once
 from ._exceptions import ManifestNotFoundError
 from ._page import (
     PageRenderOptions,
-    PageRequestContext,
+    build_page_request_context,
     build_inertia_page,
-    parse_header_list,
+    is_inertia_request_headers,
+    is_prefetch_request_headers,
 )
 
 # Configure logging with basic config if not already configured
@@ -254,7 +254,7 @@ class InertiaResponse:
 
     def is_inertia_request(self, adapter: StarletteRequestAdapter) -> bool:
         """Check if request is an Inertia XHR request"""
-        return adapter.headers.get("X-Inertia") == "true"
+        return is_inertia_request_headers(adapter.headers)
 
     def is_prefetch_request(self, adapter: StarletteRequestAdapter) -> bool:
         """Check if request is an Inertia prefetch request.
@@ -267,10 +267,7 @@ class InertiaResponse:
         Reference:
             https://inertiajs.com/prefetching
         """
-        return (
-            self.is_inertia_request(adapter)
-            and adapter.headers.get("Purpose") == "prefetch"
-        )
+        return is_prefetch_request_headers(adapter.headers)
 
     def is_dev_mode(self) -> bool:
         """Check if Vite dev server is running"""
@@ -467,41 +464,12 @@ class InertiaResponse:
             view_data: Optional extra data to pass to the template (not included in page props).
                       Useful for server-side meta tags, page titles, etc.
         """
-        # Extract path and query from full URL (lia returns full URL like http://testserver/test)
-        parsed_url = urlparse(adapter.url)
-        # Include query string in the URL so Inertia can update the browser's address bar
-        if url is not None:
-            url_path = url
-        elif parsed_url.query:
-            url_path = f"{parsed_url.path}?{parsed_url.query}"
-        else:
-            url_path = parsed_url.path
-
         build_result = build_inertia_page(
-            PageRequestContext(
-                method=request.method,
-                headers=adapter.headers,
-                current_url=adapter.url,
-                page_url=url_path,
+            build_page_request_context(
+                adapter=adapter,
                 shared_data=getattr(request.state, "inertia_shared", {}),
                 asset_version=self.get_asset_version(),
-                is_inertia=self.is_inertia_request(adapter),
-                is_prefetch=self.is_prefetch_request(adapter),
-                partial_component=adapter.headers.get("X-Inertia-Partial-Component"),
-                partial_only=parse_header_list(
-                    adapter.headers.get("X-Inertia-Partial-Data")
-                ),
-                partial_except=parse_header_list(
-                    adapter.headers.get("X-Inertia-Partial-Except")
-                ),
-                reset_props=parse_header_list(adapter.headers.get("X-Inertia-Reset")),
-                except_once_props=set(
-                    parse_header_list(
-                        adapter.headers.get("X-Inertia-Except-Once-Props")
-                    )
-                ),
-                error_bag=adapter.headers.get("X-Inertia-Error-Bag"),
-                version_conflict_location=adapter.url,
+                url=url,
             ),
             PageRenderOptions(
                 component=component,

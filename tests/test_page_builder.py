@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from cross_web import TestingRequestAdapter
+
 from cross_inertia import defer, once, optional
 from cross_inertia._page import (
     PageBuildResult,
     PageRenderOptions,
     PageRequestContext,
+    build_page_request_context,
     build_inertia_page,
 )
 
@@ -76,6 +79,40 @@ def test_partial_except_takes_precedence_when_both_headers_are_present() -> None
         "profile": {"name": "John"},
         "stats": {"count": 42},
     }
+
+
+def test_build_page_request_context_normalizes_url_and_inertia_headers() -> None:
+    context = build_page_request_context(
+        adapter=TestingRequestAdapter(
+            method="GET",
+            headers={
+                "X-Inertia": "true",
+                "Purpose": "prefetch",
+                "X-Inertia-Partial-Component": "TestComponent",
+                "X-Inertia-Partial-Data": "plans, profile.name",
+                "X-Inertia-Partial-Except": "stats",
+                "X-Inertia-Reset": "filters",
+                "X-Inertia-Except-Once-Props": "plans-cache",
+                "X-Inertia-Error-Bag": "profile",
+            },
+            url="http://testserver/billing?page=2",
+        ),
+        shared_data={"auth": {"user": "patrick"}},
+        asset_version="dev",
+    )
+
+    assert context.current_url == "http://testserver/billing?page=2"
+    assert context.page_url == "/billing?page=2"
+    assert context.shared_data == {"auth": {"user": "patrick"}}
+    assert context.is_inertia is True
+    assert context.is_prefetch is True
+    assert context.partial_component == "TestComponent"
+    assert context.partial_only == ["plans", "profile.name"]
+    assert context.partial_except == ["stats"]
+    assert context.reset_props == ["filters"]
+    assert context.except_once_props == {"plans-cache"}
+    assert context.error_bag == "profile"
+    assert context.version_conflict_location == "http://testserver/billing?page=2"
 
 
 def test_nested_optional_props_are_excluded_until_explicitly_requested() -> None:

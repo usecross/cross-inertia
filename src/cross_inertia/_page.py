@@ -4,12 +4,26 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any, Mapping, Protocol
+from urllib.parse import urlparse
 
 from ._props import always, defer, once, optional
 from ._utils import _resolve_props_sync
 
 _SPECIAL_PROP_TYPES = (optional, always, defer, once)
+
+
+class PageRequestAdapter(Protocol):
+    """Minimal adapter interface needed to normalize an Inertia request."""
+
+    @property
+    def method(self) -> str: ...
+
+    @property
+    def headers(self) -> Mapping[str, str]: ...
+
+    @property
+    def url(self) -> str: ...
 
 
 @dataclass(slots=True)
@@ -91,6 +105,49 @@ def parse_header_list(value: str | None) -> list[str]:
         return []
 
     return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def is_inertia_request_headers(headers: Mapping[str, str]) -> bool:
+    """Check if headers represent an Inertia XHR request."""
+    return headers.get("X-Inertia") == "true"
+
+
+def is_prefetch_request_headers(headers: Mapping[str, str]) -> bool:
+    """Check if headers represent an Inertia prefetch request."""
+    return is_inertia_request_headers(headers) and headers.get("Purpose") == "prefetch"
+
+
+def build_page_request_context(
+    *,
+    adapter: PageRequestAdapter,
+    shared_data: Mapping[str, Any] | None,
+    asset_version: str,
+    url: str | None = None,
+    version_conflict_location: str | None = None,
+) -> PageRequestContext:
+    """Build shared request context from a normalized framework adapter."""
+    headers = adapter.headers
+    current_url = adapter.url
+
+    return PageRequestContext(
+        method=adapter.method,
+        headers=headers,
+        current_url=current_url,
+        page_url=_resolve_page_url(current_url, url),
+        shared_data=dict(shared_data or {}),
+        asset_version=asset_version,
+        is_inertia=is_inertia_request_headers(headers),
+        is_prefetch=is_prefetch_request_headers(headers),
+        partial_component=headers.get("X-Inertia-Partial-Component"),
+        partial_only=parse_header_list(headers.get("X-Inertia-Partial-Data")),
+        partial_except=parse_header_list(headers.get("X-Inertia-Partial-Except")),
+        reset_props=parse_header_list(headers.get("X-Inertia-Reset")),
+        except_once_props=set(
+            parse_header_list(headers.get("X-Inertia-Except-Once-Props"))
+        ),
+        error_bag=headers.get("X-Inertia-Error-Bag"),
+        version_conflict_location=version_conflict_location or current_url,
+    )
 
 
 def build_inertia_page(
@@ -189,6 +246,17 @@ def build_inertia_page(
         page_data=page_data,
         page_json=json.dumps(page_data).replace("'", "&#39;"),
     )
+
+
+def _resolve_page_url(current_url: str, override_url: str | None) -> str:
+    if override_url is not None:
+        return override_url
+
+    parsed_url = urlparse(current_url)
+    if parsed_url.query:
+        return f"{parsed_url.path}?{parsed_url.query}"
+
+    return parsed_url.path
 
 
 def _walk_node(
