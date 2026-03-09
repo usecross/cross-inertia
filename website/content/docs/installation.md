@@ -21,24 +21,29 @@ uv add cross-inertia
 
 ## Client-side installation
 
-Install the Inertia.js client adapter for your framework of choice:
+Cross-Inertia uses [Inertia.js v3](https://inertiajs.com) (currently in beta), which requires Node.js 24+.
+
+Install the Inertia.js client adapter and Vite plugin for your framework of choice:
 
 ### React
 
 ```bash
-bun add @inertiajs/react react react-dom
+bun add @inertiajs/react@beta react react-dom
+bun add -d @inertiajs/vite@beta
 ```
 
 ### Vue
 
 ```bash
-bun add @inertiajs/vue3 vue
+bun add @inertiajs/vue3@beta vue
+bun add -d @inertiajs/vite@beta
 ```
 
 ### Svelte
 
 ```bash
-bun add @inertiajs/svelte svelte
+bun add @inertiajs/svelte@beta svelte
+bun add -d @inertiajs/vite@beta
 ```
 
 ## Framework-specific dependencies
@@ -77,6 +82,8 @@ We recommend using Vite for building your frontend assets:
 ```bash
 bun add -d vite @vitejs/plugin-react typescript
 ```
+
+> **Note:** The `@inertiajs/vite` plugin (installed above) simplifies your setup by automatically handling page component resolution and SSR configuration.
 
 ## Verification
 
