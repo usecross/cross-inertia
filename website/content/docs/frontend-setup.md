@@ -5,9 +5,12 @@ description: Set up React with Vite for your Inertia.js + FastAPI application
 
 This guide walks you through setting up a React frontend with Vite for your Inertia.js + FastAPI application.
 
+> **Note:** Cross-Inertia uses [Inertia.js v3](https://inertiajs.com) (currently in beta). The `@inertiajs/vite` plugin greatly simplifies frontend setup by automatically handling page component resolution.
+
 ## Prerequisites
 
-- Node.js 18+ (or Bun)
+- Node.js 24+ (or Bun) — required by Inertia.js v3
+- React 19+
 - A FastAPI application with cross-inertia installed
 
 ## Project Structure
@@ -51,13 +54,14 @@ Create a `package.json` with the required dependencies:
     "preview": "vite preview"
   },
   "dependencies": {
-    "@inertiajs/react": "^2.3.17",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@inertiajs/react": "^3.0.0-beta",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
+    "@inertiajs/vite": "^3.0.0-beta",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.5.3",
     "vite": "^5.4.2"
@@ -85,10 +89,11 @@ Create `vite.config.ts`:
 ```typescript
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import inertia from '@inertiajs/vite'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), inertia()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './frontend'),
@@ -109,6 +114,7 @@ export default defineConfig({
 ```
 
 Key settings:
+- **`inertia()`** - The Inertia.js Vite plugin, which automatically resolves page components from the `./pages` directory relative to your entry point
 - **`manifest: true`** - Generates a manifest file for production asset loading
 - **`outDir: 'static/build'`** - Where built files are placed
 - **`input: 'frontend/app.tsx'`** - Your app's entry point
@@ -153,53 +159,21 @@ import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 import './globals.css'
 
-// Option 1: Explicit imports (recommended for smaller apps)
-import Home from './pages/Home'
-import About from './pages/About'
-import UsersIndex from './pages/Users/Index'
-import UsersShow from './pages/Users/Show'
-
-const pages: Record<string, React.ComponentType<any>> = {
-  Home,
-  About,
-  'Users/Index': UsersIndex,
-  'Users/Show': UsersShow,
-}
-
 createInertiaApp({
-  defaults: {
-    future: {
-      useScriptElementForInitialPage: true,
-    },
-  },
-  resolve: (name) => {
-    const page = pages[name]
-    if (!page) {
-      throw new Error(`Page component "${name}" not found`)
-    }
-    return page
-  },
   setup({ el, App, props }) {
     createRoot(el).render(<App {...props} />)
   },
 })
 ```
 
-### Dynamic Imports (Alternative)
+The `@inertiajs/vite` plugin automatically resolves page components from the `./pages` directory relative to this entry point. No manual `resolve` callback or `import.meta.glob` is needed.
 
-For larger apps, use dynamic imports with `import.meta.glob`:
+### Custom Page Resolution (Optional)
+
+If you need to customize how pages are resolved, you can still provide a `resolve` callback:
 
 ```tsx
-import { createInertiaApp } from '@inertiajs/react'
-import { createRoot } from 'react-dom/client'
-import './globals.css'
-
 createInertiaApp({
-  defaults: {
-    future: {
-      useScriptElementForInitialPage: true,
-    },
-  },
   resolve: (name) => {
     const pages = import.meta.glob('./pages/**/*.tsx', { eager: true })
     const page = pages[`./pages/${name}.tsx`]
@@ -234,7 +208,7 @@ Create `templates/app.html`:
 </html>
 ```
 
-This template matches Inertia's script-element bootstrap. Be sure your client setup enables `future.useScriptElementForInitialPage`.
+Inertia v3 uses a `<script>` element to pass the initial page data to the client.
 
 The `{{ vite() }}` function automatically includes:
 - React Fast Refresh scripts (dev mode)
