@@ -561,6 +561,7 @@ class InertiaResponse:
                 template_context.update(view_data)
                 logger.debug(f"Adding view_data to template: {list(view_data.keys())}")
             return self.templates.TemplateResponse(
+                request,
                 "app.html",
                 template_context,
             )
