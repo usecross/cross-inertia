@@ -52,20 +52,13 @@ class InertiaSSR:
         self.url = url.rstrip("/")
         self.timeout = timeout
         self.enabled = enabled
-        self._client: httpx.AsyncClient | None = None
         self._healthy: bool | None = None
-
-    async def _get_client(self) -> httpx.AsyncClient:
-        """Get or create the HTTP client."""
-        if self._client is None:
-            self._client = httpx.AsyncClient(timeout=self.timeout)
-        return self._client
 
     async def health_check(self) -> bool:
         """Check if the SSR server is healthy."""
         try:
-            client = await self._get_client()
-            response = await client.get(f"{self.url}/health")
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.get(f"{self.url}/health")
             self._healthy = response.status_code == 200
             if self._healthy:
                 logger.info("SSR server is healthy")
@@ -89,11 +82,11 @@ class InertiaSSR:
             return None
 
         try:
-            client = await self._get_client()
-            response = await client.post(
-                f"{self.url}/render",
-                json=page,
-            )
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.url}/render",
+                    json=page,
+                )
             response.raise_for_status()
 
             data = response.json()
@@ -113,9 +106,3 @@ class InertiaSSR:
         except Exception as e:
             logger.warning(f"SSR request failed: {e}")
             return None
-
-    async def close(self) -> None:
-        """Close the HTTP client."""
-        if self._client:
-            await self._client.aclose()
-            self._client = None
