@@ -1,3 +1,16 @@
+0.16.1 - 2026-03-24
+-------------------
+
+This release fixes a server-side rendering bug caused by reusing an async SSR HTTP client across closed event loops.
+
+- Create a fresh `httpx.AsyncClient` for each SSR `render()` call
+- Create a fresh `httpx.AsyncClient` for each SSR `health_check()` call
+- Remove the cached async SSR client to avoid `Event loop is closed` errors on repeated requests
+- Add tests covering repeated SSR renders and health checks across separate event loops
+- Preserve graceful fallback to CSR when SSR fails
+
+This release was contributed by [@patrick91](https://github.com/patrick91) in [#118](https://github.com/usecross/cross-inertia/pull/118)
+
 0.16.0 - 2026-03-08
 -------------------
 
