@@ -9,7 +9,7 @@ class TestHistoryEncryption:
     """Test history encryption functionality."""
 
     def test_default_no_encryption(self, client: TestClient):
-        """Test that encryptHistory and clearHistory default to False."""
+        """Test that encryptHistory and clearHistory are absent when not set."""
         response = client.get(
             "/test",
             headers={"X-Inertia": "true"},
@@ -17,8 +17,8 @@ class TestHistoryEncryption:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["encryptHistory"] is False
-        assert data["clearHistory"] is False
+        assert "encryptHistory" not in data
+        assert "clearHistory" not in data
 
     def test_encrypt_history_enabled(self, client: TestClient):
         """Test that encrypt_history() sets encryptHistory to True."""
@@ -29,7 +29,7 @@ class TestHistoryEncryption:
         page_data = extract_page_data(response.text)
 
         assert page_data["encryptHistory"] is True
-        assert page_data["clearHistory"] is False
+        assert "clearHistory" not in page_data
 
     def test_encrypt_history_in_json_response(self, client: TestClient):
         """Test encryptHistory in Inertia JSON response."""
@@ -41,7 +41,7 @@ class TestHistoryEncryption:
         assert response.status_code == 200
         data = response.json()
         assert data["encryptHistory"] is True
-        assert data["clearHistory"] is False
+        assert "clearHistory" not in data
 
     def test_clear_history_enabled(self, client: TestClient):
         """Test that clear_history() sets clearHistory to True."""
@@ -52,7 +52,7 @@ class TestHistoryEncryption:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["encryptHistory"] is False
+        assert "encryptHistory" not in data
         assert data["clearHistory"] is True
 
     def test_both_encrypt_and_clear(self, client: TestClient):
@@ -80,7 +80,7 @@ class TestHistoryEncryption:
         assert data["clearHistory"] is True
 
     def test_encrypt_history_false(self, client: TestClient):
-        """Test that encrypt_history(False) disables encryption."""
+        """Test that encrypt_history(False) keeps encryptHistory absent."""
         response = client.get(
             "/test-encrypt-false",
             headers={"X-Inertia": "true"},
@@ -88,10 +88,10 @@ class TestHistoryEncryption:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["encryptHistory"] is False
+        assert "encryptHistory" not in data
 
     def test_clear_history_false(self, client: TestClient):
-        """Test that clear_history(False) doesn't clear history."""
+        """Test that clear_history(False) keeps clearHistory absent."""
         response = client.get(
             "/test-clear-false",
             headers={"X-Inertia": "true"},
@@ -99,7 +99,7 @@ class TestHistoryEncryption:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["clearHistory"] is False
+        assert "clearHistory" not in data
 
     def test_page_object_structure_with_encryption(self, client: TestClient):
         """Test that encrypted pages maintain proper page object structure."""
@@ -117,7 +117,9 @@ class TestHistoryEncryption:
         assert "url" in data
         assert "version" in data
         assert "encryptHistory" in data
-        assert "clearHistory" in data
+
+        # clearHistory should NOT be present when not enabled
+        assert "clearHistory" not in data
 
         # Verify correct values
         assert data["component"] == "TestComponent"

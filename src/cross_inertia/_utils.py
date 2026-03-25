@@ -29,11 +29,6 @@ def _is_once_prop(value: Any) -> bool:
     return isinstance(value, once)
 
 
-# Keep old function name for internal compatibility
-def _is_lazy_prop(value: Any) -> bool:
-    """Check if a value is an optional/lazy prop."""
-    return _is_optional_prop(value)
-
 
 def _is_callable_prop(value: Any) -> bool:
     """Check if a value is a callable prop (function/lambda, not a class or special prop)."""
@@ -50,8 +45,8 @@ def _is_callable_prop(value: Any) -> bool:
 async def _resolve_callable(value: Any) -> Any:
     """Resolve a callable value, handling both sync and async callables.
 
-    Works with both lazy props and regular callables. Both are invoked the same
-    way - lazy props have a __call__ method that invokes their callback.
+    Works with both special props (optional, always, defer, once) and regular
+    callables. Special props have a __call__ method that invokes their callback.
     """
     result = value()
     if inspect.iscoroutine(result):

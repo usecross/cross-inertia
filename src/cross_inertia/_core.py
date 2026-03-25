@@ -38,7 +38,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# Re-export for backwards compatibility
 __all__ = ["optional", "always", "defer", "once", "ManifestNotFoundError"]
 
 
@@ -56,6 +55,8 @@ class Inertia:
         self.response = response
         self._encrypt_history = False
         self._clear_history = False
+        self._flash: dict[str, Any] = {}
+        self._preserve_fragment = False
 
     def render(
         self,
@@ -89,6 +90,8 @@ class Inertia:
             errors,
             encrypt_history=self._encrypt_history,
             clear_history=self._clear_history,
+            flash=self._flash or None,
+            preserve_fragment=self._preserve_fragment,
             merge_props=merge_props,
             prepend_props=prepend_props,
             deep_merge_props=deep_merge_props,
@@ -209,6 +212,81 @@ class Inertia:
         if clear:
             logger.info("History will be cleared (encryption keys rotated)")
         return self
+
+    def flash(self, key: str, value: Any) -> "Inertia":
+        """
+        Set flash data for the current response.
+
+        Flash data is one-time notification data (toasts, highlights) that is
+        NOT persisted in browser history state. The client clears flash data
+        before pushing the page to history.
+
+        Args:
+            key: The flash data key
+            value: The flash data value
+
+        Returns:
+            Self for method chaining
+
+        Example:
+            @app.post("/users")
+            async def create_user(inertia: InertiaDep):
+                user = create_user(...)
+                inertia.flash("success", "User created successfully!")
+                return inertia.render("Users/Show", {"user": user})
+        """
+        self._flash[key] = value
+        return self
+
+    def preserve_fragment(self, preserve: bool = True) -> "Inertia":
+        """
+        Preserve the URL fragment (hash) across the redirect.
+
+        When enabled, the Inertia client will keep the current URL fragment
+        when navigating to this page response.
+
+        Args:
+            preserve: Whether to preserve the fragment (default: True)
+
+        Returns:
+            Self for method chaining
+
+        Example:
+            @app.post("/settings")
+            async def update_settings(inertia: InertiaDep):
+                save_settings(...)
+                inertia.preserve_fragment()
+                return inertia.render("Settings", {...})
+        """
+        self._preserve_fragment = preserve
+        return self
+
+    def redirect(self, url: str) -> Response:
+        """
+        Perform an internal redirect that preserves URL fragments.
+
+        Unlike location() which triggers a full page reload, redirect()
+        returns a 409 with X-Inertia-Redirect header that the client
+        treats as an internal Inertia visit, preserving SPA state.
+
+        Use this when redirecting to a URL that contains a fragment (#).
+
+        Args:
+            url: The URL to redirect to (should contain a fragment)
+
+        Returns:
+            Response with 409 status code and X-Inertia-Redirect header
+
+        Example:
+            return inertia.redirect("/settings#notifications")
+        """
+        logger.info(f"Fragment redirect to: {url}")
+        return Response(
+            status_code=409,
+            headers={
+                "X-Inertia-Redirect": url,
+            },
+        )
 
 
 class InertiaResponse:
@@ -448,6 +526,8 @@ class InertiaResponse:
         errors: dict[str, str] | None = None,
         encrypt_history: bool = False,
         clear_history: bool = False,
+        flash: dict[str, Any] | None = None,
+        preserve_fragment: bool = False,
         merge_props: list[str] | None = None,
         prepend_props: list[str] | None = None,
         deep_merge_props: list[str] | None = None,
@@ -479,6 +559,8 @@ class InertiaResponse:
                 errors=errors,
                 encrypt_history=encrypt_history,
                 clear_history=clear_history,
+                flash=flash,
+                preserve_fragment=preserve_fragment,
                 merge_props=merge_props,
                 prepend_props=prepend_props,
                 deep_merge_props=deep_merge_props,
