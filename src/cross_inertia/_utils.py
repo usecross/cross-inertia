@@ -29,7 +29,6 @@ def _is_once_prop(value: Any) -> bool:
     return isinstance(value, once)
 
 
-
 def _is_callable_prop(value: Any) -> bool:
     """Check if a value is a callable prop (function/lambda, not a class or special prop)."""
     return (
