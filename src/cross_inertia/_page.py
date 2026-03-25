@@ -56,6 +56,8 @@ class PageRenderOptions:
     errors: dict[str, str] | None = None
     encrypt_history: bool = False
     clear_history: bool = False
+    flash: dict[str, Any] | None = None
+    preserve_fragment: bool = False
     merge_props: list[str] | None = None
     prepend_props: list[str] | None = None
     deep_merge_props: list[str] | None = None
@@ -196,9 +198,20 @@ def build_inertia_page(
         "props": resolved_props,
         "url": context.page_url,
         "version": context.asset_version,
-        "encryptHistory": options.encrypt_history,
-        "clearHistory": options.clear_history,
     }
+
+    if options.encrypt_history:
+        page_data["encryptHistory"] = True
+    if options.clear_history:
+        page_data["clearHistory"] = True
+    if options.flash:
+        page_data["flash"] = options.flash
+    if options.preserve_fragment:
+        page_data["preserveFragment"] = True
+
+    shared_keys = list(context.shared_data.keys())
+    if shared_keys:
+        page_data["sharedProps"] = shared_keys
 
     filtered_merge = _filter_merge_metadata(
         options.merge_props,
