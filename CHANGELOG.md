@@ -1,3 +1,17 @@
+0.17.0 - 2026-03-25
+-------------------
+
+Align with Inertia v3 stable protocol
+
+- Add flash data support via `inertia.flash(key, value)`
+- Add `preserveFragment` support via `inertia.preserve_fragment()`
+- Add `X-Inertia-Redirect` for hash fragment redirects via `inertia.redirect(url)`
+- Add `sharedProps` to page object (exposes shared prop keys for optimistic updates)
+- Make `encryptHistory`/`clearHistory` optional in page object (only sent when `true`)
+- Remove unused `_is_lazy_prop` backwards compat alias
+
+This release was contributed by [@patrick91](https://github.com/patrick91) in [#119](https://github.com/usecross/cross-inertia/pull/119)
+
 0.16.1 - 2026-03-24
 -------------------
 
