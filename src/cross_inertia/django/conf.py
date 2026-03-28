@@ -10,8 +10,10 @@ Usage in settings.py:
         'LAYOUT': 'base.html',
         'VITE_ENTRY': 'src/main.tsx',
         'VITE_PORT': 5173,
+        'AUTO_START_VITE': True,
         'MANIFEST_PATH': BASE_DIR / 'static/build/.vite/manifest.json',
-        'SSR_ENABLED': False,
+        'SSR_ENABLED': True,
+        'AUTO_START_SSR': True,
         'SHARE': 'myapp.inertia.share_data',  # Optional: shared data function
     }
 
@@ -25,9 +27,12 @@ Then access settings via:
 
 from __future__ import annotations
 
+import os
 import socket
 from pathlib import Path
 from typing import Any
+
+from cross_inertia._config import get_config
 
 DEFAULTS: dict[str, Any] = {
     # Template settings
@@ -38,16 +43,34 @@ DEFAULTS: dict[str, Any] = {
     "VITE_ENTRY": "src/main.tsx",
     "VITE_COMMAND": "bun run dev",
     "VITE_TIMEOUT": 30.0,
+    "AUTO_START_VITE": True,
     # Production settings
     "MANIFEST_PATH": "static/build/.vite/manifest.json",
+    "ASSET_URL_PREFIX": "/static/build",
     # SSR settings
-    "SSR_ENABLED": False,
+    "SSR_ENABLED": True,
+    "AUTO_START_SSR": True,
     "SSR_URL": "http://127.0.0.1:13714",
     "SSR_COMMAND": "bun dist/ssr/ssr.js",
     "SSR_TIMEOUT": 10.0,
     "SSR_HEALTH_PATH": "/health",
     # Shared data
     "SHARE": None,  # Dotted path to share function, e.g. 'myapp.inertia.share_data'
+}
+
+SHARED_CONFIG_ATTRS: dict[str, str] = {
+    "VITE_PORT": "vite_port",
+    "VITE_HOST": "vite_host",
+    "VITE_ENTRY": "vite_entry",
+    "VITE_COMMAND": "vite_command",
+    "VITE_TIMEOUT": "vite_timeout",
+    "MANIFEST_PATH": "manifest_path",
+    "ASSET_URL_PREFIX": "asset_url_prefix",
+    "SSR_ENABLED": "ssr_enabled",
+    "SSR_URL": "ssr_url",
+    "SSR_COMMAND": "ssr_command",
+    "SSR_TIMEOUT": "ssr_timeout",
+    "SSR_HEALTH_PATH": "ssr_health_path",
 }
 
 
@@ -98,7 +121,23 @@ class InertiaSettings:
         if attr not in DEFAULTS:
             raise AttributeError(f"Invalid Inertia setting: '{attr}'")
 
-        val = self.user_settings.get(attr, DEFAULTS[attr])
+        if attr in self.user_settings:
+            val = self.user_settings[attr]
+        elif attr == "ASSET_URL_PREFIX":
+            from django.conf import settings
+
+            static_url = getattr(settings, "STATIC_URL", None) or "/static/"
+            if static_url.startswith(("http://", "https://")):
+                val = f"{static_url.rstrip('/')}/build"
+            else:
+                normalized_static_url = static_url.rstrip("/")
+                if not normalized_static_url.startswith("/"):
+                    normalized_static_url = f"/{normalized_static_url}"
+                val = f"{normalized_static_url}/build"
+        elif attr in SHARED_CONFIG_ATTRS:
+            val = getattr(get_config(), SHARED_CONFIG_ATTRS[attr])
+        else:
+            val = DEFAULTS[attr]
 
         # Convert Path to string for consistency
         if isinstance(val, Path):
@@ -132,6 +171,18 @@ class InertiaSettings:
     def SSR_HEALTH_URL(self) -> str:
         """Get the full SSR health check URL."""
         return f"{self.SSR_URL}{self.SSR_HEALTH_PATH}"
+
+    def is_dev_mode(self) -> bool:
+        """Determine whether Django should manage Inertia in dev mode."""
+        env_dev = os.environ.get("INERTIA_DEV", "").lower()
+        if env_dev in ("1", "true"):
+            return True
+        if env_dev in ("0", "false"):
+            return False
+
+        from django.conf import settings
+
+        return bool(getattr(settings, "DEBUG", False))
 
     def get_vite_command_with_port(self) -> str | list[str]:
         """Get the Vite command with the port argument appended."""

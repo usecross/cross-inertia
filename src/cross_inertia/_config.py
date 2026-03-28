@@ -123,6 +123,9 @@ class InertiaConfig:
     manifest_path: str = "static/build/.vite/manifest.json"
     """Path to Vite manifest file for production builds."""
 
+    asset_url_prefix: str = "/static/build"
+    """Public URL prefix where built Vite assets are served."""
+
     # SSR settings
     ssr_enabled: bool = False
     """Whether SSR is enabled."""
@@ -193,6 +196,7 @@ def configure_inertia(
     vite_timeout: float = 30.0,
     template_dir: str = "templates",
     manifest_path: str = "static/build/.vite/manifest.json",
+    asset_url_prefix: str = "/static/build",
     ssr_enabled: bool = False,
     ssr_url: str = "http://127.0.0.1:13714",
     ssr_command: str | list[str] = "bun dist/ssr/ssr.js",
@@ -212,6 +216,7 @@ def configure_inertia(
         vite_timeout: Timeout for Vite server startup.
         template_dir: Directory containing Jinja2 templates.
         manifest_path: Path to Vite manifest for production.
+        asset_url_prefix: Public URL prefix for built frontend assets.
         ssr_enabled: Whether to enable SSR.
         ssr_url: URL of the SSR server.
         ssr_command: Command to start the SSR server.
@@ -244,6 +249,7 @@ def configure_inertia(
         vite_timeout=vite_timeout,
         template_dir=template_dir,
         manifest_path=manifest_path,
+        asset_url_prefix=asset_url_prefix,
         ssr_enabled=ssr_enabled,
         ssr_url=ssr_url,
         ssr_command=ssr_command,

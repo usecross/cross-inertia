@@ -12,12 +12,12 @@ Cross-Inertia provides full Django support with a familiar API that follows Djan
 Install Cross-Inertia:
 
 ```bash
-pip install cross-inertia
+pip install "cross-inertia[django]"
 ```
 
 ## Configuration
 
-Add `inertia.django` to your installed apps and middleware:
+Add `cross_inertia.django` to your installed apps and middleware:
 
 ```python
 # settings.py
@@ -29,7 +29,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # ...
-    'inertia.django.InertiaMiddleware',
+    'cross_inertia.django.InertiaMiddleware',
 ]
 ```
 
@@ -42,8 +42,10 @@ CROSS_INERTIA = {
     'LAYOUT': 'base.html',              # Template for initial page loads
     'VITE_ENTRY': 'src/main.tsx',       # Vite entry point
     'VITE_PORT': 5173,                  # Vite dev server port (or 'auto')
+    'AUTO_START_VITE': True,            # Set False for manifest-only setups
     'MANIFEST_PATH': 'static/build/.vite/manifest.json',
-    'SSR_ENABLED': False,
+    'SSR_ENABLED': True,                # Enabled by default
+    'AUTO_START_SSR': True,             # Set False if SSR runs remotely
     'SHARE': 'myapp.inertia.share_data',  # Dotted path to share function
 }
 ```
@@ -176,16 +178,19 @@ def logout(request):
     return location('https://example.com/logged-out')
 ```
 
-## Automatic Vite Startup
+## Automatic Dev Server Startup
 
-When using Django's `runserver`, the Vite dev server starts automatically:
+When using Django's `runserver`, the middleware can start the Vite dev server automatically:
 
 ```bash
 python manage.py runserver
 # Vite dev server starts automatically!
 ```
 
-This is controlled by the app configuration and only runs in development mode.
+If SSR is enabled, the middleware can also start the SSR server automatically.
+This is controlled by the Django middleware and only runs in development mode.
+Set `AUTO_START_VITE` to `False` if you want to serve prebuilt assets from a manifest without starting Vite.
+Set `AUTO_START_SSR` to `False` if SSR is enabled but managed by a separate process.
 
 ## URL Configuration
 
@@ -215,13 +220,16 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'inertia.django.InertiaMiddleware',
+    'cross_inertia.django.InertiaMiddleware',
 ]
 
 CROSS_INERTIA = {
     'LAYOUT': 'base.html',
     'VITE_ENTRY': 'frontend/app.tsx',
     'VITE_PORT': 'auto',
+    'AUTO_START_VITE': True,
+    'SSR_ENABLED': True,
+    'AUTO_START_SSR': True,
 }
 
 # views.py

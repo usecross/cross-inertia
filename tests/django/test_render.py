@@ -1,6 +1,10 @@
 """Tests for Django Inertia render function."""
 
 import pytest
+from unittest.mock import AsyncMock
+from unittest.mock import patch
+
+from django.test import override_settings
 
 
 @pytest.fixture
@@ -113,3 +117,80 @@ def test_class_based_view_post(client, setup_inertia):
     assert data["component"] == "ClassViewTest"
     assert data["props"]["class_based"] is True
     assert data["props"]["method"] == "POST"
+
+
+def test_ssr_html_response_includes_ssr_head_and_body(client, django_inertia_response):
+    from cross_inertia._ssr import SSRResponse
+    from cross_inertia.django.shortcuts import reset_inertia_response
+    import cross_inertia.django.shortcuts as shortcuts
+
+    django_inertia_response.ssr_enabled = True
+    django_inertia_response._ssr_client = AsyncMock()
+    django_inertia_response._ssr_client.render = AsyncMock(
+        return_value=SSRResponse(
+            head=["<title>SSR Title</title>"],
+            body="<main><h1>SSR Body</h1></main>",
+        )
+    )
+    shortcuts._inertia_response = django_inertia_response
+
+    try:
+        response = client.get("/test/")
+    finally:
+        reset_inertia_response()
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "<title>SSR Title</title>" in content
+    assert "<main><h1>SSR Body</h1></main>" in content
+
+
+def test_ssr_failure_falls_back_to_csr_html(client, django_inertia_response):
+    from cross_inertia.django.shortcuts import reset_inertia_response
+    import cross_inertia.django.shortcuts as shortcuts
+
+    django_inertia_response.ssr_enabled = True
+    django_inertia_response._ssr_client = AsyncMock()
+    django_inertia_response._ssr_client.render = AsyncMock(
+        side_effect=RuntimeError("SSR unavailable")
+    )
+    shortcuts._inertia_response = django_inertia_response
+
+    try:
+        response = client.get("/test/")
+    finally:
+        reset_inertia_response()
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert 'script data-page="app"' in content
+    assert "TestComponent" in content
+
+
+@override_settings(STATIC_URL="assets/")
+def test_production_vite_tags_use_static_url_prefix(temp_template_dir):
+    from cross_inertia.django.conf import inertia_settings
+    from cross_inertia.django.response import DjangoInertiaResponse
+
+    inertia_settings.reload()
+    response = DjangoInertiaResponse(
+        template_name="app.html",
+        vite_dev_url=None,
+        manifest_path="static/build/.vite/manifest.json",
+        ssr_enabled=False,
+    )
+    response._is_dev = False
+
+    manifest = {
+        "frontend/app.tsx": {
+            "file": "assets/app.js",
+            "css": ["assets/app.css"],
+        }
+    }
+
+    with patch.object(response, "get_manifest", return_value=manifest):
+        tags = response.get_vite_tags()
+
+    assert '/assets/build/assets/app.js' in tags
+    assert '/assets/build/assets/app.css' in tags
+    inertia_settings.reload()

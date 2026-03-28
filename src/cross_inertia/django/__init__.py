@@ -22,8 +22,10 @@ Example usage:
         'LAYOUT': 'base.html',           # Template for initial page loads
         'VITE_ENTRY': 'src/main.tsx',    # Vite entry point
         'VITE_PORT': 5173,               # Vite dev server port (or 'auto')
+        'AUTO_START_VITE': True,         # Disable for manifest-only setups
         'MANIFEST_PATH': 'static/build/.vite/manifest.json',
-        'SSR_ENABLED': False,
+        'SSR_ENABLED': True,             # Enabled by default for Django
+        'AUTO_START_SSR': True,          # Disable if SSR runs remotely
         'SHARE': 'myapp.inertia.share_data',  # Shared data for all pages
     }
 
