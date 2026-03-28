@@ -51,12 +51,12 @@ def inertia_head(context: dict) -> SafeString:
     parts = [response.get_vite_tags()]
 
     # Add SSR head tags if present
-    ssr_head = context.get("ssr_head")
-    if ssr_head:
-        if isinstance(ssr_head, list):
-            parts.extend(ssr_head)
+    head = context.get("head")
+    if head:
+        if isinstance(head, list):
+            parts.extend(head)
         else:
-            parts.append(str(ssr_head))
+            parts.append(str(head))
 
     return mark_safe("\n".join(parts))  # type: ignore[return-value]
 
@@ -81,6 +81,6 @@ def inertia_body(context: dict) -> SafeString:
         </body>
     """
     page = context.get("page", "{}")
-    ssr_body = context.get("ssr_body", "")
+    body = context.get("body", "")
 
-    return mark_safe(render_inertia_body(page, ssr_body))  # type: ignore[return-value]
+    return mark_safe(render_inertia_body(page, body))  # type: ignore[return-value]

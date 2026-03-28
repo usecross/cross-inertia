@@ -44,7 +44,7 @@ CROSS_INERTIA = {
     'VITE_PORT': 5173,                  # Vite dev server port (or 'auto')
     'AUTO_START_VITE': True,            # Set False for manifest-only setups
     'MANIFEST_PATH': 'static/build/.vite/manifest.json',
-    'SSR_ENABLED': True,                # Enabled by default
+    'SSR_ENABLED': False,               # Enable for server-side rendering
     'AUTO_START_SSR': True,             # Set False if SSR runs remotely
     'SHARE': 'myapp.inertia.share_data',  # Dotted path to share function
 }
@@ -228,8 +228,6 @@ CROSS_INERTIA = {
     'VITE_ENTRY': 'frontend/app.tsx',
     'VITE_PORT': 'auto',
     'AUTO_START_VITE': True,
-    'SSR_ENABLED': True,
-    'AUTO_START_SSR': True,
 }
 
 # views.py

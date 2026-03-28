@@ -114,15 +114,24 @@ class InertiaMiddleware:
 
     @classmethod
     def _should_start_ssr_server(cls) -> bool:
-        """Mirror FastAPI lifespan behavior: standalone SSR is non-dev only."""
+        """Start standalone SSR when Vite won't provide it.
+
+        In dev mode Vite handles SSR via its ``/__inertia_ssr`` endpoint,
+        so a standalone SSR server is unnecessary — *unless* Vite itself
+        is disabled (``AUTO_START_VITE=False``), e.g. manifest-only
+        development setups.  Outside dev mode standalone SSR is always
+        needed when SSR is enabled.
+        """
         from .conf import inertia_settings
 
-        return (
-            cls._should_manage_servers()
-            and not inertia_settings.is_dev_mode()
-            and inertia_settings.SSR_ENABLED
-            and inertia_settings.AUTO_START_SSR
-        )
+        if not cls._should_manage_servers():
+            return False
+        if not inertia_settings.SSR_ENABLED or not inertia_settings.AUTO_START_SSR:
+            return False
+        # In dev mode Vite handles SSR — unless Vite itself is disabled.
+        if inertia_settings.is_dev_mode() and inertia_settings.AUTO_START_VITE:
+            return False
+        return True
 
     @classmethod
     def _maybe_start_vite_dev_server(cls) -> None:
@@ -182,7 +191,7 @@ class InertiaMiddleware:
 
     @classmethod
     def _start_ssr_server(cls) -> None:
-        """Start the SSR server for development."""
+        """Start the standalone SSR server for production."""
         from .conf import inertia_settings
 
         health_url = inertia_settings.SSR_HEALTH_URL

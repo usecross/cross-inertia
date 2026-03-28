@@ -1,4 +1,4 @@
-# Inertia.js FastAPI Adapter
+# Inertia.js Adapter for Python Web Frameworks
 
 [![Tests](https://github.com/patrick91/cross-inertia/actions/workflows/test.yml/badge.svg)](https://github.com/patrick91/cross-inertia/actions/workflows/test.yml)
 [![Lint](https://github.com/patrick91/cross-inertia/actions/workflows/lint.yml/badge.svg)](https://github.com/patrick91/cross-inertia/actions/workflows/lint.yml)
@@ -6,7 +6,7 @@
 [![Python Versions](https://img.shields.io/pypi/pyversions/cross-inertia.svg)](https://pypi.org/project/cross-inertia/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A Python adapter for using [Inertia.js](https://inertiajs.com/) with FastAPI.
+A Python adapter for using [Inertia.js](https://inertiajs.com/) with FastAPI and Django.
 
 **[📚 Documentation](https://inertia.patrick.wtf)** | **[🚀 Quick Start](#quick-start)** | **[🗺️ Roadmap](./ROADMAP.md)**
 

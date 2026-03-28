@@ -221,6 +221,43 @@ def test_middleware_skips_dev_servers_in_autoreload_parent(monkeypatch):
     assert started_ssr == []
 
 
+def test_middleware_starts_standalone_ssr_in_dev_when_vite_disabled(monkeypatch):
+    """Manifest-only dev setup: AUTO_START_VITE=False but SSR_ENABLED=True.
+
+    Since Vite is not running there is no /__inertia_ssr endpoint, so the
+    middleware must start the standalone SSR server even though DEBUG=True.
+    """
+    reset_vite_state()
+    started: list[bool] = []
+
+    monkeypatch.setattr("sys.argv", ["manage.py", "runserver"])
+    monkeypatch.setenv("RUN_MAIN", "true")
+    monkeypatch.setattr(
+        InertiaMiddleware,
+        "_start_vite_dev_server",
+        classmethod(lambda cls: None),
+    )
+    monkeypatch.setattr(
+        InertiaMiddleware,
+        "_start_ssr_server",
+        classmethod(lambda cls: started.append(True)),
+    )
+
+    with override_settings(
+        DEBUG=True,
+        CROSS_INERTIA={
+            "SSR_ENABLED": True,
+            "AUTO_START_VITE": False,
+        },
+    ):
+        inertia_settings.reload()
+        InertiaMiddleware(lambda request: None)
+
+    inertia_settings.reload()
+    reset_vite_state()
+    assert started == [True]
+
+
 def test_django_settings_fall_back_to_shared_config():
     from cross_inertia import configure_inertia
     from cross_inertia._config import reset_config

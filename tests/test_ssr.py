@@ -436,8 +436,9 @@ class TestInertiaResponseSSR:
                     body="<div id='app'>SSR Body</div>",
                 )
 
-            inertia_response._ssr_client = AsyncMock()
-            inertia_response._ssr_client.render = mock_render
+            mock_client = AsyncMock()
+            mock_client.render = mock_render
+            inertia_response._vite_dev_ssr_client = mock_client
 
             client = TestClient(app)
 
@@ -491,8 +492,9 @@ class TestInertiaResponseSSR:
             async def failing_render(page: dict):
                 raise RuntimeError("SSR broken")
 
-            inertia_response._ssr_client = AsyncMock()
-            inertia_response._ssr_client.render = failing_render
+            mock_client = AsyncMock()
+            mock_client.render = failing_render
+            inertia_response._vite_dev_ssr_client = mock_client
 
             client = TestClient(app)
             response = client.get("/test")

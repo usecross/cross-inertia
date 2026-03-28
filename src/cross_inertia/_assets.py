@@ -38,9 +38,7 @@ def resolve_manifest_entry(
         return basename_matches[0]
 
     explicit_entries = [
-        (key, value)
-        for key, value in entry_candidates
-        if value.get("isEntry") is True
+        (key, value) for key, value in entry_candidates if value.get("isEntry") is True
     ]
     if len(explicit_entries) == 1:
         return explicit_entries[0]

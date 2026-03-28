@@ -7,6 +7,7 @@ import concurrent.futures
 import json
 import hashlib
 import logging
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +19,7 @@ from django.template.response import TemplateResponse
 
 from .._assets import build_asset_url, resolve_manifest_entry
 from .._exceptions import ManifestNotFoundError
-from .._ssr import InertiaSSR
+from .._ssr import VITE_DEV_SSR_ENDPOINT, InertiaSSR
 from .conf import inertia_settings
 from .._page import (
     PageRenderOptions,
@@ -29,7 +30,23 @@ from .._page import (
 )
 
 logger = logging.getLogger(__name__)
-VITE_DEV_SSR_ENDPOINT = "/__inertia_ssr"
+
+_VITE_TAGS_DEPRECATION = (
+    "The 'vite_tags' template variable is deprecated. "
+    "Use {% inertia_head %} and {% inertia_body %} template tags instead."
+)
+
+
+class _DeprecatedViteTags(str):
+    """String subclass that emits a deprecation warning when rendered."""
+
+    _warned = False
+
+    def __str__(self) -> str:
+        if not _DeprecatedViteTags._warned:
+            _DeprecatedViteTags._warned = True
+            warnings.warn(_VITE_TAGS_DEPRECATION, DeprecationWarning, stacklevel=2)
+        return super().__str__()
 
 
 class DjangoInertiaResponse:
@@ -138,10 +155,6 @@ class DjangoInertiaResponse:
         if self.is_dev_mode():
             if self._vite_dev_ssr_client is not None:
                 return self._vite_dev_ssr_client
-            if self._ssr_client is not None and not isinstance(
-                self._ssr_client, InertiaSSR
-            ):
-                return self._ssr_client
 
             self._vite_dev_ssr_client = InertiaSSR(
                 url=self.vite_dev_url,
@@ -305,9 +318,7 @@ class DjangoInertiaResponse:
 
             template_context = {
                 "page": build_result.page_json,
-                "vite_tags": self.get_vite_tags(),
-                "ssr_head": ssr_head,
-                "ssr_body": ssr_body,
+                "vite_tags": _DeprecatedViteTags(self.get_vite_tags()),
                 "head": ssr_head,
                 "body": ssr_body,
             }

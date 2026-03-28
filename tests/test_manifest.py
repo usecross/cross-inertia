@@ -116,8 +116,8 @@ class TestManifestNotFound:
             response._is_dev = False
 
             tags = response.get_vite_tags()
-            assert '/assets-build/assets/app.js' in tags
-            assert '/assets-build/assets/app.css' in tags
+            assert "/assets-build/assets/app.js" in tags
+            assert "/assets-build/assets/app.css" in tags
 
 
 class TestManifestNotFoundErrorExport:

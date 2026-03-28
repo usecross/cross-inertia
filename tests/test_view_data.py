@@ -27,11 +27,10 @@ def temp_template_dir_with_view_data():
     <meta property="og:title" content="{{ og_meta.title }}">
     <meta property="og:description" content="{{ og_meta.description }}">
     {% endif %}
-    {{ vite_tags | safe }}
+    {{ inertia_head() }}
 </head>
 <body>
-    <script data-page="app" type="application/json">{{ page | safe }}</script>
-    <div id="app"></div>
+    {{ inertia_body() }}
 </body>
 </html>"""
         )

@@ -24,7 +24,7 @@ Example usage:
         'VITE_PORT': 5173,               # Vite dev server port (or 'auto')
         'AUTO_START_VITE': True,         # Disable for manifest-only setups
         'MANIFEST_PATH': 'static/build/.vite/manifest.json',
-        'SSR_ENABLED': True,             # Enabled by default for Django
+        'SSR_ENABLED': False,            # Enable for server-side rendering
         'AUTO_START_SSR': True,          # Disable if SSR runs remotely
         'SHARE': 'myapp.inertia.share_data',  # Shared data for all pages
     }

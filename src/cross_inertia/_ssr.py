@@ -29,6 +29,8 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+VITE_DEV_SSR_ENDPOINT = "/__inertia_ssr"
+
 
 @dataclass
 class SSRResponse:
@@ -226,9 +228,9 @@ class SyncSSRServer:
                             )
                         return
                 except httpx.ConnectError:
-                    pass
-                except Exception:
-                    pass
+                    logger.debug("SSR health check connection refused, retrying...")
+                except Exception as exc:
+                    logger.debug(f"SSR health check failed: {exc}")
 
                 time.sleep(0.1)
 

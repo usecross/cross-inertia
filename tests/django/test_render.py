@@ -125,13 +125,14 @@ def test_ssr_html_response_includes_ssr_head_and_body(client, django_inertia_res
     import cross_inertia.django.shortcuts as shortcuts
 
     django_inertia_response.ssr_enabled = True
-    django_inertia_response._ssr_client = AsyncMock()
-    django_inertia_response._ssr_client.render = AsyncMock(
+    mock_client = AsyncMock()
+    mock_client.render = AsyncMock(
         return_value=SSRResponse(
             head=["<title>SSR Title</title>"],
             body="<main><h1>SSR Body</h1></main>",
         )
     )
+    django_inertia_response._vite_dev_ssr_client = mock_client
     shortcuts._inertia_response = django_inertia_response
 
     try:
@@ -150,10 +151,9 @@ def test_ssr_failure_falls_back_to_csr_html(client, django_inertia_response):
     import cross_inertia.django.shortcuts as shortcuts
 
     django_inertia_response.ssr_enabled = True
-    django_inertia_response._ssr_client = AsyncMock()
-    django_inertia_response._ssr_client.render = AsyncMock(
-        side_effect=RuntimeError("SSR unavailable")
-    )
+    mock_client = AsyncMock()
+    mock_client.render = AsyncMock(side_effect=RuntimeError("SSR unavailable"))
+    django_inertia_response._vite_dev_ssr_client = mock_client
     shortcuts._inertia_response = django_inertia_response
 
     try:
@@ -191,6 +191,6 @@ def test_production_vite_tags_use_static_url_prefix(temp_template_dir):
     with patch.object(response, "get_manifest", return_value=manifest):
         tags = response.get_vite_tags()
 
-    assert '/assets/build/assets/app.js' in tags
-    assert '/assets/build/assets/app.css' in tags
+    assert "/assets/build/assets/app.js" in tags
+    assert "/assets/build/assets/app.css" in tags
     inertia_settings.reload()

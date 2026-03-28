@@ -12,7 +12,7 @@ Usage in settings.py:
         'VITE_PORT': 5173,
         'AUTO_START_VITE': True,
         'MANIFEST_PATH': BASE_DIR / 'static/build/.vite/manifest.json',
-        'SSR_ENABLED': True,
+        'SSR_ENABLED': False,
         'AUTO_START_SSR': True,
         'SHARE': 'myapp.inertia.share_data',  # Optional: shared data function
     }
@@ -48,7 +48,7 @@ DEFAULTS: dict[str, Any] = {
     "MANIFEST_PATH": "static/build/.vite/manifest.json",
     "ASSET_URL_PREFIX": "/static/build",
     # SSR settings
-    "SSR_ENABLED": True,
+    "SSR_ENABLED": False,
     "AUTO_START_SSR": True,
     "SSR_URL": "http://127.0.0.1:13714",
     "SSR_COMMAND": "bun dist/ssr/ssr.js",

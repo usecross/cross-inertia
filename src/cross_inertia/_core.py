@@ -5,6 +5,7 @@ import concurrent.futures
 import hashlib
 import json
 import logging
+import warnings
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -12,6 +13,7 @@ import httpx
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from jinja2 import pass_context
+from markupsafe import Markup
 from starlette.responses import Response
 from fastapi.templating import Jinja2Templates
 from cross_web import StarletteRequestAdapter
@@ -19,6 +21,7 @@ from cross_web import StarletteRequestAdapter
 from ._props import optional, always, defer, once
 from ._assets import build_asset_url, resolve_manifest_entry
 from ._exceptions import ManifestNotFoundError
+from ._ssr import VITE_DEV_SSR_ENDPOINT
 from ._page import (
     PageRenderOptions,
     build_page_request_context,
@@ -37,7 +40,23 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-VITE_DEV_SSR_ENDPOINT = "/__inertia_ssr"
+
+_VITE_TAGS_DEPRECATION = (
+    "The 'vite_tags' template variable is deprecated. "
+    "Use {{ inertia_head() }} and {{ inertia_body() }} instead."
+)
+
+
+class _DeprecatedViteTags(str):
+    """String subclass that emits a deprecation warning when rendered."""
+
+    _warned = False
+
+    def __str__(self) -> str:
+        if not _DeprecatedViteTags._warned:
+            _DeprecatedViteTags._warned = True
+            warnings.warn(_VITE_TAGS_DEPRECATION, DeprecationWarning, stacklevel=2)
+        return super().__str__()
 
 
 __all__ = ["optional", "always", "defer", "once", "ManifestNotFoundError"]
@@ -432,7 +451,7 @@ class InertiaResponse:
         response = self
 
         @pass_context
-        def inertia_head(context: dict) -> str:
+        def inertia_head(context: dict) -> Markup:
             """
             Generate all head content needed for Inertia.
 
@@ -450,7 +469,7 @@ class InertiaResponse:
                 else:
                     parts.append(str(head))
 
-            return "\n".join(parts)
+            return Markup("\n".join(parts))
 
         return inertia_head
 
@@ -458,7 +477,7 @@ class InertiaResponse:
         """Create the inertia_body template function."""
 
         @pass_context
-        def inertia_body(context: dict) -> str:
+        def inertia_body(context: dict) -> Markup:
             """
             Generate the Inertia app container.
 
@@ -470,7 +489,7 @@ class InertiaResponse:
             page = context.get("page", "{}")
             body = context.get("body", "")
 
-            return render_inertia_body(page, body)
+            return Markup(render_inertia_body(page, body))
 
         return inertia_body
 
@@ -484,11 +503,6 @@ class InertiaResponse:
                 return self._vite_dev_ssr_client
 
             from cross_inertia._ssr import InertiaSSR
-
-            if self._ssr_client is not None and not isinstance(
-                self._ssr_client, InertiaSSR
-            ):
-                return self._ssr_client
 
             self._vite_dev_ssr_client = InertiaSSR(
                 url=self.vite_dev_url,
@@ -670,10 +684,9 @@ class InertiaResponse:
             template_context = {
                 "request": request,
                 "page": build_result.page_json,
-                "vite_tags": self.get_vite_tags(),  # Backward compatibility
+                "vite_tags": _DeprecatedViteTags(self.get_vite_tags()),
                 "head": head,
                 "body": body,
-                # Note: vite() function is also available globally
             }
             # Add view_data to template context if provided
             if view_data:
