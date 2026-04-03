@@ -185,6 +185,7 @@ class InertiaConfig:
 
 # Global configuration instance
 _config: InertiaConfig | None = None
+_config_explicitly_set: bool = False
 
 
 def configure_inertia(
@@ -239,8 +240,9 @@ def configure_inertia(
             ssr_enabled=True,
         )
     """
-    global _config
+    global _config, _config_explicitly_set
 
+    _config_explicitly_set = True
     _config = InertiaConfig(
         vite_port=vite_port,
         vite_host=vite_host,
@@ -274,7 +276,13 @@ def get_config() -> InertiaConfig:
     return _config
 
 
+def is_config_explicitly_set() -> bool:
+    """Return True if configure_inertia() has been called."""
+    return _config_explicitly_set
+
+
 def reset_config() -> None:
     """Reset the configuration to None. Useful for testing."""
-    global _config
+    global _config, _config_explicitly_set
+    _config_explicitly_set = False
     _config = None

@@ -128,9 +128,14 @@ class InertiaMiddleware:
             return False
         if not inertia_settings.SSR_ENABLED or not inertia_settings.AUTO_START_SSR:
             return False
-        # In dev mode Vite handles SSR — unless Vite itself is disabled.
-        if inertia_settings.is_dev_mode() and inertia_settings.AUTO_START_VITE:
-            return False
+        # In dev mode Vite handles SSR via /__inertia_ssr — whether we
+        # started it or it was launched externally.
+        if inertia_settings.is_dev_mode():
+            if inertia_settings.AUTO_START_VITE:
+                return False
+            # AUTO_START_VITE is off, but Vite may be running externally.
+            if is_port_in_use(inertia_settings.resolved_vite_port):
+                return False
         return True
 
     @classmethod
@@ -197,6 +202,7 @@ class InertiaMiddleware:
         health_url = inertia_settings.SSR_HEALTH_URL
         cls._ssr_process = SyncSSRServer(
             command=inertia_settings.SSR_COMMAND,
+            cwd=inertia_settings.SSR_CWD,
             health_url=health_url,
             startup_timeout=inertia_settings.SSR_TIMEOUT,
         )

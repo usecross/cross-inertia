@@ -242,6 +242,11 @@ def test_middleware_starts_standalone_ssr_in_dev_when_vite_disabled(monkeypatch)
         "_start_ssr_server",
         classmethod(lambda cls: started.append(True)),
     )
+    # Vite is not running externally
+    monkeypatch.setattr(
+        "cross_inertia.django.middleware.is_port_in_use",
+        lambda port: False,
+    )
 
     with override_settings(
         DEBUG=True,
@@ -258,6 +263,47 @@ def test_middleware_starts_standalone_ssr_in_dev_when_vite_disabled(monkeypatch)
     assert started == [True]
 
 
+def test_middleware_skips_standalone_ssr_when_vite_running_externally(monkeypatch):
+    """AUTO_START_VITE=False but Vite is running externally on the port.
+
+    Since Vite provides /__inertia_ssr, standalone SSR is unnecessary.
+    """
+    reset_vite_state()
+    started: list[bool] = []
+
+    monkeypatch.setattr("sys.argv", ["manage.py", "runserver"])
+    monkeypatch.setenv("RUN_MAIN", "true")
+    monkeypatch.setattr(
+        InertiaMiddleware,
+        "_start_vite_dev_server",
+        classmethod(lambda cls: None),
+    )
+    monkeypatch.setattr(
+        InertiaMiddleware,
+        "_start_ssr_server",
+        classmethod(lambda cls: started.append(True)),
+    )
+    # Vite IS running externally
+    monkeypatch.setattr(
+        "cross_inertia.django.middleware.is_port_in_use",
+        lambda port: True,
+    )
+
+    with override_settings(
+        DEBUG=True,
+        CROSS_INERTIA={
+            "SSR_ENABLED": True,
+            "AUTO_START_VITE": False,
+        },
+    ):
+        inertia_settings.reload()
+        InertiaMiddleware(lambda request: None)
+
+    inertia_settings.reload()
+    reset_vite_state()
+    assert started == []
+
+
 def test_django_settings_fall_back_to_shared_config():
     from cross_inertia import configure_inertia
     from cross_inertia._config import reset_config
@@ -269,6 +315,80 @@ def test_django_settings_fall_back_to_shared_config():
             assert inertia_settings.VITE_PORT == 5199
             assert inertia_settings.VITE_HOST == "127.0.0.1"
             assert inertia_settings.SSR_ENABLED is False
+    finally:
+        reset_config()
+        inertia_settings.reload()
+
+
+def test_django_defaults_used_when_shared_config_not_set():
+    """When configure_inertia() was never called, Django's own defaults apply."""
+    from cross_inertia._config import reset_config
+
+    reset_config()
+    try:
+        with override_settings(CROSS_INERTIA={}):
+            inertia_settings.reload()
+            assert inertia_settings.VITE_ENTRY == "src/main.tsx"
+            assert inertia_settings.VITE_PORT == 5173
+    finally:
+        reset_config()
+        inertia_settings.reload()
+
+
+def test_shared_config_asset_url_prefix_overrides_static_url():
+    """configure_inertia(asset_url_prefix=...) should take priority over STATIC_URL."""
+    from cross_inertia import configure_inertia
+    from cross_inertia._config import reset_config
+
+    try:
+        configure_inertia(asset_url_prefix="/custom-assets")
+        with override_settings(CROSS_INERTIA={}, STATIC_URL="/static/"):
+            inertia_settings.reload()
+            assert inertia_settings.ASSET_URL_PREFIX == "/custom-assets"
+    finally:
+        reset_config()
+        inertia_settings.reload()
+
+
+def test_asset_url_prefix_derives_from_static_url_without_shared_config():
+    """Without configure_inertia(), ASSET_URL_PREFIX derives from STATIC_URL."""
+    from cross_inertia._config import reset_config
+
+    reset_config()
+    try:
+        with override_settings(CROSS_INERTIA={}, STATIC_URL="/assets/"):
+            inertia_settings.reload()
+            assert inertia_settings.ASSET_URL_PREFIX == "/assets/build"
+    finally:
+        reset_config()
+        inertia_settings.reload()
+
+
+def test_ssr_cwd_passed_to_ssr_server():
+    """SSR_CWD from Django settings should be accessible."""
+    from cross_inertia._config import reset_config
+
+    reset_config()
+    try:
+        with override_settings(CROSS_INERTIA={"SSR_CWD": "/app/frontend"}):
+            inertia_settings.reload()
+            assert inertia_settings.SSR_CWD == "/app/frontend"
+    finally:
+        reset_config()
+        inertia_settings.reload()
+
+
+def test_ssr_cwd_falls_back_to_shared_config():
+    """SSR_CWD should fall back to shared config when set."""
+    from cross_inertia import configure_inertia
+    from cross_inertia._config import reset_config
+
+    try:
+        configure_inertia(ssr_enabled=True)
+        with override_settings(CROSS_INERTIA={}):
+            inertia_settings.reload()
+            # InertiaConfig default for ssr_cwd is None
+            assert inertia_settings.SSR_CWD is None
     finally:
         reset_config()
         inertia_settings.reload()

@@ -32,7 +32,7 @@ import socket
 from pathlib import Path
 from typing import Any
 
-from cross_inertia._config import get_config
+from cross_inertia._config import get_config, is_config_explicitly_set
 
 DEFAULTS: dict[str, Any] = {
     # Template settings
@@ -54,6 +54,7 @@ DEFAULTS: dict[str, Any] = {
     "SSR_COMMAND": "bun dist/ssr/ssr.js",
     "SSR_TIMEOUT": 10.0,
     "SSR_HEALTH_PATH": "/health",
+    "SSR_CWD": None,
     # Shared data
     "SHARE": None,  # Dotted path to share function, e.g. 'myapp.inertia.share_data'
 }
@@ -71,6 +72,7 @@ SHARED_CONFIG_ATTRS: dict[str, str] = {
     "SSR_COMMAND": "ssr_command",
     "SSR_TIMEOUT": "ssr_timeout",
     "SSR_HEALTH_PATH": "ssr_health_path",
+    "SSR_CWD": "ssr_cwd",
 }
 
 
@@ -123,6 +125,8 @@ class InertiaSettings:
 
         if attr in self.user_settings:
             val = self.user_settings[attr]
+        elif attr in SHARED_CONFIG_ATTRS and is_config_explicitly_set():
+            val = getattr(get_config(), SHARED_CONFIG_ATTRS[attr])
         elif attr == "ASSET_URL_PREFIX":
             from django.conf import settings
 
@@ -134,8 +138,6 @@ class InertiaSettings:
                 if not normalized_static_url.startswith("/"):
                     normalized_static_url = f"/{normalized_static_url}"
                 val = f"{normalized_static_url}/build"
-        elif attr in SHARED_CONFIG_ATTRS:
-            val = getattr(get_config(), SHARED_CONFIG_ATTRS[attr])
         else:
             val = DEFAULTS[attr]
 
