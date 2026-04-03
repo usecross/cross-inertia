@@ -10,10 +10,8 @@ Usage in settings.py:
         'LAYOUT': 'base.html',
         'VITE_ENTRY': 'src/main.tsx',
         'VITE_PORT': 5173,
-        'AUTO_START_VITE': True,
         'MANIFEST_PATH': BASE_DIR / 'static/build/.vite/manifest.json',
         'SSR_ENABLED': False,
-        'AUTO_START_SSR': True,
         'SHARE': 'myapp.inertia.share_data',  # Optional: shared data function
     }
 
@@ -43,13 +41,11 @@ DEFAULTS: dict[str, Any] = {
     "VITE_ENTRY": "src/main.tsx",
     "VITE_COMMAND": "bun run dev",
     "VITE_TIMEOUT": 30.0,
-    "AUTO_START_VITE": True,
     # Production settings
     "MANIFEST_PATH": "static/build/.vite/manifest.json",
     "ASSET_URL_PREFIX": "/static/build",
     # SSR settings
     "SSR_ENABLED": False,
-    "AUTO_START_SSR": True,
     "SSR_URL": "http://127.0.0.1:13714",
     "SSR_COMMAND": "bun dist/ssr/ssr.js",
     "SSR_TIMEOUT": 10.0,

@@ -103,39 +103,28 @@ class InertiaMiddleware:
 
     @classmethod
     def _should_start_vite_dev_server(cls) -> bool:
-        """Mirror FastAPI lifespan behavior: Vite is a dev-only server."""
+        """Start the Vite dev server in development mode."""
         from .conf import inertia_settings
 
-        return (
-            cls._should_manage_servers()
-            and inertia_settings.is_dev_mode()
-            and inertia_settings.AUTO_START_VITE
-        )
+        return cls._should_manage_servers() and inertia_settings.is_dev_mode()
 
     @classmethod
     def _should_start_ssr_server(cls) -> bool:
-        """Start standalone SSR when Vite won't provide it.
+        """Start standalone SSR outside development mode.
 
         In dev mode Vite handles SSR via its ``/__inertia_ssr`` endpoint,
-        so a standalone SSR server is unnecessary — *unless* Vite itself
-        is disabled (``AUTO_START_VITE=False``), e.g. manifest-only
-        development setups.  Outside dev mode standalone SSR is always
-        needed when SSR is enabled.
+        so a standalone server is unnecessary.  Outside dev mode standalone
+        SSR is needed when SSR is enabled.
         """
         from .conf import inertia_settings
 
         if not cls._should_manage_servers():
             return False
-        if not inertia_settings.SSR_ENABLED or not inertia_settings.AUTO_START_SSR:
+        if not inertia_settings.SSR_ENABLED:
             return False
-        # In dev mode Vite handles SSR via /__inertia_ssr — whether we
-        # started it or it was launched externally.
+        # In dev mode Vite handles SSR via /__inertia_ssr.
         if inertia_settings.is_dev_mode():
-            if inertia_settings.AUTO_START_VITE:
-                return False
-            # AUTO_START_VITE is off, but Vite may be running externally.
-            if is_port_in_use(inertia_settings.resolved_vite_port):
-                return False
+            return False
         return True
 
     @classmethod

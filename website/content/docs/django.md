@@ -42,10 +42,8 @@ CROSS_INERTIA = {
     'LAYOUT': 'base.html',              # Template for initial page loads
     'VITE_ENTRY': 'src/main.tsx',       # Vite entry point
     'VITE_PORT': 5173,                  # Vite dev server port (or 'auto')
-    'AUTO_START_VITE': True,            # Set False for manifest-only setups
     'MANIFEST_PATH': 'static/build/.vite/manifest.json',
     'SSR_ENABLED': False,               # Enable for server-side rendering
-    'AUTO_START_SSR': True,             # Set False if SSR runs remotely
     'SHARE': 'myapp.inertia.share_data',  # Dotted path to share function
 }
 ```
@@ -180,17 +178,15 @@ def logout(request):
 
 ## Automatic Dev Server Startup
 
-When using Django's `runserver`, the middleware can start the Vite dev server automatically:
+When using Django's `runserver`, the middleware starts the Vite dev server automatically:
 
 ```bash
 python manage.py runserver
 # Vite dev server starts automatically!
 ```
 
-If SSR is enabled, the middleware can also start the SSR server automatically.
-This is controlled by the Django middleware and only runs in development mode.
-Set `AUTO_START_VITE` to `False` if you want to serve prebuilt assets from a manifest without starting Vite.
-Set `AUTO_START_SSR` to `False` if SSR is enabled but managed by a separate process.
+In development mode (`DEBUG=True`), Vite also handles SSR via its `/__inertia_ssr` endpoint.
+Outside development mode, a standalone SSR server is started automatically when `SSR_ENABLED` is `True`.
 
 ## URL Configuration
 
@@ -227,7 +223,6 @@ CROSS_INERTIA = {
     'LAYOUT': 'base.html',
     'VITE_ENTRY': 'frontend/app.tsx',
     'VITE_PORT': 'auto',
-    'AUTO_START_VITE': True,
 }
 
 # views.py

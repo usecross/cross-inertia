@@ -39,32 +39,6 @@ def test_middleware_starts_vite_by_default_for_runserver_child(monkeypatch):
     assert started == [True]
 
 
-def test_middleware_skips_vite_when_auto_start_disabled(monkeypatch):
-    reset_vite_state()
-    started: list[bool] = []
-
-    monkeypatch.setattr("sys.argv", ["manage.py", "runserver"])
-    monkeypatch.setenv("RUN_MAIN", "true")
-    monkeypatch.setattr(
-        InertiaMiddleware,
-        "_start_ssr_server",
-        classmethod(lambda cls: None),
-    )
-    monkeypatch.setattr(
-        InertiaMiddleware,
-        "_start_vite_dev_server",
-        classmethod(lambda cls: started.append(True)),
-    )
-
-    with override_settings(CROSS_INERTIA={"AUTO_START_VITE": False}):
-        inertia_settings.reload()
-        InertiaMiddleware(lambda request: None)
-
-    inertia_settings.reload()
-    reset_vite_state()
-    assert started == []
-
-
 def test_middleware_only_starts_vite_once_per_process(monkeypatch):
     reset_vite_state()
     started: list[bool] = []
@@ -119,6 +93,7 @@ def test_middleware_skips_standalone_ssr_by_default_for_runserver_child(monkeypa
 
 
 def test_middleware_skips_standalone_ssr_in_dev_mode(monkeypatch):
+    """In dev mode Vite handles SSR via /__inertia_ssr."""
     reset_vite_state()
     started: list[bool] = []
 
@@ -170,29 +145,6 @@ def test_middleware_starts_standalone_ssr_outside_dev_mode(monkeypatch):
     assert started == [True]
 
 
-def test_middleware_skips_ssr_when_auto_start_disabled(monkeypatch):
-    reset_vite_state()
-    started: list[bool] = []
-
-    monkeypatch.setattr("sys.argv", ["manage.py", "runserver"])
-    monkeypatch.setenv("RUN_MAIN", "true")
-    monkeypatch.setattr(
-        InertiaMiddleware,
-        "_start_ssr_server",
-        classmethod(lambda cls: started.append(True)),
-    )
-
-    with override_settings(
-        DEBUG=False, CROSS_INERTIA={"SSR_ENABLED": True, "AUTO_START_SSR": False}
-    ):
-        inertia_settings.reload()
-        InertiaMiddleware(lambda request: None)
-
-    inertia_settings.reload()
-    reset_vite_state()
-    assert started == []
-
-
 def test_middleware_skips_dev_servers_in_autoreload_parent(monkeypatch):
     reset_vite_state()
     started_vite: list[bool] = []
@@ -219,89 +171,6 @@ def test_middleware_skips_dev_servers_in_autoreload_parent(monkeypatch):
     reset_vite_state()
     assert started_vite == []
     assert started_ssr == []
-
-
-def test_middleware_starts_standalone_ssr_in_dev_when_vite_disabled(monkeypatch):
-    """Manifest-only dev setup: AUTO_START_VITE=False but SSR_ENABLED=True.
-
-    Since Vite is not running there is no /__inertia_ssr endpoint, so the
-    middleware must start the standalone SSR server even though DEBUG=True.
-    """
-    reset_vite_state()
-    started: list[bool] = []
-
-    monkeypatch.setattr("sys.argv", ["manage.py", "runserver"])
-    monkeypatch.setenv("RUN_MAIN", "true")
-    monkeypatch.setattr(
-        InertiaMiddleware,
-        "_start_vite_dev_server",
-        classmethod(lambda cls: None),
-    )
-    monkeypatch.setattr(
-        InertiaMiddleware,
-        "_start_ssr_server",
-        classmethod(lambda cls: started.append(True)),
-    )
-    # Vite is not running externally
-    monkeypatch.setattr(
-        "cross_inertia.django.middleware.is_port_in_use",
-        lambda port: False,
-    )
-
-    with override_settings(
-        DEBUG=True,
-        CROSS_INERTIA={
-            "SSR_ENABLED": True,
-            "AUTO_START_VITE": False,
-        },
-    ):
-        inertia_settings.reload()
-        InertiaMiddleware(lambda request: None)
-
-    inertia_settings.reload()
-    reset_vite_state()
-    assert started == [True]
-
-
-def test_middleware_skips_standalone_ssr_when_vite_running_externally(monkeypatch):
-    """AUTO_START_VITE=False but Vite is running externally on the port.
-
-    Since Vite provides /__inertia_ssr, standalone SSR is unnecessary.
-    """
-    reset_vite_state()
-    started: list[bool] = []
-
-    monkeypatch.setattr("sys.argv", ["manage.py", "runserver"])
-    monkeypatch.setenv("RUN_MAIN", "true")
-    monkeypatch.setattr(
-        InertiaMiddleware,
-        "_start_vite_dev_server",
-        classmethod(lambda cls: None),
-    )
-    monkeypatch.setattr(
-        InertiaMiddleware,
-        "_start_ssr_server",
-        classmethod(lambda cls: started.append(True)),
-    )
-    # Vite IS running externally
-    monkeypatch.setattr(
-        "cross_inertia.django.middleware.is_port_in_use",
-        lambda port: True,
-    )
-
-    with override_settings(
-        DEBUG=True,
-        CROSS_INERTIA={
-            "SSR_ENABLED": True,
-            "AUTO_START_VITE": False,
-        },
-    ):
-        inertia_settings.reload()
-        InertiaMiddleware(lambda request: None)
-
-    inertia_settings.reload()
-    reset_vite_state()
-    assert started == []
 
 
 def test_django_settings_fall_back_to_shared_config():
