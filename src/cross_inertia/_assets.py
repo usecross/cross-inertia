@@ -6,7 +6,7 @@ from typing import Any
 
 def normalize_entry_key(entry: str) -> str:
     """Normalize a Vite manifest entry key for matching."""
-    return entry.replace("\\", "/").lstrip("./")
+    return entry.replace("\\", "/").removeprefix("./")
 
 
 def resolve_manifest_entry(
