@@ -1,3 +1,17 @@
+0.18.0 - 2026-04-04
+-------------------
+
+Align Django adapter with FastAPI and Inertia v3 SSR model.
+
+- Use Vite's `/__inertia_ssr` endpoint for SSR during development (both adapters)
+- Move Vite/SSR server lifecycle from `AppConfig.ready()` to middleware
+- Add configurable `asset_url_prefix` (Django derives from `STATIC_URL` by default)
+- Add `SSR_CWD` setting for Django parity with FastAPI's `ssr_cwd`
+- Deprecate `vite_tags` template variable in favour of `inertia_head()`/`inertia_body()`
+- Return `Markup`/`mark_safe` from template helpers to prevent double-escaping
+
+This release was contributed by [@patrick91](https://github.com/patrick91) in [#120](https://github.com/usecross/cross-inertia/pull/120)
+
 0.17.0 - 2026-03-25
 -------------------
 
