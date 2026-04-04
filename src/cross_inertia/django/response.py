@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
+import concurrent.futures
 import json
 import hashlib
 import logging
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +17,9 @@ from cross_web import DjangoHTTPRequestAdapter
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.template.response import TemplateResponse
 
+from .._assets import build_asset_url, resolve_manifest_entry
 from .._exceptions import ManifestNotFoundError
+from .._ssr import VITE_DEV_SSR_ENDPOINT, InertiaSSR
 from .conf import inertia_settings
 from .._page import (
     PageRenderOptions,
@@ -25,6 +30,23 @@ from .._page import (
 )
 
 logger = logging.getLogger(__name__)
+
+_VITE_TAGS_DEPRECATION = (
+    "The 'vite_tags' template variable is deprecated. "
+    "Use {% inertia_head %} and {% inertia_body %} template tags instead."
+)
+
+
+class _DeprecatedViteTags(str):
+    """String subclass that emits a deprecation warning when rendered."""
+
+    _warned = False
+
+    def __str__(self) -> str:
+        if not _DeprecatedViteTags._warned:
+            _DeprecatedViteTags._warned = True
+            warnings.warn(_VITE_TAGS_DEPRECATION, DeprecationWarning, stacklevel=2)
+        return super().__str__()
 
 
 class DjangoInertiaResponse:
@@ -50,6 +72,7 @@ class DjangoInertiaResponse:
         self.template_name = template_name or inertia_settings.LAYOUT
         self.vite_dev_url = vite_dev_url or inertia_settings.VITE_DEV_URL
         self.manifest_path = manifest_path or inertia_settings.MANIFEST_PATH
+        self.asset_url_prefix = inertia_settings.ASSET_URL_PREFIX
         self.vite_entry = vite_entry or inertia_settings.VITE_ENTRY
         self.ssr_enabled = (
             ssr_enabled if ssr_enabled is not None else inertia_settings.SSR_ENABLED
@@ -58,6 +81,10 @@ class DjangoInertiaResponse:
 
         self._is_dev: bool | None = None
         self._manifest: dict[str, Any] | None = None
+        self._ssr_client: InertiaSSR | None = None
+        self._vite_dev_ssr_client: InertiaSSR | None = None
+        if self.ssr_enabled:
+            self._ssr_client = InertiaSSR(url=self.ssr_url, enabled=True)
 
     def is_inertia_request(self, request: "HttpRequest") -> bool:
         """Check if request is an Inertia XHR request."""
@@ -120,6 +147,25 @@ class DjangoInertiaResponse:
         manifest_str = json.dumps(manifest, sort_keys=True)
         return hashlib.md5(manifest_str.encode()).hexdigest()
 
+    def get_ssr_client(self) -> InertiaSSR | None:
+        """Return the appropriate SSR client for the current runtime mode."""
+        if not self.ssr_enabled:
+            return None
+
+        if self.is_dev_mode():
+            if self._vite_dev_ssr_client is not None:
+                return self._vite_dev_ssr_client
+
+            self._vite_dev_ssr_client = InertiaSSR(
+                url=self.vite_dev_url,
+                enabled=True,
+                render_path=VITE_DEV_SSR_ENDPOINT,
+                health_path=VITE_DEV_SSR_ENDPOINT,
+            )
+            return self._vite_dev_ssr_client
+
+        return self._ssr_client
+
     def get_vite_tags(self) -> str:
         """Generate script tags for Vite assets."""
         if self.is_dev_mode():
@@ -139,26 +185,29 @@ class DjangoInertiaResponse:
             """
         else:
             manifest = self.get_manifest()
-            entry = manifest.get(self.vite_entry, {})
+            resolved_key, entry = resolve_manifest_entry(manifest, self.vite_entry)
 
             if not entry:
                 logger.error(
                     f"No entry found for '{self.vite_entry}' in manifest - did you run 'npm run build'?"
                 )
+                return ""
 
             tags = []
 
             css_files = entry.get("css", [])
             if css_files:
                 logger.info(
-                    f"Generating PRODUCTION script tags - {len(css_files)} CSS file(s), entry: {entry.get('file', 'none')}"
+                    f"Generating PRODUCTION script tags - {len(css_files)} CSS file(s), entry: {resolved_key or entry.get('file', 'none')}"
                 )
             for css in css_files:
-                tags.append(f'<link rel="stylesheet" href="/static/build/{css}">')
+                tags.append(
+                    f'<link rel="stylesheet" href="{build_asset_url(self.asset_url_prefix, css)}">'
+                )
 
             if "file" in entry:
                 tags.append(
-                    f'<script type="module" src="/static/build/{entry["file"]}"></script>'
+                    f'<script type="module" src="{build_asset_url(self.asset_url_prefix, entry["file"])}"></script>'
                 )
             else:
                 logger.warning("No JS entry file found in manifest!")
@@ -238,9 +287,40 @@ class DjangoInertiaResponse:
                 f"-> Initial page load: {component} (props: {list(build_result.page_data['props'].keys())})"
             )
 
+            ssr_head: list[str] = []
+            ssr_body: str = ""
+            ssr_client = self.get_ssr_client()
+            if ssr_client:
+                try:
+                    try:
+                        loop = asyncio.get_running_loop()
+                    except RuntimeError:
+                        loop = None
+
+                    if loop is not None:
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = executor.submit(
+                                asyncio.run,
+                                ssr_client.render(build_result.page_data),
+                            )
+                            ssr_result = future.result(timeout=5.0)
+                    else:
+                        ssr_result = asyncio.run(
+                            ssr_client.render(build_result.page_data)
+                        )
+
+                    if ssr_result:
+                        ssr_head = ssr_result.head
+                        ssr_body = ssr_result.body
+                        logger.info(f"SSR rendered {component} successfully")
+                except Exception as e:
+                    logger.warning(f"SSR failed, falling back to CSR: {e}")
+
             template_context = {
                 "page": build_result.page_json,
-                "vite_tags": self.get_vite_tags(),
+                "vite_tags": _DeprecatedViteTags(self.get_vite_tags()),
+                "head": ssr_head,
+                "body": ssr_body,
             }
 
             # Add view_data to template context if provided

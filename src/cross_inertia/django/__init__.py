@@ -23,7 +23,7 @@ Example usage:
         'VITE_ENTRY': 'src/main.tsx',    # Vite entry point
         'VITE_PORT': 5173,               # Vite dev server port (or 'auto')
         'MANIFEST_PATH': 'static/build/.vite/manifest.json',
-        'SSR_ENABLED': False,
+        'SSR_ENABLED': False,            # Enable for server-side rendering
         'SHARE': 'myapp.inertia.share_data',  # Shared data for all pages
     }
 

@@ -12,12 +12,12 @@ Cross-Inertia provides full Django support with a familiar API that follows Djan
 Install Cross-Inertia:
 
 ```bash
-pip install cross-inertia
+pip install "cross-inertia[django]"
 ```
 
 ## Configuration
 
-Add `inertia.django` to your installed apps and middleware:
+Add `cross_inertia.django` to your installed apps and middleware:
 
 ```python
 # settings.py
@@ -29,7 +29,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # ...
-    'inertia.django.InertiaMiddleware',
+    'cross_inertia.django.InertiaMiddleware',
 ]
 ```
 
@@ -43,7 +43,7 @@ CROSS_INERTIA = {
     'VITE_ENTRY': 'src/main.tsx',       # Vite entry point
     'VITE_PORT': 5173,                  # Vite dev server port (or 'auto')
     'MANIFEST_PATH': 'static/build/.vite/manifest.json',
-    'SSR_ENABLED': False,
+    'SSR_ENABLED': False,               # Enable for server-side rendering
     'SHARE': 'myapp.inertia.share_data',  # Dotted path to share function
 }
 ```
@@ -176,16 +176,17 @@ def logout(request):
     return location('https://example.com/logged-out')
 ```
 
-## Automatic Vite Startup
+## Automatic Dev Server Startup
 
-When using Django's `runserver`, the Vite dev server starts automatically:
+When using Django's `runserver`, the middleware starts the Vite dev server automatically:
 
 ```bash
 python manage.py runserver
 # Vite dev server starts automatically!
 ```
 
-This is controlled by the app configuration and only runs in development mode.
+In development mode (`DEBUG=True`), Vite also handles SSR via its `/__inertia_ssr` endpoint.
+Outside development mode, a standalone SSR server is started automatically when `SSR_ENABLED` is `True`.
 
 ## URL Configuration
 
@@ -215,7 +216,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'inertia.django.InertiaMiddleware',
+    'cross_inertia.django.InertiaMiddleware',
 ]
 
 CROSS_INERTIA = {

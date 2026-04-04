@@ -94,6 +94,31 @@ class TestManifestNotFound:
             with pytest.raises(ManifestNotFoundError):
                 response.get_vite_tags()
 
+    def test_get_vite_tags_falls_back_to_single_manifest_entry(self):
+        """Should use the sole entry in the manifest when the configured key differs."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            template_path = Path(tmpdir) / "templates"
+            template_path.mkdir()
+            (template_path / "app.html").write_text("<html></html>")
+
+            manifest_path = Path(tmpdir) / "manifest.json"
+            manifest_path.write_text(
+                '{"src/main.tsx": {"file": "assets/app.js", "css": ["assets/app.css"], "isEntry": true}}'
+            )
+
+            response = InertiaResponse(
+                template_dir=str(template_path),
+                vite_dev_url=None,
+                manifest_path=str(manifest_path),
+                vite_entry="frontend/app.tsx",
+                asset_url_prefix="/assets-build",
+            )
+            response._is_dev = False
+
+            tags = response.get_vite_tags()
+            assert "/assets-build/assets/app.js" in tags
+            assert "/assets-build/assets/app.css" in tags
+
 
 class TestManifestNotFoundErrorExport:
     """Test that ManifestNotFoundError is properly exported."""

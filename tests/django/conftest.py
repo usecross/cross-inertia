@@ -60,15 +60,15 @@ def temp_template_dir():
 
         # Create a basic app.html template
         (template_path / "app.html").write_text(
-            """<!DOCTYPE html>
+            """{% load inertia %}
+<!DOCTYPE html>
 <html>
 <head>
     <title>Test</title>
-    {{ vite_tags|safe }}
+    {% inertia_head %}
 </head>
 <body>
-    <script data-page="app" type="application/json">{{ page|safe }}</script>
-    <div id="app"></div>
+    {% inertia_body %}
 </body>
 </html>"""
         )
@@ -89,6 +89,7 @@ def django_inertia_response(temp_template_dir):
         template_name="app.html",
         vite_dev_url="http://localhost:5173",
         manifest_path="static/build/.vite/manifest.json",
+        ssr_enabled=False,
     )
     # Force dev mode for tests (avoids HTTP check to Vite server)
     response._is_dev = True

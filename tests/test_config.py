@@ -63,6 +63,7 @@ class TestInertiaConfig:
         assert config.vite_entry == "frontend/app.tsx"
         assert config.vite_command == "bun run dev"
         assert config.template_dir == "templates"
+        assert config.asset_url_prefix == "/static/build"
         assert config.ssr_enabled is False
 
     def test_vite_dev_url_with_explicit_port(self):
@@ -142,6 +143,7 @@ class TestConfigureInertia:
             vite_timeout=60.0,
             template_dir="views",
             manifest_path="dist/manifest.json",
+            asset_url_prefix="/assets",
             ssr_enabled=True,
             ssr_url="http://localhost:3000",
             ssr_command="node ssr.js",
@@ -155,6 +157,7 @@ class TestConfigureInertia:
         assert config.vite_timeout == 60.0
         assert config.template_dir == "views"
         assert config.manifest_path == "dist/manifest.json"
+        assert config.asset_url_prefix == "/assets"
         assert config.ssr_enabled is True
         assert config.ssr_url == "http://localhost:3000"
         assert config.ssr_command == "node ssr.js"

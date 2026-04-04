@@ -5,6 +5,7 @@ import concurrent.futures
 import hashlib
 import json
 import logging
+import warnings
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -12,12 +13,15 @@ import httpx
 from fastapi import Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from jinja2 import pass_context
+from markupsafe import Markup
 from starlette.responses import Response
 from fastapi.templating import Jinja2Templates
 from cross_web import StarletteRequestAdapter
 
 from ._props import optional, always, defer, once
+from ._assets import build_asset_url, resolve_manifest_entry
 from ._exceptions import ManifestNotFoundError
+from ._ssr import VITE_DEV_SSR_ENDPOINT
 from ._page import (
     PageRenderOptions,
     build_page_request_context,
@@ -36,6 +40,23 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+_VITE_TAGS_DEPRECATION = (
+    "The 'vite_tags' template variable is deprecated. "
+    "Use {{ inertia_head() }} and {{ inertia_body() }} instead."
+)
+
+
+class _DeprecatedViteTags(str):
+    """String subclass that emits a deprecation warning when rendered."""
+
+    _warned = False
+
+    def __str__(self) -> str:
+        if not _DeprecatedViteTags._warned:
+            _DeprecatedViteTags._warned = True
+            warnings.warn(_VITE_TAGS_DEPRECATION, DeprecationWarning, stacklevel=2)
+        return super().__str__()
 
 
 __all__ = ["optional", "always", "defer", "once", "ManifestNotFoundError"]
@@ -294,38 +315,43 @@ class InertiaResponse:
 
     def __init__(
         self,
-        template_dir: str = "templates",
+        template_dir: str | None = None,
         vite_dev_url: str | None = None,
-        manifest_path: str = "static/build/.vite/manifest.json",
-        vite_entry: str = "frontend/app.tsx",
+        manifest_path: str | None = None,
+        vite_entry: str | None = None,
         ssr_url: str | None = None,
-        ssr_enabled: bool = False,
+        ssr_enabled: bool | None = None,
+        asset_url_prefix: str | None = None,
     ):
         # Import here to avoid circular imports
         from cross_inertia._config import get_config
 
         config = get_config()
         self.vite_dev_url = vite_dev_url or config.vite_dev_url
-        self.manifest_path = manifest_path
+        self.manifest_path = manifest_path or config.manifest_path
+        self.asset_url_prefix = asset_url_prefix or config.asset_url_prefix
         self._is_dev: bool | None = None
         self._manifest: dict[str, Any] | None = None
         self._shared_data: dict[str, Any] = {}  # Store shared data
 
         # SSR configuration
-        self.ssr_enabled = ssr_enabled
-        self.ssr_url = ssr_url or "http://127.0.0.1:13714"
+        self.ssr_enabled = (
+            ssr_enabled if ssr_enabled is not None else config.ssr_enabled
+        )
+        self.ssr_url = ssr_url or config.ssr_url
         self._ssr_client: "InertiaSSR | None" = None
-        if ssr_enabled:
+        self._vite_dev_ssr_client: "InertiaSSR | None" = None
+        if self.ssr_enabled:
             from cross_inertia._ssr import InertiaSSR
 
             self._ssr_client = InertiaSSR(url=self.ssr_url, enabled=True)
             logger.info(f"SSR enabled: {self.ssr_url}")
 
-        self.vite_entry = vite_entry
+        self.vite_entry = vite_entry or config.vite_entry
         logger.info(f"Vite entry: {self.vite_entry}")
 
         # Initialize Jinja2 with custom functions
-        self.templates = Jinja2Templates(directory=template_dir)
+        self.templates = Jinja2Templates(directory=template_dir or config.template_dir)
         # Add template functions to the Jinja2 environment
         self.templates.env.globals["vite"] = self._vite_template_function
         self.templates.env.globals["inertia_head"] = self._make_inertia_head_function()
@@ -425,7 +451,7 @@ class InertiaResponse:
         response = self
 
         @pass_context
-        def inertia_head(context: dict) -> str:
+        def inertia_head(context: dict) -> Markup:
             """
             Generate all head content needed for Inertia.
 
@@ -443,7 +469,7 @@ class InertiaResponse:
                 else:
                     parts.append(str(head))
 
-            return "\n".join(parts)
+            return Markup("\n".join(parts))
 
         return inertia_head
 
@@ -451,7 +477,7 @@ class InertiaResponse:
         """Create the inertia_body template function."""
 
         @pass_context
-        def inertia_body(context: dict) -> str:
+        def inertia_body(context: dict) -> Markup:
             """
             Generate the Inertia app container.
 
@@ -463,9 +489,30 @@ class InertiaResponse:
             page = context.get("page", "{}")
             body = context.get("body", "")
 
-            return render_inertia_body(page, body)
+            return Markup(render_inertia_body(page, body))
 
         return inertia_body
+
+    def get_ssr_client(self):
+        """Return the appropriate SSR client for the current runtime mode."""
+        if not self.ssr_enabled:
+            return None
+
+        if self.is_dev_mode():
+            if self._vite_dev_ssr_client is not None:
+                return self._vite_dev_ssr_client
+
+            from cross_inertia._ssr import InertiaSSR
+
+            self._vite_dev_ssr_client = InertiaSSR(
+                url=self.vite_dev_url,
+                enabled=True,
+                render_path=VITE_DEV_SSR_ENDPOINT,
+                health_path=VITE_DEV_SSR_ENDPOINT,
+            )
+            return self._vite_dev_ssr_client
+
+        return self._ssr_client
 
     def get_vite_tags(self) -> str:
         """Generate script tags for Vite assets"""
@@ -489,12 +536,13 @@ class InertiaResponse:
         else:
             # Production mode - use built assets from manifest
             manifest = self.get_manifest()
-            entry = manifest.get(self.vite_entry, {})
+            resolved_key, entry = resolve_manifest_entry(manifest, self.vite_entry)
 
             if not entry:
                 logger.error(
                     f"No entry found for '{self.vite_entry}' in manifest - did you run 'npm run build'?"
                 )
+                return ""
 
             tags = []
 
@@ -502,15 +550,17 @@ class InertiaResponse:
             css_files = entry.get("css", [])
             if css_files:
                 logger.info(
-                    f"Generating PRODUCTION script tags - {len(css_files)} CSS file(s), entry: {entry.get('file', 'none')}"
+                    f"Generating PRODUCTION script tags - {len(css_files)} CSS file(s), entry: {resolved_key or entry.get('file', 'none')}"
                 )
             for css in css_files:
-                tags.append(f'<link rel="stylesheet" href="/static/build/{css}">')
+                tags.append(
+                    f'<link rel="stylesheet" href="{build_asset_url(self.asset_url_prefix, css)}">'
+                )
 
             # Add main JS file
             if "file" in entry:
                 tags.append(
-                    f'<script type="module" src="/static/build/{entry["file"]}"></script>'
+                    f'<script type="module" src="{build_asset_url(self.asset_url_prefix, entry["file"])}"></script>'
                 )
             else:
                 logger.warning("No JS entry file found in manifest!")
@@ -606,7 +656,8 @@ class InertiaResponse:
             # Try SSR if enabled
             head: list[str] = []
             body: str = ""
-            if self._ssr_client and self.ssr_enabled:
+            ssr_client = self.get_ssr_client()
+            if ssr_client:
                 try:
                     # Run SSR render (need to handle sync context)
                     loop = asyncio.get_event_loop()
@@ -615,12 +666,12 @@ class InertiaResponse:
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             future = executor.submit(
                                 asyncio.run,
-                                self._ssr_client.render(build_result.page_data),
+                                ssr_client.render(build_result.page_data),
                             )
                             ssr_result = future.result(timeout=5.0)
                     else:
                         ssr_result = loop.run_until_complete(
-                            self._ssr_client.render(build_result.page_data)
+                            ssr_client.render(build_result.page_data)
                         )
 
                     if ssr_result:
@@ -633,10 +684,9 @@ class InertiaResponse:
             template_context = {
                 "request": request,
                 "page": build_result.page_json,
-                "vite_tags": self.get_vite_tags(),  # Backward compatibility
+                "vite_tags": _DeprecatedViteTags(self.get_vite_tags()),
                 "head": head,
                 "body": body,
-                # Note: vite() function is also available globally
             }
             # Add view_data to template context if provided
             if view_data:

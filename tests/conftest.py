@@ -21,11 +21,10 @@ def temp_template_dir():
 <html>
 <head>
     <title>Test</title>
-    {{ vite_tags | safe }}
+    {{ inertia_head() }}
 </head>
 <body>
-    <script data-page="app" type="application/json">{{ page | safe }}</script>
-    <div id="app"></div>
+    {{ inertia_body() }}
 </body>
 </html>"""
         )
