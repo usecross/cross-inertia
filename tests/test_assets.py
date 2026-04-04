@@ -1,6 +1,10 @@
 """Tests for Vite manifest asset resolution."""
 
-from cross_inertia._assets import build_asset_url, normalize_entry_key, resolve_manifest_entry
+from cross_inertia._assets import (
+    build_asset_url,
+    normalize_entry_key,
+    resolve_manifest_entry,
+)
 
 
 class TestNormalizeEntryKey:
@@ -85,13 +89,25 @@ class TestResolveManifestEntry:
 
 class TestBuildAssetUrl:
     def test_basic(self):
-        assert build_asset_url("/static/build", "assets/app.js") == "/static/build/assets/app.js"
+        assert (
+            build_asset_url("/static/build", "assets/app.js")
+            == "/static/build/assets/app.js"
+        )
 
     def test_strips_trailing_slash_from_prefix(self):
-        assert build_asset_url("/static/build/", "assets/app.js") == "/static/build/assets/app.js"
+        assert (
+            build_asset_url("/static/build/", "assets/app.js")
+            == "/static/build/assets/app.js"
+        )
 
     def test_strips_leading_slash_from_path(self):
-        assert build_asset_url("/static/build", "/assets/app.js") == "/static/build/assets/app.js"
+        assert (
+            build_asset_url("/static/build", "/assets/app.js")
+            == "/static/build/assets/app.js"
+        )
 
     def test_both_slashes(self):
-        assert build_asset_url("/static/build/", "/assets/app.js") == "/static/build/assets/app.js"
+        assert (
+            build_asset_url("/static/build/", "/assets/app.js")
+            == "/static/build/assets/app.js"
+        )
