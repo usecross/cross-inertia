@@ -7,29 +7,30 @@ import json
 import logging
 import warnings
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Any
 
 import httpx
-from fastapi import Depends, Request
+from cross_web import StarletteRequestAdapter
+from fastapi import Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 from jinja2 import pass_context
 from markupsafe import Markup
 from starlette.responses import Response
-from fastapi.templating import Jinja2Templates
-from cross_web import StarletteRequestAdapter
 
-from ._props import optional, always, defer, once
 from ._assets import build_asset_url, resolve_manifest_entry
 from ._exceptions import ManifestNotFoundError
-from ._ssr import VITE_DEV_SSR_ENDPOINT
 from ._page import (
     PageRenderOptions,
-    build_page_request_context,
     build_inertia_page,
+    build_page_request_context,
     is_inertia_request_headers,
     is_prefetch_request_headers,
     render_inertia_body,
 )
+from ._props import always, defer, once, optional
+from ._ssr import VITE_DEV_SSR_ENDPOINT
+from ._types import ValidationErrors
 
 # Configure logging with basic config if not already configured
 logging.basicConfig(
@@ -70,10 +71,12 @@ class Inertia:
         request: Request,
         adapter: StarletteRequestAdapter,
         response: InertiaResponse,
+        validation_errors: ValidationErrors | None = None,
     ):
         self.request = request
         self.adapter = adapter
         self.response = response
+        self._validation_errors = validation_errors
         self._encrypt_history = False
         self._clear_history = False
         self._flash: dict[str, Any] = {}
@@ -83,7 +86,7 @@ class Inertia:
         self,
         component: str,
         props: dict[str, Any] | None = None,
-        errors: dict[str, str] | None = None,
+        errors: ValidationErrors | None = None,
         merge_props: list[str] | None = None,
         prepend_props: list[str] | None = None,
         deep_merge_props: list[str] | None = None,
@@ -101,14 +104,16 @@ class Inertia:
             view_data: Optional extra data to pass to the template (not included in page props).
                       Useful for server-side meta tags, page titles, etc.
         """
-        if props is None:
-            props = {}
+        props = props or {}
+
+        validation_errors = self._merge_validation_errors(errors)
+
         return self.response.render(
             self.request,
             self.adapter,
             component,
             props,
-            errors,
+            validation_errors,
             encrypt_history=self._encrypt_history,
             clear_history=self._clear_history,
             flash=self._flash or None,
@@ -121,6 +126,18 @@ class Inertia:
             url=url,
             view_data=view_data,
         )
+
+    def _merge_validation_errors(
+        self,
+        errors: ValidationErrors | None,
+    ) -> ValidationErrors | None:
+        if not self._validation_errors:
+            return errors
+
+        if not errors:
+            return self._validation_errors
+
+        return {**self._validation_errors, **errors}
 
     def location(self, url: str) -> Response:
         """
@@ -573,7 +590,7 @@ class InertiaResponse:
         adapter: StarletteRequestAdapter,
         component: str,
         props: dict[str, Any],
-        errors: dict[str, str] | None = None,
+        errors: ValidationErrors | None = None,
         encrypt_history: bool = False,
         clear_history: bool = False,
         flash: dict[str, Any] | None = None,
@@ -730,13 +747,3 @@ def reset_inertia_response() -> None:
     """Reset the InertiaResponse singleton. Useful for testing."""
     global _inertia_response
     _inertia_response = None
-
-
-def get_inertia(request: Request) -> Inertia:
-    """FastAPI dependency to get request-scoped Inertia renderer"""
-    adapter = StarletteRequestAdapter(request)
-    return Inertia(request, adapter, get_inertia_response())
-
-
-# Type alias for dependency injection
-InertiaDep = Annotated[Inertia, Depends(get_inertia)]
