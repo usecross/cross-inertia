@@ -101,7 +101,7 @@ def create_direct_render_app(inertia_response: InertiaResponse) -> FastAPI:
     return app
 
 
-def test_fastapi_validation_errors_redirect_back_and_flash_to_errors_prop(
+def test_fastapi_validation_errors_redirect_back_and_store_to_errors_prop(
     inertia_response: InertiaResponse,
 ) -> None:
     client = TestClient(create_validation_app(inertia_response))
@@ -208,7 +208,7 @@ def test_fastapi_validation_errors_respect_error_bag(
     assert data["props"]["errors"]["createUser"]["name"] == "Field required"
 
 
-def test_fastapi_model_validation_errors_use_form_key(
+def test_fastapi_model_validation_errors_use_non_field_key_without_value_error_prefix(
     inertia_response: InertiaResponse,
 ) -> None:
     client = TestClient(create_validation_app(inertia_response))
@@ -232,10 +232,7 @@ def test_fastapi_model_validation_errors_use_form_key(
     redirected = client.get("/conferences/1/edit", headers={"X-Inertia": "true"})
     data: dict[str, Any] = redirected.json()
 
-    assert (
-        data["props"]["errors"]["form"]
-        == "Value error, end_date must be after start_date"
-    )
+    assert data["props"]["errors"]["_form"] == "end_date must be after start_date"
 
 
 def test_non_inertia_validation_errors_keep_fastapi_default_response(
@@ -277,6 +274,61 @@ def test_validation_error_locations_include_list_indexes() -> None:
     )
 
     assert validation_errors_from_exception(exc) == {"items.0.name": "Field required"}
+
+
+def test_validation_value_errors_use_original_exception_message() -> None:
+    exc = RequestValidationError(
+        [
+            {
+                "type": "value_error",
+                "loc": ("body",),
+                "msg": "Value error, Too late",
+                "input": {},
+                "ctx": {"error": ValueError("Too late")},
+            }
+        ]
+    )
+
+    assert validation_errors_from_exception(exc) == {"_form": "Too late"}
+
+
+def test_validation_errors_keep_non_value_error_messages() -> None:
+    exc = RequestValidationError(
+        [
+            {
+                "type": "missing",
+                "loc": ("body", "name"),
+                "msg": "Field required",
+                "input": {},
+            },
+            {
+                "type": "int_parsing",
+                "loc": ("body", "age"),
+                "msg": "Input should be a valid integer",
+                "input": "abc",
+            },
+        ]
+    )
+
+    assert validation_errors_from_exception(exc) == {
+        "name": "Field required",
+        "age": "Input should be a valid integer",
+    }
+
+
+def test_validation_errors_fall_back_for_non_string_messages() -> None:
+    exc = RequestValidationError(
+        [
+            {
+                "type": "missing",
+                "loc": ("body", "name"),
+                "msg": None,
+                "input": {},
+            }
+        ]
+    )
+
+    assert validation_errors_from_exception(exc) == {"name": "Invalid value"}
 
 
 def test_pop_validation_errors_from_session_removes_stored_errors() -> None:

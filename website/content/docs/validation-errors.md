@@ -20,11 +20,16 @@ app.add_middleware(SessionMiddleware, secret_key="change-me")
 
 When a mutating Inertia request (`POST`, `PUT`, `PATCH`, or `DELETE`) fails FastAPI or Pydantic validation, Cross-Inertia stores the validation errors in the session and redirects back with `303`. The next Inertia response exposes those errors once as `page.props.errors`. Non-Inertia requests and `GET` validation errors keep FastAPI's default `422` response.
 
-Pydantic model-level validation errors use the `form` key:
+Pydantic model-level validation errors do not belong to a single input field.
+Cross-Inertia exposes them with the `_form` key:
 
 ```tsx
-{errors.form && <div>{errors.form}</div>}
+{errors._form && <div>{errors._form}</div>}
 ```
+
+`_form` is a Cross-Inertia convention, not a special Inertia.js key. Inertia
+treats validation errors as plain object keys, so field errors continue to use
+their field names (`name`, `email`, `address.street`, and so on).
 
 ## Basic Validation
 

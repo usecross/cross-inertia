@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TypeAlias, cast
+from typing import Mapping, TypeAlias, cast
 from urllib.parse import urlparse
 
 from fastapi import Request
@@ -31,7 +31,7 @@ async def inertia_validation_exception_handler(
 ) -> Response:
     """FastAPI exception handler for Inertia validation failures."""
 
-    if not _should_flash_validation_errors(request):
+    if not _should_store_validation_errors(request):
         return await request_validation_exception_handler(request, exc)
 
     if "session" not in request.scope:
@@ -89,13 +89,34 @@ def validation_errors_from_exception(exc: RequestValidationError) -> ValidationE
         if field in errors:
             continue
 
-        message = error.get("msg")
-        errors[field] = message if isinstance(message, str) else "Invalid value"
+        errors[field] = _error_message_for_display(error)
 
     return errors
 
 
-def _should_flash_validation_errors(request: Request) -> bool:
+def _error_message_for_display(error: Mapping[str, object]) -> str:
+    if error.get("type") == "value_error":
+        # Pydantic prefixes ValueError messages with "Value error", which
+        # I don't think look nice (eg: "Value error, end date must be after start date")
+        # so if we get a ValueError in the `ctx`, then we, return the string
+        # version of the exception
+        try:
+            raw_error = cast(Mapping[str, object], error["ctx"])["error"]
+        except (KeyError, TypeError):
+            pass
+        else:
+            if isinstance(raw_error, ValueError) and (message := str(raw_error)):
+                return message
+
+    try:
+        raw_message = error["msg"]
+    except KeyError:
+        return "Invalid value"
+
+    return raw_message if isinstance(raw_message, str) else "Invalid value"
+
+
+def _should_store_validation_errors(request: Request) -> bool:
     return (
         request.headers.get("X-Inertia") == "true"
         and request.method.upper() in _MUTATING_METHODS
@@ -108,7 +129,7 @@ def _error_location_to_field_path(location: ErrorLocation) -> str:
         parts = parts[1:]
 
     if not parts or parts == ["__root__"]:
-        return "form"
+        return "_form"
 
     return ".".join(parts)
 

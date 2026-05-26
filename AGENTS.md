@@ -13,10 +13,7 @@ When creating a release, add a `RELEASE.md` file to your PR with this format:
 release type: patch|minor|major
 ---
 
-Release notes go here.
-
-- List your changes
-- Can be multiple lines
+This release adds/fixes ...
 ```
 
 ### Release Types
