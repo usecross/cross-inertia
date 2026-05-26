@@ -17,6 +17,21 @@ async def home(inertia: InertiaDep):
     return inertia.render("Home", {"message": "Hello"})
 ```
 
+## FastAPI validation handlers
+
+Use `inertia_exception_handlers()` when creating your FastAPI app to store FastAPI/Pydantic validation errors from mutating Inertia requests in the session, redirect back, and expose those errors once as `props.errors`.
+
+```python
+from fastapi import FastAPI
+from starlette.middleware.sessions import SessionMiddleware
+from cross_inertia.fastapi import inertia_exception_handlers
+
+app = FastAPI(exception_handlers=inertia_exception_handlers())
+app.add_middleware(SessionMiddleware, secret_key="change-me")
+```
+
+If you need to compose handlers yourself, register `inertia_validation_exception_handler` for FastAPI's `RequestValidationError`.
+
 ## Methods
 
 ### render()

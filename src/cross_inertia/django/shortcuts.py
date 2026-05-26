@@ -8,6 +8,7 @@ from typing import Any, Callable, TypeVar
 
 from django.http import HttpRequest, HttpResponse
 
+from .._types import ValidationErrors
 from .response import DjangoInertiaResponse
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ def render(
     request: "HttpRequest",
     component: str,
     props: dict[str, Any] | None = None,
-    errors: dict[str, str] | None = None,
+    errors: ValidationErrors | None = None,
     encrypt_history: bool = False,
     clear_history: bool = False,
     merge_props: list[str] | None = None,
@@ -279,7 +280,7 @@ class InertiaViewMixin:
         """
         return {}
 
-    def get_errors(self, request: "HttpRequest") -> dict[str, str] | None:
+    def get_errors(self, request: "HttpRequest") -> ValidationErrors | None:
         """Return validation errors dict.
 
         Override this method to provide validation errors.

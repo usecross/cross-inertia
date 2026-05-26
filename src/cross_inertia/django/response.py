@@ -28,6 +28,7 @@ from .._page import (
     is_inertia_request_headers,
     is_prefetch_request_headers,
 )
+from .._types import ValidationErrors
 
 logger = logging.getLogger(__name__)
 
@@ -219,7 +220,7 @@ class DjangoInertiaResponse:
         request: "HttpRequest",
         component: str,
         props: dict[str, Any],
-        errors: dict[str, str] | None = None,
+        errors: ValidationErrors | None = None,
         encrypt_history: bool = False,
         clear_history: bool = False,
         flash: dict[str, Any] | None = None,

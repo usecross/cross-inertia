@@ -14,7 +14,14 @@ RUFF_VERSION = "0.14.3"
 def tests(session: nox.Session) -> None:
     """Run unit tests."""
     session.install(
-        "pytest", "pytest-cov", "pytest-django", "fastapi", "httpx", "jinja2", "django"
+        "pytest",
+        "pytest-cov",
+        "pytest-django",
+        "fastapi",
+        "python-multipart",
+        "httpx",
+        "jinja2",
+        "django",
     )
     # Install in editable mode so coverage can track the source
     session.install("-e", ".")

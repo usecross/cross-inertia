@@ -8,6 +8,7 @@ from typing import Any, Mapping, Protocol
 from urllib.parse import urlparse
 
 from ._props import always, defer, once, optional
+from ._types import ValidationErrors
 from ._utils import _resolve_props_sync
 
 _SPECIAL_PROP_TYPES = (optional, always, defer, once)
@@ -53,7 +54,7 @@ class PageRenderOptions:
 
     component: str
     props: dict[str, Any]
-    errors: dict[str, str] | None = None
+    errors: ValidationErrors | None = None
     encrypt_history: bool = False
     clear_history: bool = False
     flash: dict[str, Any] | None = None

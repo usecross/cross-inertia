@@ -3,7 +3,28 @@ title: Validation Errors
 description: Handle form validation errors with Inertia
 ---
 
-Cross-Inertia provides built-in support for form validation errors following the Inertia.js protocol. When validation fails, errors are automatically returned with a `422 Unprocessable Entity` status.
+Cross-Inertia provides built-in support for form validation errors following the Inertia.js protocol. Inertia form submissions receive validation errors through `page.props.errors`, not as `422` JSON responses.
+
+## Automatic FastAPI Validation
+
+For FastAPI apps, you can opt into Laravel-style validation handling by registering Cross-Inertia's validation exception handler and enabling Starlette sessions:
+
+```python
+from fastapi import FastAPI
+from starlette.middleware.sessions import SessionMiddleware
+from cross_inertia.fastapi import inertia_exception_handlers
+
+app = FastAPI(exception_handlers=inertia_exception_handlers())
+app.add_middleware(SessionMiddleware, secret_key="change-me")
+```
+
+When a mutating Inertia request (`POST`, `PUT`, `PATCH`, or `DELETE`) fails FastAPI or Pydantic validation, Cross-Inertia stores the validation errors in the session and redirects back with `303`. The next Inertia response exposes those errors once as `page.props.errors`. Non-Inertia requests and `GET` validation errors keep FastAPI's default `422` response.
+
+Pydantic model-level validation errors use the `form` key:
+
+```tsx
+{errors.form && <div>{errors.form}</div>}
+```
 
 ## Basic Validation
 
@@ -49,10 +70,9 @@ async def create_user(inertia: InertiaDep):
 
 When you pass `errors` to `inertia.render()`:
 
-1. Cross-Inertia returns a `422 Unprocessable Entity` status
-2. The error bag is included in the response props
-3. The Inertia client automatically handles the errors
-4. Your frontend receives the errors in the component props
+1. Cross-Inertia includes the errors in `page.props.errors`
+2. The Inertia client automatically calls `onError()` instead of `onSuccess()`
+3. Your frontend receives the errors in the component props
 
 ## Frontend Error Display
 
@@ -401,7 +421,7 @@ See the [Inertia.js error bags documentation](https://inertiajs.com/validation#e
 2. **Provide clear messages**: Tell users exactly what went wrong and how to fix it
 3. **Validate early**: Return errors as soon as validation fails
 4. **Preserve form data**: When re-rendering with errors, include the submitted data so users don't have to re-enter everything
-5. **Use proper status codes**: Cross-Inertia automatically uses `422` for validation errors
+5. **Follow the Inertia protocol**: Use `props.errors` for Inertia form validation; reserve `422` JSON for non-Inertia endpoints
 
 ## Next Steps
 

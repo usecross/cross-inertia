@@ -16,7 +16,7 @@ A Python adapter for using [Inertia.js](https://inertiajs.com/) with FastAPI and
 - ✅ Vite integration (dev & production)
 - ✅ Auto-detection of Vite entry point from vite.config.ts/js
 - ✅ Asset versioning for cache busting
-- ✅ Validation error handling (422 responses)
+- ✅ Validation error handling (`props.errors`)
 - ✅ History encryption for sensitive data
 - ✅ External redirects (OAuth, payments, etc.)
 - ✅ Partial reloads & shared data
@@ -192,7 +192,7 @@ async def create_user(inertia: InertiaDep):
     errors = validate_user(request_data)
 
     if errors:
-        # Returns 422 status for Inertia requests
+        # Returns 200 with props.errors for Inertia requests
         return inertia.render(
             "Users/Create",
             {"user": request_data},
@@ -271,7 +271,7 @@ No configuration changes needed - it just works!
 | Template function `{{ vite() }}` | ✅ `@vite` | ✅ | - |
 | Auto Vite entry detection | ✅ | ✅ | - |
 | Dev/Prod mode detection | ✅ | ✅ | - |
-| Validation errors (422) | ✅ | ✅ | - |
+| Validation errors (`props.errors`) | ✅ | ✅ | - |
 | Asset versioning (basic) | ✅ | ✅ | - |
 | **Asset version mismatch (409)** | ✅ | ✅ | - |
 | **Partial reloads** | ✅ | ✅ | - |
