@@ -1,3 +1,14 @@
+0.19.1 - 2026-05-26
+-------------------
+
+Add automatic FastAPI validation error handling for Inertia requests.
+
+- Store FastAPI and Pydantic validation errors in the session and expose them once as `page.props.errors`
+- Use `_form` for Pydantic model-level validation errors
+- Document the FastAPI validation error flow
+
+This release was contributed by [@patrick91](https://github.com/patrick91) in [#132](https://github.com/usecross/cross-inertia/pull/132)
+
 0.19.0 - 2026-05-26
 -------------------
 
