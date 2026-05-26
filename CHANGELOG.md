@@ -1,3 +1,16 @@
+0.19.0 - 2026-05-26
+-------------------
+
+This release adds FastAPI validation error handling for Inertia form submissions.
+
+- Add declarative FastAPI exception handlers for validation failures
+- Store validation errors in the session and expose them once as `props.errors`
+- Redirect validation failures back using the same-origin referrer or stored previous Inertia URL
+- Preserve error bags for scoped form errors
+- Update validation documentation to match the Inertia protocol
+
+This release was contributed by [@patrick91](https://github.com/patrick91) in [#131](https://github.com/usecross/cross-inertia/pull/131)
+
 0.18.0 - 2026-04-04
 -------------------
 
