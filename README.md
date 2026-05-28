@@ -8,6 +8,9 @@
 
 A Python adapter for using [Inertia.js](https://inertiajs.com/) with FastAPI and Django.
 
+> [!CAUTION]
+> This library is still in active development so it might not be fully stable yet.
+
 **[📚 Documentation](https://inertia.patrick.wtf)** | **[🚀 Quick Start](#quick-start)** | **[🗺️ Roadmap](./ROADMAP.md)**
 
 ## Features
@@ -107,13 +110,13 @@ async def home(inertia: Inertia = Depends(get_custom_inertia)):
 
 ### InertiaResponse Parameters
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `template_dir` | `str` | `"templates"` | Directory containing your root HTML template |
-| `vite_dev_url` | `str` | `"http://localhost:5173"` | Vite dev server URL |
-| `manifest_path` | `str` | `"static/build/.vite/manifest.json"` | Path to Vite manifest file (production) |
-| `vite_entry` | `str \| None` | `None` | Vite entry point (auto-detected from config if None) |
-| `vite_config_path` | `str` | `"vite.config.ts"` | Path to vite.config.ts/js for auto-detection |
+| Parameter          | Type          | Default                              | Description                                          |
+| ------------------ | ------------- | ------------------------------------ | ---------------------------------------------------- |
+| `template_dir`     | `str`         | `"templates"`                        | Directory containing your root HTML template         |
+| `vite_dev_url`     | `str`         | `"http://localhost:5173"`            | Vite dev server URL                                  |
+| `manifest_path`    | `str`         | `"static/build/.vite/manifest.json"` | Path to Vite manifest file (production)              |
+| `vite_entry`       | `str \| None` | `None`                               | Vite entry point (auto-detected from config if None) |
+| `vite_config_path` | `str`         | `"vite.config.ts"`                   | Path to vite.config.ts/js for auto-detection         |
 
 ### Auto-Detection of Vite Entry
 
@@ -124,7 +127,7 @@ By default, the adapter will attempt to read your `vite.config.ts` (or `.js`) fi
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: "frontend/app.tsx",  // ← Auto-detected
+      input: "frontend/app.tsx", // ← Auto-detected
     },
   },
 });
@@ -139,19 +142,22 @@ Create a template file (default: `templates/app.html`):
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     {{ vite()|safe }}
-</head>
-<body>
-    <script data-page="app" type="application/json">{{ page|safe }}</script>
+  </head>
+  <body>
+    <script data-page="app" type="application/json">
+      {{ page|safe }}
+    </script>
     <div id="app"></div>
-</body>
+  </body>
 </html>
 ```
 
 The `{{ vite() }}` function will automatically include:
+
 - React Fast Refresh scripts (dev mode)
 - Vite client scripts (dev mode)
 - Your entry point script
@@ -167,7 +173,7 @@ createInertiaApp({
     },
   },
   // ...
-})
+});
 ```
 
 ### Using Custom Entry Points
@@ -247,6 +253,7 @@ async def logout(inertia: InertiaDep):
 ```
 
 **How it works:**
+
 - Uses browser's Web Crypto API (AES-GCM encryption)
 - Encryption keys stored in sessionStorage
 - `clear_history()` rotates keys, making old history unreadable
@@ -265,26 +272,26 @@ No configuration changes needed - it just works!
 
 ## Feature Status
 
-| Feature | Laravel Inertia | FastAPI Inertia | Priority |
-|---------|----------------|-----------------|----------|
-| Basic protocol | ✅ | ✅ | - |
-| Template function `{{ vite() }}` | ✅ `@vite` | ✅ | - |
-| Auto Vite entry detection | ✅ | ✅ | - |
-| Dev/Prod mode detection | ✅ | ✅ | - |
-| Validation errors (`props.errors`) | ✅ | ✅ | - |
-| Asset versioning (basic) | ✅ | ✅ | - |
-| **Asset version mismatch (409)** | ✅ | ✅ | - |
-| **Partial reloads** | ✅ | ✅ | - |
-| **Shared data** | ✅ | ✅ | - |
-| **External redirects** | ✅ | ✅ | - |
-| **History encryption** | ✅ | ✅ | - |
-| **Merging props (infinite scroll)** | ✅ | ✅ | - |
-| **View data** | ✅ | ✅ | - |
-| Lazy props | ✅ | ⏳ Planned | 🟡 Medium |
-| Deferred props | ✅ | ⏳ Planned | 🟡 Medium |
-| Error bags | ✅ | ⏳ Planned | 🟢 Low |
-| Prefetching | ✅ | ⏳ Planned | 🟢 Low |
-| SSR | ✅ | ❌ Not planned | - |
+| Feature                             | Laravel Inertia | FastAPI Inertia | Priority  |
+| ----------------------------------- | --------------- | --------------- | --------- |
+| Basic protocol                      | ✅              | ✅              | -         |
+| Template function `{{ vite() }}`    | ✅ `@vite`      | ✅              | -         |
+| Auto Vite entry detection           | ✅              | ✅              | -         |
+| Dev/Prod mode detection             | ✅              | ✅              | -         |
+| Validation errors (`props.errors`)  | ✅              | ✅              | -         |
+| Asset versioning (basic)            | ✅              | ✅              | -         |
+| **Asset version mismatch (409)**    | ✅              | ✅              | -         |
+| **Partial reloads**                 | ✅              | ✅              | -         |
+| **Shared data**                     | ✅              | ✅              | -         |
+| **External redirects**              | ✅              | ✅              | -         |
+| **History encryption**              | ✅              | ✅              | -         |
+| **Merging props (infinite scroll)** | ✅              | ✅              | -         |
+| **View data**                       | ✅              | ✅              | -         |
+| Lazy props                          | ✅              | ⏳ Planned      | 🟡 Medium |
+| Deferred props                      | ✅              | ⏳ Planned      | 🟡 Medium |
+| Error bags                          | ✅              | ⏳ Planned      | 🟢 Low    |
+| Prefetching                         | ✅              | ⏳ Planned      | 🟢 Low    |
+| SSR                                 | ✅              | ❌ Not planned  | -         |
 
 **See [ROADMAP.md](./ROADMAP.md) for detailed implementation plans and progress tracking.**
 
@@ -295,6 +302,7 @@ No configuration changes needed - it just works!
 This adapter implements all production-critical Inertia features and is **ready for production use**.
 
 **Production-ready features:**
+
 - ✅ Basic page rendering
 - ✅ Form submissions with validation
 - ✅ Navigation between pages
@@ -308,6 +316,7 @@ This adapter implements all production-critical Inertia features and is **ready 
 - ✅ View data (server-side template variables)
 
 **Coming soon:**
+
 - ⏳ Lazy props evaluation
 - ⏳ Deferred props
 
