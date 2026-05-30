@@ -1,5 +1,6 @@
 """Tests for Django Inertia render function."""
 
+import json
 import pytest
 from unittest.mock import AsyncMock
 from unittest.mock import patch
@@ -71,6 +72,59 @@ def test_render_with_errors(client, setup_inertia):
 
     assert "errors" in data["props"]
     assert data["props"]["errors"]["field"] == "This field is required"
+
+
+def test_render_shortcut_accepts_schema_argument(rf, setup_inertia):
+    """Django render shortcut should validate and serialize props with schema."""
+    from pydantic import BaseModel
+
+    from cross_inertia.django import render
+
+    class UserRecord(BaseModel):
+        id: int
+        name: str
+        password_hash: str
+
+    class UserPublic(BaseModel):
+        id: int
+        name: str
+
+    class PostPublic(BaseModel):
+        id: int
+        title: str
+
+    class CountsByStatus(BaseModel):
+        draft: int
+        published: int
+
+    class PostsIndexProps(BaseModel):
+        user: UserPublic
+        posts: list[PostPublic]
+        counts: CountsByStatus
+
+    def posts_view(request):
+        return render(
+            request,
+            "Posts/Index",
+            {
+                "user": UserRecord(id=1, name="Ada", password_hash="secret"),
+                "posts": [{"id": 10, "title": "Draft"}],
+                "counts": lambda: CountsByStatus(draft=1, published=0),
+            },
+            schema=PostsIndexProps,
+        )
+
+    request = rf.get("/posts/", HTTP_X_INERTIA="true")
+    response = posts_view(request)
+    data = json.loads(response.content)
+
+    assert response.status_code == 200
+    assert response["X-Inertia"] == "true"
+    assert data["props"] == {
+        "user": {"id": 1, "name": "Ada"},
+        "posts": [{"id": 10, "title": "Draft"}],
+        "counts": {"draft": 1, "published": 0},
+    }
 
 
 def test_external_redirect_returns_409(client, setup_inertia):

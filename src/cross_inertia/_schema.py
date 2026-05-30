@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from operator import getitem
 from typing import Annotated, Any
 
 from ._exceptions import InertiaSchemaError
@@ -13,8 +14,9 @@ def validate_props_with_schema(
     allowed_missing_fields: set[str],
 ) -> dict[str, Any]:
     """Validate and serialize included top-level props against a Pydantic model."""
-    TypeAdapter, Field = _get_pydantic_tools()
+    TypeAdapter, Field, validation_exceptions = _get_pydantic_tools()
     model_fields = _get_model_fields(schema)
+    schema_name = _get_schema_name(schema)
 
     if require_required_fields:
         missing_fields = [
@@ -37,31 +39,32 @@ def validate_props_with_schema(
             serialized[name] = value
             continue
 
+        adapter = _make_type_adapter(field, TypeAdapter, Field)
         try:
-            adapter = _make_type_adapter(field, TypeAdapter, Field)
             validated = adapter.validate_python(value, from_attributes=True)
             serialized[name] = adapter.dump_python(
                 validated,
                 mode="json",
                 by_alias=True,
             )
-        except Exception as exc:
+        except validation_exceptions as exc:
             raise InertiaSchemaError(
-                f"Inertia prop '{name}' does not match schema {schema.__name__}"
+                f"Inertia prop '{name}' does not match schema {schema_name}"
             ) from exc
 
     return serialized
 
 
-def _get_pydantic_tools() -> tuple[Any, Any]:
+def _get_pydantic_tools() -> tuple[Any, Any, tuple[type[Exception], ...]]:
     try:
-        from pydantic import Field, TypeAdapter
+        from pydantic import Field, TypeAdapter, ValidationError
+        from pydantic_core import PydanticSerializationError
     except ImportError as exc:
         raise InertiaSchemaError(
             "render(..., schema=...) requires pydantic>=2 to be installed"
         ) from exc
 
-    return TypeAdapter, Field
+    return TypeAdapter, Field, (ValidationError, PydanticSerializationError, TypeError)
 
 
 def _make_type_adapter(field: Any, TypeAdapter: Any, Field: Any) -> Any:
@@ -71,7 +74,8 @@ def _make_type_adapter(field: Any, TypeAdapter: Any, Field: Any) -> Any:
         *field_dict["metadata"],
         Field(**field_dict["attributes"]),
     )
-    return TypeAdapter(Annotated[annotated_args])
+    # Keeps Annotated tuple unpacking explicit while remaining valid on Python 3.10.
+    return TypeAdapter(getitem(Annotated, annotated_args))
 
 
 def _field_asdict(field: Any) -> dict[str, Any]:
@@ -115,13 +119,18 @@ def _field_asdict(field: Any) -> dict[str, Any]:
 
 
 def _get_model_fields(schema: Any) -> dict[str, Any]:
-    model_fields = getattr(schema, "model_fields", None)
+    schema_type = schema if isinstance(schema, type) else type(schema)
+    model_fields = getattr(schema_type, "model_fields", None)
     if model_fields is None:
         raise InertiaSchemaError(
             "render(..., schema=...) expects a Pydantic v2 model class"
         )
 
     return dict(model_fields)
+
+
+def _get_schema_name(schema: Any) -> str:
+    return str(getattr(schema, "__name__", type(schema).__name__))
 
 
 def _field_is_required(field: Any) -> bool:

@@ -143,6 +143,45 @@ def test_schema_validation_error_includes_prop_name() -> None:
     assert "posts" in message
 
 
+def test_schema_validation_error_names_schema_instances_defensively() -> None:
+    schema = PostsIndexProps(
+        user=UserPublic(id=1, name="Ada"),
+        posts=[],
+        counts=CountsByStatus(draft=0, published=0),
+    )
+
+    with pytest.raises(InertiaSchemaError) as exc_info:
+        validate_props_with_schema(
+            {
+                "posts": [{"id": "bad", "title": "Draft", "status": "draft"}],
+            },
+            schema=schema,
+            require_required_fields=False,
+            allowed_missing_fields=set(),
+        )
+
+    message = str(exc_info.value)
+    assert "posts" in message
+    assert "PostsIndexProps" in message
+
+
+def test_schema_does_not_wrap_unexpected_programming_errors() -> None:
+    class BrokenField:
+        def asdict(self):
+            raise RuntimeError("broken field metadata")
+
+    class BrokenSchema:
+        model_fields = {"broken": BrokenField()}
+
+    with pytest.raises(RuntimeError, match="broken field metadata"):
+        validate_props_with_schema(
+            {"broken": "value"},
+            schema=BrokenSchema,
+            require_required_fields=False,
+            allowed_missing_fields=set(),
+        )
+
+
 def test_schema_preserves_field_constraints() -> None:
     with pytest.raises(InertiaSchemaError) as exc_info:
         validate_props_with_schema(
