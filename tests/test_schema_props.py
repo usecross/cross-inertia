@@ -3,9 +3,15 @@ from __future__ import annotations
 from enum import Enum
 
 import pytest
+from cross_web import TestingRequestAdapter
 from pydantic import BaseModel, Field
 
 from cross_inertia._exceptions import InertiaSchemaError
+from cross_inertia._page import (
+    PageRenderOptions,
+    build_inertia_page,
+    build_page_request_context,
+)
 from cross_inertia._schema import validate_props_with_schema
 
 
@@ -144,3 +150,84 @@ def test_schema_preserves_field_constraints() -> None:
         )
 
     assert "count" in str(exc_info.value)
+
+
+def build_schema_page(
+    props: dict,
+    *,
+    headers: dict[str, str] | None = None,
+) -> dict:
+    result = build_inertia_page(
+        build_page_request_context(
+            adapter=TestingRequestAdapter(
+                method="GET",
+                headers=headers or {},
+                url="http://testserver/posts",
+            ),
+            shared_data={},
+            asset_version="dev",
+        ),
+        PageRenderOptions(
+            component="Posts/Index",
+            props=props,
+            schema=PostsIndexProps,
+        ),
+    )
+    assert result.page_data is not None
+    return result.page_data
+
+
+def test_page_builder_applies_schema_after_resolving_callables() -> None:
+    page = build_schema_page(
+        {
+            "user": UserRecord(id=1, name="Ada", password_hash="secret"),
+            "posts": [{"id": 10, "title": "Draft", "status": "draft"}],
+            "counts": lambda: CountsByStatus(draft=1, published=0),
+        }
+    )
+
+    assert page["props"] == {
+        "user": {"id": 1, "name": "Ada"},
+        "posts": [{"id": 10, "title": "Draft", "status": "draft"}],
+        "counts": {"draft": 1, "published": 0},
+    }
+
+
+def test_partial_reload_validates_only_included_props_and_skips_callable() -> None:
+    called = False
+
+    def load_counts() -> CountsByStatus:
+        nonlocal called
+        called = True
+        return CountsByStatus(draft=1, published=0)
+
+    page = build_schema_page(
+        {
+            "user": UserRecord(id=1, name="Ada", password_hash="secret"),
+            "posts": [{"id": 10, "title": "Draft", "status": "draft"}],
+            "counts": load_counts,
+        },
+        headers={
+            "X-Inertia": "true",
+            "X-Inertia-Partial-Component": "Posts/Index",
+            "X-Inertia-Partial-Data": "posts",
+        },
+    )
+
+    assert called is False
+    assert page["props"] == {
+        "posts": [{"id": 10, "title": "Draft", "status": "draft"}],
+    }
+
+
+def test_page_builder_raises_for_missing_required_schema_prop_on_full_render() -> None:
+    with pytest.raises(InertiaSchemaError) as exc_info:
+        build_schema_page(
+            {
+                "user": UserRecord(id=1, name="Ada", password_hash="secret"),
+                "posts": [{"id": 10, "title": "Draft", "status": "draft"}],
+            }
+        )
+
+    assert "Posts/Index" in str(exc_info.value)
+    assert "counts" in str(exc_info.value)
