@@ -3,10 +3,13 @@ from __future__ import annotations
 from enum import Enum
 
 import pytest
-from cross_web import TestingRequestAdapter
+from cross_web import StarletteRequestAdapter, TestingRequestAdapter
+from fastapi import FastAPI, Request
+from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field
 
 from cross_inertia._exceptions import InertiaSchemaError
+from cross_inertia._core import Inertia
 from cross_inertia._page import (
     PageRenderOptions,
     build_inertia_page,
@@ -231,3 +234,33 @@ def test_page_builder_raises_for_missing_required_schema_prop_on_full_render() -
 
     assert "Posts/Index" in str(exc_info.value)
     assert "counts" in str(exc_info.value)
+
+
+def test_inertia_render_accepts_schema_argument(inertia_response) -> None:
+    app = FastAPI()
+
+    @app.get("/posts")
+    def posts(request: Request):
+        inertia = Inertia(
+            request,
+            StarletteRequestAdapter(request),
+            inertia_response,
+        )
+        return inertia.render(
+            "Posts/Index",
+            {
+                "user": UserRecord(id=1, name="Ada", password_hash="secret"),
+                "posts": [{"id": 10, "title": "Draft", "status": "draft"}],
+                "counts": lambda: CountsByStatus(draft=1, published=0),
+            },
+            schema=PostsIndexProps,
+        )
+
+    response = TestClient(app).get("/posts", headers={"X-Inertia": "true"})
+
+    assert response.status_code == 200
+    assert response.json()["props"] == {
+        "user": {"id": 1, "name": "Ada"},
+        "posts": [{"id": 10, "title": "Draft", "status": "draft"}],
+        "counts": {"draft": 1, "published": 0},
+    }

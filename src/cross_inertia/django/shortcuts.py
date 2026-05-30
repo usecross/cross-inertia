@@ -50,6 +50,7 @@ def render(
     scroll_props: dict[str, Any] | None = None,
     url: str | None = None,
     view_data: dict[str, Any] | None = None,
+    schema: Any | None = None,
 ) -> "HttpResponse":
     """
     Render an Inertia response.
@@ -72,6 +73,7 @@ def render(
         scroll_props: Scroll position configuration for props.
         url: Override the URL in the Inertia response (defaults to request URL).
         view_data: Extra data to pass to the template (not included in page props).
+        schema: Optional Pydantic model used to validate and serialize included props.
 
     Returns:
         HttpResponse (JsonResponse for XHR, TemplateResponse for initial loads)
@@ -116,6 +118,7 @@ def render(
         scroll_props=scroll_props,
         url=url,
         view_data=view_data,
+        schema=schema,
     )
 
 

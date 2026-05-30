@@ -232,6 +232,7 @@ class DjangoInertiaResponse:
         scroll_props: dict[str, Any] | None = None,
         url: str | None = None,
         view_data: dict[str, Any] | None = None,
+        schema: Any | None = None,
     ) -> HttpResponse:
         """Render an Inertia response for Django."""
         adapter = DjangoHTTPRequestAdapter(request)
@@ -256,6 +257,7 @@ class DjangoInertiaResponse:
                 deep_merge_props=deep_merge_props,
                 match_props_on=match_props_on,
                 scroll_props=scroll_props,
+                schema=schema,
             ),
         )
 
