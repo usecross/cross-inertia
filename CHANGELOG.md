@@ -1,3 +1,19 @@
+0.20.0 - 2026-05-31
+-------------------
+
+Add optional Pydantic schema support for Inertia page props.
+
+- Add a `schema=` argument to render APIs so page props can be validated and
+  serialized through Pydantic models
+- Support schema validation during partial reloads, deferred props, optional
+  props, and remembered `once()` props
+- Expose `InertiaSchemaError` for schema validation failures
+- Document prop schemas, including using public models to reduce exposed fields
+- Add tests for schema serialization, validation, partial reload behavior, and
+  framework integration
+
+This release was contributed by [@patrick91](https://github.com/patrick91) in [#133](https://github.com/usecross/cross-inertia/pull/133)
+
 0.19.1 - 2026-05-26
 -------------------
 

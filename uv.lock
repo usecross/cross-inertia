@@ -242,7 +242,7 @@ wheels = [
 
 [[package]]
 name = "cross-inertia"
-version = "0.19.1"
+version = "0.20.0"
 source = { editable = "." }
 dependencies = [
     { name = "cross-web" },
