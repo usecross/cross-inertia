@@ -42,6 +42,7 @@ Render an Inertia page component.
 inertia.render(
     component: str,
     props: dict = {},
+    schema: type[BaseModel] | None = None,
     view_data: dict = {},
     encrypt_history: bool = False,
 )
@@ -53,8 +54,66 @@ inertia.render(
 |-----------|------|-------------|
 | `component` | `str` | The name of the page component to render |
 | `props` | `dict` | Props to pass to the component |
+| `schema` | `type[BaseModel] \| None` | Optional Pydantic model used to validate and serialize included page props |
 | `view_data` | `dict` | Additional data for the template (not passed to component) |
 | `encrypt_history` | `bool` | Whether to encrypt this page in browser history |
+
+### Prop schemas
+
+Use `schema=` to validate and serialize page props without manually calling
+`model_dump(mode="json")` in every route. Schemas also let you reduce the
+fields exposed for a prop: pass your application object, then declare the
+public response shape with a Pydantic model.
+
+```python
+from pydantic import BaseModel
+
+
+class UserPublic(BaseModel):
+    id: int
+    name: str
+
+
+class PostPublic(BaseModel):
+    id: int
+    title: str
+
+
+class CountsByStatus(BaseModel):
+    draft: int
+    published: int
+
+
+class PostsIndexProps(BaseModel):
+    user: UserPublic
+    posts: list[PostPublic]
+    counts: CountsByStatus
+
+
+@app.get("/posts")
+async def posts(inertia: InertiaDep):
+    return inertia.render(
+        "Posts/Index",
+        {
+            "user": current_user,
+            "posts": posts,
+            "counts": lambda: count_posts_by_status(session),
+        },
+        schema=PostsIndexProps,
+    )
+```
+
+In this example, `current_user` can contain additional fields such as
+`username` or `password_hash`. Because the page schema declares
+`user: UserPublic`, only the fields on `UserPublic` are serialized into the
+Inertia response.
+
+The schema describes the full page prop contract. During partial reloads,
+deferred props, optional props, and remembered `once()` props, Cross-Inertia
+validates only the props included in the current response. A required field
+such as `counts: CountsByStatus` may be omitted from a partial response when
+the client requests only another prop, but it must match `CountsByStatus`
+whenever it is sent.
 
 **Returns:** `InertiaResponse`
 

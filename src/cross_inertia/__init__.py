@@ -32,9 +32,9 @@ Prop types (following Laravel Inertia conventions):
 
 from importlib.metadata import version
 
-from cross_inertia._props import optional, always, defer, once
-from cross_inertia._exceptions import ManifestNotFoundError
 from cross_inertia._config import configure_inertia, get_config, InertiaConfig
+from cross_inertia._exceptions import InertiaSchemaError, ManifestNotFoundError
+from cross_inertia._props import optional, always, defer, once
 from cross_inertia._types import ValidationErrors, ValidationErrorValue
 
 __version__ = version("cross-inertia")
@@ -47,6 +47,7 @@ __all__ = [
     "get_config",
     "InertiaConfig",
     "ManifestNotFoundError",
+    "InertiaSchemaError",
     "ValidationErrors",
     "ValidationErrorValue",
     "__version__",

@@ -7,7 +7,9 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Protocol
 from urllib.parse import urlparse
 
+from ._exceptions import InertiaSchemaError
 from ._props import always, defer, once, optional
+from ._schema import validate_props_with_schema
 from ._types import ValidationErrors
 from ._utils import _resolve_props_sync
 
@@ -54,6 +56,7 @@ class PageRenderOptions:
 
     component: str
     props: dict[str, Any]
+    schema: Any | None = None
     errors: ValidationErrors | None = None
     encrypt_history: bool = False
     clear_history: bool = False
@@ -174,6 +177,7 @@ def build_inertia_page(
     merged_props = {**context.shared_data, **options.props}
     metadata = _CollectedMetadata()
     filtered_props: dict[str, Any] = {}
+    omitted_props: set[str] = set()
 
     for key, value in merged_props.items():
         include, filtered_value = _walk_node(
@@ -185,8 +189,23 @@ def build_inertia_page(
         )
         if include:
             filtered_props[key] = filtered_value
+        else:
+            omitted_props.add(key)
 
     resolved_props = _resolve_props_sync(filtered_props)
+
+    if options.schema is not None:
+        try:
+            resolved_props = validate_props_with_schema(
+                resolved_props,
+                schema=options.schema,
+                require_required_fields=not is_partial,
+                allowed_missing_fields=omitted_props,
+            )
+        except InertiaSchemaError as exc:
+            raise InertiaSchemaError(
+                f"Inertia component '{options.component}' props do not match schema: {exc}"
+            ) from exc
 
     if options.errors:
         if context.error_bag:

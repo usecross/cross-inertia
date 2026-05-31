@@ -94,6 +94,7 @@ class Inertia:
         scroll_props: dict[str, Any] | None = None,
         url: str | None = None,
         view_data: dict[str, Any] | None = None,
+        schema: Any | None = None,
     ) -> JSONResponse | HTMLResponse | Response:
         """Render an Inertia response without needing to pass request
 
@@ -103,6 +104,7 @@ class Inertia:
             scroll_props: Configuration for infinite scroll prop merging behavior.
             view_data: Optional extra data to pass to the template (not included in page props).
                       Useful for server-side meta tags, page titles, etc.
+            schema: Optional Pydantic model used to validate and serialize included props.
         """
         props = props or {}
 
@@ -125,6 +127,7 @@ class Inertia:
             scroll_props=scroll_props,
             url=url,
             view_data=view_data,
+            schema=schema,
         )
 
     def _merge_validation_errors(
@@ -602,6 +605,7 @@ class InertiaResponse:
         scroll_props: dict[str, Any] | None = None,
         url: str | None = None,
         view_data: dict[str, Any] | None = None,
+        schema: Any | None = None,
     ) -> JSONResponse | HTMLResponse | Response:
         """
         Render an Inertia response.
@@ -612,6 +616,7 @@ class InertiaResponse:
                  Useful for rendering a component with a different URL than the endpoint.
             view_data: Optional extra data to pass to the template (not included in page props).
                       Useful for server-side meta tags, page titles, etc.
+            schema: Optional Pydantic model used to validate and serialize included props.
         """
         build_result = build_inertia_page(
             build_page_request_context(
@@ -633,6 +638,7 @@ class InertiaResponse:
                 deep_merge_props=deep_merge_props,
                 match_props_on=match_props_on,
                 scroll_props=scroll_props,
+                schema=schema,
             ),
         )
 
