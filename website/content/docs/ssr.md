@@ -19,26 +19,16 @@ Create a `frontend/ssr.tsx` file:
 import { createInertiaApp } from '@inertiajs/react'
 import ReactDOMServer from 'react-dom/server'
 
-const pages = import.meta.glob('./pages/**/*.tsx', { eager: true })
-
 export default function render(page: any) {
   return createInertiaApp({
     page,
-    defaults: {
-      future: {
-        useScriptElementForInitialPage: true,
-      },
-    },
     render: ReactDOMServer.renderToString,
-    resolve: (name) => {
-      const resolved = pages[`./pages/${name}.tsx`]
-      if (!resolved) throw new Error(`Page ${name} not found`)
-      return resolved
-    },
     setup: ({ App, props }) => <App {...props} />,
   })
 }
 ```
+
+The `@inertiajs/vite` plugin automatically handles page resolution for SSR, just like it does for the client entry point.
 
 ### 2. Configure Vite for SSR
 
@@ -47,9 +37,10 @@ Update your `vite.config.ts`:
 ```ts
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import inertia from '@inertiajs/vite'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), inertia()],
   build: {
     manifest: true,
     outDir: 'static/build',

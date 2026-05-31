@@ -11,6 +11,8 @@ Cross-Inertia is an Inertia.js adapter for Python backends. It allows you to bui
 
 Instead of building an API and a separate SPA frontend, you can build a monolithic application where your Python backend renders React, Vue, or Svelte components directly.
 
+> **Note:** Cross-Inertia supports [Inertia.js v3](https://inertiajs.com), which is currently in beta. This brings a simplified setup with the `@inertiajs/vite` plugin, a built-in XHR client (no more Axios dependency), and new features like optimistic updates and instant visits.
+
 ## How it works
 
 Inertia sits between your server-side framework and your client-side framework. On the initial page visit, Inertia returns a full HTML document. Subsequent visits return JSON responses that update the page without a full reload.
