@@ -45,6 +45,7 @@ inertia.render(
     schema: type[BaseModel] | None = None,
     view_data: dict = {},
     encrypt_history: bool = False,
+    status_code: int = 200,
 )
 ```
 
@@ -57,6 +58,14 @@ inertia.render(
 | `schema` | `type[BaseModel] \| None` | Optional Pydantic model used to validate and serialize included page props |
 | `view_data` | `dict` | Additional data for the template (not passed to component) |
 | `encrypt_history` | `bool` | Whether to encrypt this page in browser history |
+| `status_code` | `int` | HTTP status for both Inertia JSON and initial HTML responses |
+
+Use a non-200 status when an error page itself should retain the underlying
+HTTP semantics:
+
+```python
+return inertia.render("ErrorPage", {"status": 403}, status_code=403)
+```
 
 ### Prop schemas
 

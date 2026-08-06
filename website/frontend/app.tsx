@@ -11,11 +11,6 @@ const pages = {
 }
 
 createInertiaApp({
-  defaults: {
-    future: {
-      useScriptElementForInitialPage: true,
-    },
-  },
   title: (title) => (title ? `${title} - Cross-Inertia` : 'Cross-Inertia'),
   resolve: (name) => {
     const page = pages[name as keyof typeof pages]

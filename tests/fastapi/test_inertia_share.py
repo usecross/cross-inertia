@@ -1,9 +1,31 @@
-from typing import Any
+from __future__ import annotations
 
+import inspect
+from datetime import date
+from typing import TYPE_CHECKING, Annotated, Any
+
+from fastapi import Depends, FastAPI, Request
 from fastapi.testclient import TestClient
 from httpx import Response
 
+from cross_inertia.fastapi import inertia_share
 from tests.page_html import extract_page_data
+
+if TYPE_CHECKING:
+
+    class MissingSharedData(dict[str, str]):
+        pass
+
+
+def get_test_user() -> str:
+    return "alice"
+
+
+def _provider_with_unresolvable_return(
+    req: Request,
+    since: date,
+) -> MissingSharedData:
+    return {"since": since.isoformat()}
 
 
 def test_single_share_sets_data(share_client: TestClient) -> None:
@@ -104,3 +126,63 @@ def test_decorator_only(share_client: TestClient) -> None:
 
     assert response.status_code == 200
     assert data["props"]["from_decorator"] is True
+
+
+def test_share_accepts_postponed_request_annotation() -> None:
+    def share(request: "Request") -> dict[str, bool]:
+        return {"shared": True}
+
+    wrapped = inertia_share(share)
+
+    assert list(inspect.signature(wrapped).parameters) == ["request"]
+
+
+def test_share_accepts_request_parameter_with_different_name() -> None:
+    def share(req: Request) -> dict[str, bool]:
+        return {"shared": bool(req)}
+
+    wrapped = inertia_share(share)
+
+    assert list(inspect.signature(wrapped).parameters) == ["req"]
+
+
+def test_share_resolves_postponed_dependency_annotations(
+    inertia_response,
+) -> None:
+    @inertia_share
+    def share(
+        request: Request,
+        since: date,
+        user: Annotated[str, Depends(get_test_user)],
+    ) -> dict[str, str]:
+        return {"since": since.isoformat(), "user": user}
+
+    app = FastAPI(dependencies=[Depends(share)])
+
+    @app.get("/")
+    def index(request: Request):
+        from cross_inertia._core import Inertia
+        from cross_web import StarletteRequestAdapter
+
+        inertia = Inertia(request, StarletteRequestAdapter(request), inertia_response)
+        return inertia.render("Index", {})
+
+    response = TestClient(app).get(
+        "/?since=2026-08-02",
+        headers={"X-Inertia": "true"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["props"] == {
+        "since": "2026-08-02",
+        "user": "alice",
+    }
+
+
+def test_unresolved_return_does_not_poison_parameter_annotations() -> None:
+    wrapped = inertia_share(_provider_with_unresolvable_return)
+    parameters = inspect.signature(wrapped).parameters
+
+    assert list(parameters) == ["req", "since"]
+    assert parameters["req"].annotation is Request
+    assert parameters["since"].annotation is date

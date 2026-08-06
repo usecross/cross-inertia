@@ -142,6 +142,7 @@ class defer:
         callback: Callable[..., Any],
         *args: Any,
         group: str = "default",
+        rescue: bool = False,
         **kwargs: Any,
     ):
         """
@@ -153,6 +154,8 @@ class defer:
             group: Name of the group for batching requests. Props in the same
                    group are loaded together; different groups load in parallel.
                    Defaults to "default".
+            rescue: Omit failures and report the prop in ``rescuedProps`` instead
+                    of failing the entire partial response.
             **kwargs: Keyword arguments to pass to the callback.
         """
         if not callable(callback):
@@ -160,6 +163,7 @@ class defer:
         self.callback = callback
         self.args = args
         self.group = group
+        self.rescue = rescue
         self.kwargs = kwargs
 
     def __call__(self) -> Any:

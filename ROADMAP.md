@@ -1,115 +1,50 @@
 # Cross-Inertia Roadmap
 
-This document provides a high-level overview of the project roadmap. For detailed tasks and progress, see [GitHub Issues](https://github.com/patrick91/cross-inertia/issues).
+Cross-Inertia is an Inertia.js v3 server adapter for Python web frameworks.
+For individual work items, see [GitHub Issues](https://github.com/usecross/cross-inertia/issues).
 
----
+## Framework support
 
-## 📦 Framework Support Status
+- **FastAPI / Starlette** — supported and covered by unit and browser tests.
+- **Django 4.2+** — supported and covered by unit tests.
+- **Other ASGI frameworks** — can use the framework-neutral core and `cross-web`
+  adapters; dedicated integrations are considered as demand emerges.
 
-### ✅ Supported
-- **FastAPI / Starlette** - Fully supported and tested
+## Current capabilities
 
-### 🚧 Planned
-See [GitHub Issues](https://github.com/patrick91/cross-inertia/issues?q=is%3Aissue+is%3Aopen+label%3Aframework-support) for framework support requests:
-- [Flask](https://github.com/patrick91/cross-inertia/issues/7)
-- [Django](https://github.com/patrick91/cross-inertia/issues/8)
+- Inertia request and response protocol, including asset version conflicts.
+- Shared, optional, deferred, once, merge, and rescued props.
+- Error bags, flash data, history encryption, and fragment preservation.
+- Internal and external redirects.
+- Vite development, production manifests, and React Fast Refresh.
+- Client-side rendering and optional server-side rendering.
+- FastAPI dependency helpers and Django middleware, shortcuts, and template tags.
 
----
+## Stabilization priorities
 
-## 🗺️ Version Milestones
+1. Keep protocol behavior aligned with the current Inertia.js v3 client.
+2. Expand Django end-to-end coverage alongside the existing FastAPI example.
+3. Document production deployment patterns for assets and SSR processes.
+4. Maintain the supported Python 3.10–3.14 test matrix and framework type coverage.
+5. Reach a stable 1.0 API after production feedback from both framework adapters.
 
-### v0.2.0 - "Production Ready" ✅ COMPLETE
-All production-critical features implemented:
-- ✅ Asset version mismatch handling
-- ✅ External redirects  
-- ✅ Partial reloads
-- ✅ Shared data
-- ✅ History encryption
-- ✅ E2E integration tests
+## Design principles
 
-### v0.3.0 - "Performance" ✅ COMPLETE
-Focus on optimization and developer experience:
-- ✅ Inertia.js v2 support (scrollProps)
+- Follow the upstream Inertia protocol instead of inventing framework-specific behavior.
+- Keep framework integrations thin and build shared behavior in the core package.
+- Prefer explicit, typed configuration and conventional framework APIs.
+- Preserve backwards compatibility within the 0.x line where practical, while
+  correcting protocol violations promptly.
 
-### v0.4.0 - "Advanced Features" ✅ COMPLETE
-Additional Inertia.js protocol features:
-- ✅ [Merging props (infinite scroll)](https://github.com/patrick91/cross-inertia/issues/4) - `merge_props`, `prepend_props`, `deep_merge_props`, `match_props_on`
-- ✅ View data support for server-side template variables
+## Contributing
 
-### v0.5.0 - "Props Enhancement"
-Advanced prop handling:
-- [Lazy props evaluation](https://github.com/patrick91/cross-inertia/issues/2)
-- [Deferred props](https://github.com/patrick91/cross-inertia/issues/3)
-- [Error bags](https://github.com/patrick91/cross-inertia/issues/5)
-- [Prefetching support](https://github.com/patrick91/cross-inertia/issues/6)
+Run the relevant checks before opening a pull request:
 
-### v0.6.0 - "Multi-Framework"
-Expand framework support:
-- Flask support
-- Django support
-- Sanic support
+```bash
+nox -s lint
+nox -s typecheck
+nox -s tests-3.14
+```
 
-### v1.0.0 - "Stable Release"
-Production-ready stable release:
-- All high/medium priority features
-- Support for 3+ frameworks
-- 80%+ test coverage
-- Published to PyPI
-- API stability guarantee
-
----
-
-## 📊 Current Status
-
-**Latest Version:** v0.4.0 (Advanced Features)
-
-**Core Protocol:** 98% complete
-- ✅ Request/response handling
-- ✅ Partial reloads
-- ✅ History encryption
-- ✅ External redirects
-- ✅ Merging props (infinite scroll)
-- ✅ View data
-- 🚧 Lazy/deferred props
-
-**Framework Support:** 12% complete (1 of 8 planned frameworks)
-- ✅ FastAPI/Starlette
-- 🚧 Flask, Django, Sanic, etc. (planned)
-
-**Test Coverage:** 71%
-- Unit tests: 37 passing
-- E2E tests: 15 (local only)
-- CI/CD: ✅ Automated on Python 3.10-3.14
-
----
-
-## 🤝 Contributing
-
-See [GitHub Issues](https://github.com/patrick91/cross-inertia/issues) for available tasks.
-
-### Good First Issues
-Look for issues labeled [`good first issue`](https://github.com/patrick91/cross-inertia/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22):
-- [Error bags](https://github.com/patrick91/cross-inertia/issues/5)
-- [Prefetching support](https://github.com/patrick91/cross-inertia/issues/6)
-
-### High Priority
-Check [`high-priority`](https://github.com/patrick91/cross-inertia/issues?q=is%3Aissue+is%3Aopen+label%3Ahigh-priority) label for critical features.
-
----
-
-## 📝 Notes
-
-### Design Philosophy
-- **Framework abstraction:** Use [lia](https://github.com/patrick91/lia) for request/response handling
-- **Protocol compliance:** Follow [Inertia.js protocol](https://inertiajs.com/the-protocol) specification
-- **Developer experience:** Simple, Pythonic API with type hints
-
-### Future Considerations
-- SSR support (requires Node.js runtime)
-- WebSocket support for live updates
-- GraphQL integration patterns
-
----
-
-**Last Updated:** November 2024  
-**Maintained by:** [@patrick91](https://github.com/patrick91)
+See [AGENTS.md](./AGENTS.md) and the repository issues for current conventions
+and scoped tasks.

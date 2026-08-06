@@ -11,6 +11,8 @@ import sys
 import threading
 from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
+from asgiref.sync import iscoroutinefunction
+
 from .._ssr import SyncSSRServer
 from .._vite import SyncViteProcess, is_port_in_use
 
@@ -88,7 +90,7 @@ class InertiaMiddleware:
         self._is_async_share: bool = False
 
         # Check if the response handler is async
-        if asyncio.iscoroutinefunction(get_response):
+        if iscoroutinefunction(get_response):
             self._is_async = True
         else:
             self._is_async = False
@@ -238,10 +240,24 @@ class InertiaMiddleware:
                     self._share_func = import_string(share_setting)
 
                 if self._share_func:
-                    self._is_async_share = asyncio.iscoroutinefunction(self._share_func)
+                    self._is_async_share = iscoroutinefunction(self._share_func)
 
             self._share_func_loaded = True
         return self._share_func
+
+    @staticmethod
+    def _adjust_redirect_status(
+        request: "HttpRequest", response: "HttpResponse"
+    ) -> "HttpResponse":
+        """Use a GET-following redirect for non-POST Inertia mutations."""
+        is_inertia = request.headers.get("X-Inertia", "").lower() == "true"
+        if (
+            is_inertia
+            and request.method in {"PUT", "PATCH", "DELETE"}
+            and response.status_code == 302
+        ):
+            response.status_code = 303
+        return response
 
     def __call__(self, request: "HttpRequest") -> "HttpResponse":
         """Sync middleware entry point."""
@@ -281,7 +297,8 @@ class InertiaMiddleware:
         else:
             request._inertia_shared = {}  # type: ignore
 
-        return self.get_response(request)  # type: ignore
+        response = self.get_response(request)  # type: ignore
+        return self._adjust_redirect_status(request, response)
 
     async def __acall__(self, request: "HttpRequest") -> "HttpResponse":
         """Async middleware entry point."""
@@ -302,4 +319,5 @@ class InertiaMiddleware:
         else:
             request._inertia_shared = {}  # type: ignore
 
-        return await self.get_response(request)  # type: ignore
+        response = await self.get_response(request)  # type: ignore
+        return self._adjust_redirect_status(request, response)

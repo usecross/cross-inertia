@@ -51,13 +51,13 @@ Create a `package.json` with the required dependencies:
     "preview": "vite preview"
   },
   "dependencies": {
-    "@inertiajs/react": "^2.3.17",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@inertiajs/react": "^3.6.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.5.3",
     "vite": "^5.4.2"
@@ -120,9 +120,9 @@ Create `tsconfig.json`:
 ```json
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",

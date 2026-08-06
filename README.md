@@ -163,15 +163,10 @@ The `{{ vite() }}` function will automatically include:
 - Your entry point script
 - Built CSS and JS files (production mode)
 
-When using `@inertiajs/react` 2.3+, enable the matching client-side bootstrap format:
+Inertia.js v3 reads this JSON script format by default:
 
 ```tsx
 createInertiaApp({
-  defaults: {
-    future: {
-      useScriptElementForInitialPage: true,
-    },
-  },
   // ...
 });
 ```
@@ -272,32 +267,22 @@ No configuration changes needed - it just works!
 
 ## Feature Status
 
-| Feature                             | Laravel Inertia | FastAPI Inertia | Priority  |
-| ----------------------------------- | --------------- | --------------- | --------- |
-| Basic protocol                      | ✅              | ✅              | -         |
-| Template function `{{ vite() }}`    | ✅ `@vite`      | ✅              | -         |
-| Auto Vite entry detection           | ✅              | ✅              | -         |
-| Dev/Prod mode detection             | ✅              | ✅              | -         |
-| Validation errors (`props.errors`)  | ✅              | ✅              | -         |
-| Asset versioning (basic)            | ✅              | ✅              | -         |
-| **Asset version mismatch (409)**    | ✅              | ✅              | -         |
-| **Partial reloads**                 | ✅              | ✅              | -         |
-| **Shared data**                     | ✅              | ✅              | -         |
-| **External redirects**              | ✅              | ✅              | -         |
-| **History encryption**              | ✅              | ✅              | -         |
-| **Merging props (infinite scroll)** | ✅              | ✅              | -         |
-| **View data**                       | ✅              | ✅              | -         |
-| Lazy props                          | ✅              | ⏳ Planned      | 🟡 Medium |
-| Deferred props                      | ✅              | ⏳ Planned      | 🟡 Medium |
-| Error bags                          | ✅              | ⏳ Planned      | 🟢 Low    |
-| Prefetching                         | ✅              | ⏳ Planned      | 🟢 Low    |
-| SSR                                 | ✅              | ❌ Not planned  | -         |
+| Feature                             | FastAPI | Django |
+| ----------------------------------- | ------- | ------ |
+| Basic protocol                      | ✅      | ✅     |
+| Vite development and production     | ✅      | ✅     |
+| Asset version mismatch              | ✅      | ✅     |
+| Partial reloads and shared data      | ✅      | ✅     |
+| Redirects and history encryption     | ✅      | ✅     |
+| Merge, deferred, and once props      | ✅      | ✅     |
+| Error bags and prefetching           | ✅      | ✅     |
+| SSR                                  | ✅      | ✅     |
 
 **See [ROADMAP.md](./ROADMAP.md) for detailed implementation plans and progress tracking.**
 
 ## Current Status
 
-**Version:** v0.4.0 "Advanced Features"
+**Version:** v0.20.0
 
 This adapter implements all production-critical Inertia features and is **ready for production use**.
 
@@ -314,11 +299,6 @@ This adapter implements all production-critical Inertia features and is **ready 
 - ✅ History encryption (sensitive data protection)
 - ✅ Merging props (infinite scroll)
 - ✅ View data (server-side template variables)
-
-**Coming soon:**
-
-- ⏳ Lazy props evaluation
-- ⏳ Deferred props
 
 ## Contributing
 

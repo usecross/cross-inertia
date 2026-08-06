@@ -29,6 +29,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # ...
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'cross_inertia.django.InertiaMiddleware',
 ]
 ```
@@ -42,6 +44,7 @@ CROSS_INERTIA = {
     'LAYOUT': 'base.html',              # Template for initial page loads
     'VITE_ENTRY': 'src/main.tsx',       # Vite entry point
     'VITE_PORT': 5173,                  # Vite dev server port (or 'auto')
+    'VITE_REACT_REFRESH': True,         # Set False for Vue/Svelte entries
     'MANIFEST_PATH': 'static/build/.vite/manifest.json',
     'SSR_ENABLED': False,               # Enable for server-side rendering
     'SHARE': 'myapp.inertia.share_data',  # Dotted path to share function
@@ -136,7 +139,7 @@ def dashboard(request):
     return render(request, 'Dashboard', {
         'user': get_user(request),                    # Regular prop
         'permissions': optional(get_permissions),     # Only when requested
-        'flash': always(get_flash_messages),          # Always included
+        'navigation': always(get_navigation),         # Always included
         'analytics': defer(get_analytics),            # Loaded after render
     })
 ```
@@ -152,7 +155,6 @@ def share_data(request):
         'auth': {
             'user': request.user.username if request.user.is_authenticated else None,
         },
-        'flash': request.session.pop('flash', None),
     }
 ```
 
@@ -163,6 +165,28 @@ CROSS_INERTIA = {
     'SHARE': 'myapp.inertia.share_data',
 }
 ```
+
+## Flash Data and URL Fragments
+
+Inertia v3 flash data belongs on the top-level page object, rather than in
+shared props. Pass it to `render()` on the request that delivers the next page:
+
+```python
+from cross_inertia.django import render
+
+def dashboard(request):
+    return render(
+        request,
+        'Dashboard',
+        flash=request.session.pop('inertia_flash', None),
+        preserve_fragment=True,
+    )
+```
+
+For the common POST-redirect-GET flow, store the flash mapping in the Django
+session before returning the redirect, then pop it in the destination view as
+shown above. Cross-Inertia does not currently provide a redirect-persistent
+flash helper.
 
 ## External Redirects
 
@@ -186,7 +210,9 @@ python manage.py runserver
 ```
 
 In development mode (`DEBUG=True`), Vite also handles SSR via its `/__inertia_ssr` endpoint.
-Outside development mode, a standalone SSR server is started automatically when `SSR_ENABLED` is `True`.
+In production, supervise the standalone SSR process alongside Django and point
+`SSR_URL` at it. The middleware only manages subprocesses while Django's
+`runserver` command is serving requests.
 
 ## URL Configuration
 
@@ -216,6 +242,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'cross_inertia.django.InertiaMiddleware',
 ]
 

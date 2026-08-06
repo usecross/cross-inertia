@@ -73,6 +73,28 @@ async def analytics(inertia: InertiaDep):
 
 Props in the same group are fetched in a single request.
 
+## Rescuing Failures
+
+Rescue slots require Inertia.js client adapters 3.1 or newer. The older React
+v2 example bundled in this repository can use ordinary deferred props, but it
+cannot consume `rescuedProps` until its frontend dependencies are upgraded.
+
+Use `rescue=True` when one deferred request may fail independently and the page
+should render the client's rescue state instead of returning a server error:
+
+```python
+return inertia.render("Analytics", {
+    "summary": get_summary(),
+    "report": defer(fetch_unreliable_report, rescue=True),
+})
+```
+
+If the callback raises, Cross-Inertia omits `report` from that partial response
+and adds `"report"` to the page's top-level `rescuedProps` array. The current
+Inertia client uses that metadata to render the `Deferred` component's rescue
+slot and to support retrying the prop. Cross-Inertia also logs the rescued
+exception so server-side monitoring still records the failure.
+
 ## Best Practices
 
 1. **Keep critical data immediate**: User info, page title, and essential UI elements should load immediately

@@ -37,11 +37,6 @@ const pages: Record<string, React.ComponentType<any>> = {
 }
 
 createInertiaApp({
-  defaults: {
-    future: {
-      useScriptElementForInitialPage: true,
-    },
-  },
   resolve: (name) => {
     const page = pages[name]
     if (!page) {
