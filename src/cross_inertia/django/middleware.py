@@ -11,7 +11,7 @@ import sys
 import threading
 from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
-from asgiref.sync import iscoroutinefunction
+from asgiref.sync import iscoroutinefunction, sync_to_async
 
 from .._ssr import SyncSSRServer
 from .._vite import SyncViteProcess, is_port_in_use
@@ -308,7 +308,10 @@ class InertiaMiddleware:
                 if self._is_async_share:
                     request._inertia_shared = await share_func(request)  # type: ignore
                 else:
-                    request._inertia_shared = share_func(request)  # type: ignore
+                    request._inertia_shared = await sync_to_async(
+                        share_func,
+                        thread_sensitive=True,
+                    )(request)  # type: ignore
 
                 logger.debug(
                     f"Shared data keys: {list(request._inertia_shared.keys())}"  # type: ignore
