@@ -86,6 +86,11 @@ def app(inertia_response):
             errors={"field": "This field is required"},
         )
 
+    @app.get("/forbidden")
+    def forbidden(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render("ErrorPage", {"status": 403}, status_code=403)
+
     @app.post("/submit")
     def test_submit(request: Request):
         inertia = get_test_inertia(request)

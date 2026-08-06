@@ -49,6 +49,7 @@ class TestAssetVersioning:
         # Should return 409 Conflict
         assert response.status_code == 409
         assert "X-Inertia-Location" in response.headers
+        assert response.headers["Vary"] == "X-Inertia"
 
     def test_version_match_proceeds_normally(self, client: TestClient):
         """Test that matching version proceeds with normal response."""
@@ -88,6 +89,35 @@ class TestViteIntegration:
             assert "@vite/client" in tags
             assert "@react-refresh" in tags
             assert "frontend/app.tsx" in tags
+
+    def test_vite_tags_skip_react_refresh_for_vue_entry(self, inertia_response):
+        inertia_response.vite_entry = "resources/js/app.ts"
+        inertia_response.vite_react_refresh = False
+
+        with patch.object(inertia_response, "is_dev_mode", return_value=True):
+            tags = inertia_response.get_vite_tags()
+
+        assert "@react-refresh" not in tags
+        assert "@vite/client" in tags
+        assert "resources/js/app.ts" in tags
+
+    def test_vite_tags_can_enable_react_refresh_for_ts_entry(self, inertia_response):
+        inertia_response.vite_entry = "resources/js/app.ts"
+        inertia_response.vite_react_refresh = True
+
+        with patch.object(inertia_response, "is_dev_mode", return_value=True):
+            tags = inertia_response.get_vite_tags()
+
+        assert "@react-refresh" in tags
+
+    def test_vite_tags_can_disable_react_refresh_for_tsx_entry(self, inertia_response):
+        inertia_response.vite_entry = "resources/js/app.tsx"
+        inertia_response.vite_react_refresh = False
+
+        with patch.object(inertia_response, "is_dev_mode", return_value=True):
+            tags = inertia_response.get_vite_tags()
+
+        assert "@react-refresh" not in tags
 
     def test_vite_tags_in_production(self, inertia_response):
         """Test that production mode uses manifest for asset tags."""

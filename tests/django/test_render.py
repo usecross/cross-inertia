@@ -1,5 +1,6 @@
 """Tests for Django Inertia render function."""
 
+import asyncio
 import json
 import pytest
 from unittest.mock import AsyncMock
@@ -24,6 +25,7 @@ def test_initial_page_load_returns_html(client, setup_inertia):
     response = client.get("/test/")
     assert response.status_code == 200
     assert "text/html" in response["Content-Type"]
+    assert response["Vary"] == "X-Inertia"
 
     content = response.content.decode()
     assert 'script data-page="app"' in content
@@ -46,6 +48,20 @@ def test_inertia_request_returns_json(client, setup_inertia):
     assert data["props"]["message"] == "Hello, World!"
     assert "url" in data
     assert "version" in data
+
+
+def test_version_conflict_varies_on_inertia_header(rf, setup_inertia):
+    from cross_inertia.django import render
+
+    request = rf.get(
+        "/version/",
+        HTTP_X_INERTIA="true",
+        HTTP_X_INERTIA_VERSION="stale",
+    )
+    response = render(request, "Versioned")
+
+    assert response.status_code == 409
+    assert response["Vary"] == "X-Inertia"
 
 
 def test_render_with_multiple_props(client, setup_inertia):
@@ -72,6 +88,54 @@ def test_render_with_errors(client, setup_inertia):
 
     assert "errors" in data["props"]
     assert data["props"]["errors"]["field"] == "This field is required"
+
+
+def test_render_shortcut_accepts_flash_and_preserve_fragment(rf, setup_inertia):
+    from cross_inertia.django import render
+
+    request = rf.get("/flash/", HTTP_X_INERTIA="true")
+    response = render(
+        request,
+        "Flash",
+        flash={"message": "Saved"},
+        preserve_fragment=True,
+    )
+    data = json.loads(response.content)
+
+    assert data["flash"] == {"message": "Saved"}
+    assert data["preserveFragment"] is True
+
+
+def test_render_shortcut_accepts_custom_status(rf, setup_inertia):
+    from cross_inertia.django import render
+
+    request = rf.get("/forbidden/", HTTP_X_INERTIA="true")
+    response = render(
+        request,
+        "ErrorPage",
+        {"status": 403},
+        status_code=403,
+    )
+
+    assert response.status_code == 403
+    assert json.loads(response.content)["props"]["status"] == 403
+
+
+def test_render_shortcut_preserves_existing_positional_arguments(rf, setup_inertia):
+    from cross_inertia.django import render
+
+    request = rf.get("/legacy/", HTTP_X_INERTIA="true")
+    response = render(
+        request,
+        "Legacy",
+        {"items": [1]},
+        None,
+        False,
+        False,
+        ["items"],
+    )
+
+    assert json.loads(response.content)["mergeProps"] == ["items"]
 
 
 def test_render_shortcut_accepts_schema_argument(rf, setup_inertia):
@@ -145,6 +209,59 @@ def test_inertia_decorator(client, setup_inertia):
     assert data["component"] == "DecoratorTest"
     assert data["props"]["decorated"] is True
     assert data["props"]["message"] == "From decorator"
+
+
+def test_inertia_decorator_supports_async_views(rf, setup_inertia):
+    from cross_inertia.django import inertia
+
+    @inertia("AsyncDecoratorTest")
+    async def async_view(request):
+        return {"decorated": True}
+
+    request = rf.get("/async-decorator/", HTTP_X_INERTIA="true")
+    response = asyncio.run(async_view(request))
+    data = json.loads(response.content)
+
+    assert data["component"] == "AsyncDecoratorTest"
+    assert data["props"]["decorated"] is True
+
+
+def test_inertia_decorator_supports_asgiref_marked_views(rf, setup_inertia):
+    from asgiref.sync import markcoroutinefunction
+
+    from cross_inertia.django import inertia
+
+    def marked_view(request):
+        async def result():
+            return {"decorated": True}
+
+        return result()
+
+    markcoroutinefunction(marked_view)
+    wrapped_view = inertia("MarkedDecoratorTest")(marked_view)
+
+    request = rf.get("/marked-decorator/", HTTP_X_INERTIA="true")
+    response = asyncio.run(wrapped_view(request))
+    data = json.loads(response.content)
+
+    assert data["component"] == "MarkedDecoratorTest"
+    assert data["props"]["decorated"] is True
+
+
+def test_inertia_decorator_passes_through_async_streaming_responses(rf, setup_inertia):
+    from django.http import StreamingHttpResponse
+
+    from cross_inertia.django import inertia
+
+    @inertia("Ignored")
+    async def async_view(request):
+        return StreamingHttpResponse(iter([b"streamed"]))
+
+    request = rf.get("/stream/")
+    response = asyncio.run(async_view(request))
+
+    assert isinstance(response, StreamingHttpResponse)
+    assert b"".join(response.streaming_content) == b"streamed"
 
 
 def test_class_based_view_get(client, setup_inertia):
@@ -248,3 +365,21 @@ def test_production_vite_tags_use_static_url_prefix(temp_template_dir):
     assert "/assets/build/assets/app.js" in tags
     assert "/assets/build/assets/app.css" in tags
     inertia_settings.reload()
+
+
+def test_django_vite_tags_allow_explicit_react_refresh_configuration():
+    from cross_inertia.django.response import DjangoInertiaResponse
+
+    react_response = DjangoInertiaResponse(
+        vite_entry="resources/js/app.ts",
+        vite_react_refresh=True,
+    )
+    react_response._is_dev = True
+    assert "@react-refresh" in react_response.get_vite_tags()
+
+    vue_response = DjangoInertiaResponse(
+        vite_entry="resources/js/app.tsx",
+        vite_react_refresh=False,
+    )
+    vue_response._is_dev = True
+    assert "@react-refresh" not in vue_response.get_vite_tags()

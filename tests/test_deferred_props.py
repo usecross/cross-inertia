@@ -1,10 +1,12 @@
 """Tests for deferred props functionality."""
 
+import logging
+
 import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
-from cross_inertia import defer
+from cross_inertia import defer, once
 from tests.page_html import extract_page_data
 
 
@@ -176,6 +178,43 @@ class TestDeferredPropsCore:
         assert response.status_code == 200
         assert data["props"]["async_data"] == "async result"
 
+    def test_failed_deferred_prop_can_be_rescued(
+        self, deferred_core_client: TestClient, caplog: pytest.LogCaptureFixture
+    ):
+        with caplog.at_level(logging.ERROR, logger="cross_inertia._utils"):
+            response = deferred_core_client.get(
+                "/test-rescued-deferred",
+                headers={
+                    "X-Inertia": "true",
+                    "X-Inertia-Partial-Component": "TestComponent",
+                    "X-Inertia-Partial-Data": "flaky_report",
+                },
+            )
+        data = response.json()
+
+        assert response.status_code == 200
+        assert "flaky_report" not in data["props"]
+        assert data["rescuedProps"] == ["flaky_report"]
+        assert "Rescued deferred Inertia prop 'flaky_report'" in caplog.text
+        assert "no running event loop" not in caplog.text
+
+    def test_once_wrapped_failed_deferred_prop_can_be_rescued(
+        self, deferred_core_client: TestClient
+    ):
+        response = deferred_core_client.get(
+            "/test-rescued-once-deferred",
+            headers={
+                "X-Inertia": "true",
+                "X-Inertia-Partial-Component": "TestComponent",
+                "X-Inertia-Partial-Data": "flaky_report",
+            },
+        )
+        data = response.json()
+
+        assert response.status_code == 200
+        assert "flaky_report" not in data["props"]
+        assert data["rescuedProps"] == ["flaky_report"]
+
 
 class TestDeferredPropValidation:
     """Test deferred prop validation and edge cases."""
@@ -228,6 +267,11 @@ class TestDeferredPropValidation:
         prop = defer(get_data, group="sidebar")
         assert prop.group == "sidebar"
         assert prop() == "data"
+
+    def test_defer_can_rescue_failures(self):
+        prop = defer(lambda: None, rescue=True)
+
+        assert prop.rescue is True
 
     def test_defer_with_args_and_custom_group(self):
         """Test defer() with args and custom group."""
@@ -321,6 +365,9 @@ def deferred_core_app(inertia_response):
     async def async_fetch():
         return "async result"
 
+    def flaky_report():
+        raise RuntimeError("Upstream report service is unavailable")
+
     @app.get("/test-deferred")
     def test_deferred(request: Request):
         inertia = get_test_inertia(request)
@@ -372,6 +419,27 @@ def deferred_core_app(inertia_response):
             "TestComponent",
             {
                 "async_data": defer(async_fetch),
+            },
+        )
+
+    @app.get("/test-rescued-deferred")
+    def test_rescued_deferred(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {"flaky_report": defer(flaky_report, rescue=True)},
+        )
+
+    @app.get("/test-rescued-once-deferred")
+    def test_rescued_once_deferred(request: Request):
+        inertia = get_test_inertia(request)
+        return inertia.render(
+            "TestComponent",
+            {
+                "flaky_report": once(
+                    defer(flaky_report, rescue=True),
+                    key="flaky-report",
+                )
             },
         )
 

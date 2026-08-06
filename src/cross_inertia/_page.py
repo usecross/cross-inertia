@@ -11,7 +11,7 @@ from ._exceptions import InertiaSchemaError
 from ._props import always, defer, once, optional
 from ._schema import validate_props_with_schema
 from ._types import ValidationErrors
-from ._utils import _resolve_props_sync
+from ._utils import _resolve_props_sync_with_rescues
 
 _SPECIAL_PROP_TYPES = (optional, always, defer, once)
 
@@ -192,7 +192,7 @@ def build_inertia_page(
         else:
             omitted_props.add(key)
 
-    resolved_props = _resolve_props_sync(filtered_props)
+    resolved_props, rescued_props = _resolve_props_sync_with_rescues(filtered_props)
 
     if options.schema is not None:
         try:
@@ -270,6 +270,8 @@ def build_inertia_page(
         page_data["resetProps"] = context.reset_props
     if metadata.deferred_props:
         page_data["deferredProps"] = metadata.deferred_props
+    if rescued_props:
+        page_data["rescuedProps"] = rescued_props
     if metadata.once_props:
         page_data["onceProps"] = metadata.once_props
 

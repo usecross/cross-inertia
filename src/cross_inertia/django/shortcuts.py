@@ -6,7 +6,9 @@ import logging
 from functools import wraps
 from typing import Any, Callable, TypeVar
 
+from asgiref.sync import iscoroutinefunction
 from django.http import HttpRequest, HttpResponse
+from django.http.response import HttpResponseBase
 
 from .._types import ValidationErrors
 from .response import DjangoInertiaResponse
@@ -51,6 +53,10 @@ def render(
     url: str | None = None,
     view_data: dict[str, Any] | None = None,
     schema: Any | None = None,
+    *,
+    flash: dict[str, Any] | None = None,
+    preserve_fragment: bool = False,
+    status_code: int = 200,
 ) -> "HttpResponse":
     """
     Render an Inertia response.
@@ -66,6 +72,8 @@ def render(
         errors: Validation errors to pass to the component (added to props.errors).
         encrypt_history: Whether to encrypt the page state in browser history.
         clear_history: Whether to clear encrypted history (rotate encryption keys).
+        flash: One-time Inertia v3 flash data for the current response.
+        preserve_fragment: Whether the client should retain the current URL fragment.
         merge_props: Props that should be merged instead of replaced on reload.
         prepend_props: Props that should be prepended instead of appended.
         deep_merge_props: Props that should be deep merged.
@@ -74,6 +82,7 @@ def render(
         url: Override the URL in the Inertia response (defaults to request URL).
         view_data: Extra data to pass to the template (not included in page props).
         schema: Optional Pydantic model used to validate and serialize included props.
+        status_code: HTTP status for the rendered page response.
 
     Returns:
         HttpResponse (JsonResponse for XHR, TemplateResponse for initial loads)
@@ -111,6 +120,8 @@ def render(
         errors=errors,
         encrypt_history=encrypt_history,
         clear_history=clear_history,
+        flash=flash,
+        preserve_fragment=preserve_fragment,
         merge_props=merge_props,
         prepend_props=prepend_props,
         deep_merge_props=deep_merge_props,
@@ -119,6 +130,7 @@ def render(
         url=url,
         view_data=view_data,
         schema=schema,
+        status_code=status_code,
     )
 
 
@@ -197,12 +209,30 @@ def inertia(component: str) -> Callable[[F], F]:
     """
 
     def decorator(view_func: F) -> F:
+        if iscoroutinefunction(view_func):
+
+            @wraps(view_func)
+            async def async_wrapper(
+                request: HttpRequest, *args: Any, **kwargs: Any
+            ) -> HttpResponseBase:
+                result = await view_func(request, *args, **kwargs)
+
+                if isinstance(result, HttpResponseBase):
+                    return result
+
+                props = result if isinstance(result, dict) else {}
+                return render(request, component, props)
+
+            return async_wrapper  # type: ignore
+
         @wraps(view_func)
-        def wrapper(request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        def wrapper(
+            request: HttpRequest, *args: Any, **kwargs: Any
+        ) -> HttpResponseBase:
             result = view_func(request, *args, **kwargs)
 
             # If view returns HttpResponse, pass through (for redirects, etc.)
-            if isinstance(result, HttpResponse):
+            if isinstance(result, HttpResponseBase):
                 return result
 
             # Otherwise treat as props dict

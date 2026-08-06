@@ -69,12 +69,19 @@ class DjangoInertiaResponse:
         vite_entry: str | None = None,
         ssr_enabled: bool | None = None,
         ssr_url: str | None = None,
+        *,
+        vite_react_refresh: bool | None = None,
     ):
         self.template_name = template_name or inertia_settings.LAYOUT
         self.vite_dev_url = vite_dev_url or inertia_settings.VITE_DEV_URL
         self.manifest_path = manifest_path or inertia_settings.MANIFEST_PATH
         self.asset_url_prefix = inertia_settings.ASSET_URL_PREFIX
         self.vite_entry = vite_entry or inertia_settings.VITE_ENTRY
+        self.vite_react_refresh = (
+            vite_react_refresh
+            if vite_react_refresh is not None
+            else inertia_settings.VITE_REACT_REFRESH
+        )
         self.ssr_enabled = (
             ssr_enabled if ssr_enabled is not None else inertia_settings.SSR_ENABLED
         )
@@ -173,7 +180,9 @@ class DjangoInertiaResponse:
             logger.info(
                 f"Generating DEV mode script tags (Vite server: {self.vite_dev_url})"
             )
-            return f"""
+            react_refresh = ""
+            if self.vite_react_refresh:
+                react_refresh = f"""
                 <script type="module">
                     import RefreshRuntime from "{self.vite_dev_url}/@react-refresh"
                     RefreshRuntime.injectIntoGlobalHook(window)
@@ -181,6 +190,10 @@ class DjangoInertiaResponse:
                     window.$RefreshSig$ = () => (type) => type
                     window.__vite_plugin_react_preamble_installed__ = true
                 </script>
+                """
+
+            return f"""
+                {react_refresh}
                 <script type="module" src="{self.vite_dev_url}/@vite/client"></script>
                 <script type="module" src="{self.vite_dev_url}/{self.vite_entry}"></script>
             """
@@ -233,6 +246,7 @@ class DjangoInertiaResponse:
         url: str | None = None,
         view_data: dict[str, Any] | None = None,
         schema: Any | None = None,
+        status_code: int = 200,
     ) -> HttpResponse:
         """Render an Inertia response for Django."""
         adapter = DjangoHTTPRequestAdapter(request)
@@ -267,7 +281,10 @@ class DjangoInertiaResponse:
             )
             return HttpResponse(
                 status=409,
-                headers={"X-Inertia-Location": build_result.version_conflict_location},
+                headers={
+                    "X-Inertia-Location": build_result.version_conflict_location,
+                    "Vary": "X-Inertia",
+                },
             )
 
         assert build_result.page_data is not None
@@ -280,7 +297,7 @@ class DjangoInertiaResponse:
                 f"-> {request_type}: {component} (props: {list(build_result.page_data['props'].keys())})"
             )
 
-            response = JsonResponse(build_result.page_data)
+            response = JsonResponse(build_result.page_data, status=status_code)
             response["X-Inertia"] = "true"
             response["Vary"] = "X-Inertia"
             return response
@@ -331,4 +348,11 @@ class DjangoInertiaResponse:
                 template_context.update(view_data)
                 logger.debug(f"Adding view_data to template: {list(view_data.keys())}")
 
-            return TemplateResponse(request, self.template_name, template_context)
+            response = TemplateResponse(
+                request,
+                self.template_name,
+                template_context,
+                status=status_code,
+            )
+            response["Vary"] = "X-Inertia"
+            return response

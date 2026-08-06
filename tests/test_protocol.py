@@ -38,8 +38,8 @@ class TestInertiaProtocol:
         )
         assert response.headers.get("Vary") == "X-Inertia"
 
-        # Note: HTML responses don't have Vary header in current implementation
-        # This should be fixed to match the spec
+        html_response = client.get("/test")
+        assert html_response.headers.get("Vary") == "X-Inertia"
 
     def test_page_object_structure_json(self, client: TestClient):
         """Test that JSON response has correct page object structure."""
@@ -84,6 +84,14 @@ class TestInertiaProtocol:
         assert response.status_code == 200
         assert "text/html" in response.headers.get("Content-Type")
         assert not response.headers.get("X-Inertia")
+
+    def test_custom_status_applies_to_json_and_html(self, client: TestClient):
+        json_response = client.get("/forbidden", headers={"X-Inertia": "true"})
+        html_response = client.get("/forbidden")
+
+        assert json_response.status_code == 403
+        assert json_response.json()["props"]["status"] == 403
+        assert html_response.status_code == 403
 
 
 class TestValidationErrors:

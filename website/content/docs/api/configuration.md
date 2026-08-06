@@ -25,11 +25,12 @@ configure_inertia(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `vite_port` | `int \| "auto"` | `5173` | Port for Vite dev server. Use `"auto"` to find an available port automatically. |
+| `vite_port` | `int \| "auto"` | `"auto"` | Port for Vite dev server. Use `"auto"` to find an available port automatically. |
 | `vite_host` | `str` | `"localhost"` | Host for Vite dev server. |
 | `vite_entry` | `str` | `"frontend/app.tsx"` | Entry point for Vite (e.g., `"src/main.tsx"`). |
 | `vite_command` | `str \| list[str]` | `"bun run dev"` | Command to start Vite dev server. Port is appended automatically. |
 | `vite_timeout` | `float` | `30.0` | Timeout in seconds for Vite dev server startup. |
+| `vite_react_refresh` | `bool` | `True` | Inject the React Refresh preamble. Set to `False` for Vue, Svelte, and other non-React frontends. |
 
 ### Template Settings
 
@@ -87,6 +88,7 @@ configure_inertia(
     vite_entry="src/main.tsx",
     vite_command="npm run dev",
     vite_timeout=30.0,
+    vite_react_refresh=True,
 
     # Template settings
     template_dir="templates",

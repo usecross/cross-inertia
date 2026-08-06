@@ -95,6 +95,7 @@ class Inertia:
         url: str | None = None,
         view_data: dict[str, Any] | None = None,
         schema: Any | None = None,
+        status_code: int = 200,
     ) -> JSONResponse | HTMLResponse | Response:
         """Render an Inertia response without needing to pass request
 
@@ -105,6 +106,7 @@ class Inertia:
             view_data: Optional extra data to pass to the template (not included in page props).
                       Useful for server-side meta tags, page titles, etc.
             schema: Optional Pydantic model used to validate and serialize included props.
+            status_code: HTTP status for the rendered page response.
         """
         props = props or {}
 
@@ -128,6 +130,7 @@ class Inertia:
             url=url,
             view_data=view_data,
             schema=schema,
+            status_code=status_code,
         )
 
     def _merge_validation_errors(
@@ -342,6 +345,7 @@ class InertiaResponse:
         ssr_url: str | None = None,
         ssr_enabled: bool | None = None,
         asset_url_prefix: str | None = None,
+        vite_react_refresh: bool | None = None,
     ):
         # Import here to avoid circular imports
         from cross_inertia._config import get_config
@@ -368,6 +372,11 @@ class InertiaResponse:
             logger.info(f"SSR enabled: {self.ssr_url}")
 
         self.vite_entry = vite_entry or config.vite_entry
+        self.vite_react_refresh = (
+            vite_react_refresh
+            if vite_react_refresh is not None
+            else config.vite_react_refresh
+        )
         logger.info(f"Vite entry: {self.vite_entry}")
 
         # Initialize Jinja2 with custom functions
@@ -538,11 +547,12 @@ class InertiaResponse:
         """Generate script tags for Vite assets"""
         if self.is_dev_mode():
             # Development mode - use Vite dev server
-            # React refresh preamble must come BEFORE Vite client
             logger.info(
                 f"Generating DEV mode script tags (Vite server: {self.vite_dev_url})"
             )
-            return f'''
+            react_refresh = ""
+            if self.vite_react_refresh:
+                react_refresh = f'''
                 <script type="module">
                     import RefreshRuntime from "{self.vite_dev_url}/@react-refresh"
                     RefreshRuntime.injectIntoGlobalHook(window)
@@ -550,6 +560,10 @@ class InertiaResponse:
                     window.$RefreshSig$ = () => (type) => type
                     window.__vite_plugin_react_preamble_installed__ = true
                 </script>
+                '''
+
+            return f'''
+                {react_refresh}
                 <script type="module" src="{self.vite_dev_url}/@vite/client"></script>
                 <script type="module" src="{self.vite_dev_url}/{self.vite_entry}"></script>
             '''
@@ -606,6 +620,7 @@ class InertiaResponse:
         url: str | None = None,
         view_data: dict[str, Any] | None = None,
         schema: Any | None = None,
+        status_code: int = 200,
     ) -> JSONResponse | HTMLResponse | Response:
         """
         Render an Inertia response.
@@ -617,6 +632,7 @@ class InertiaResponse:
             view_data: Optional extra data to pass to the template (not included in page props).
                       Useful for server-side meta tags, page titles, etc.
             schema: Optional Pydantic model used to validate and serialize included props.
+            status_code: HTTP status for the rendered page response.
         """
         build_result = build_inertia_page(
             build_page_request_context(
@@ -648,7 +664,10 @@ class InertiaResponse:
             )
             return Response(
                 status_code=409,
-                headers={"X-Inertia-Location": build_result.version_conflict_location},
+                headers={
+                    "X-Inertia-Location": build_result.version_conflict_location,
+                    "Vary": "X-Inertia",
+                },
             )
 
         assert build_result.page_data is not None
@@ -656,8 +675,6 @@ class InertiaResponse:
 
         if build_result.is_inertia:
             # Return JSON response for Inertia XHR requests
-            # Always return 200 OK for Inertia requests, even with validation errors
-            # Errors are communicated via props.errors, not HTTP status codes
             request_type = "Prefetch" if build_result.is_prefetch else "Inertia XHR"
             logger.info(
                 f"→ {request_type}: {component} (props: {list(build_result.page_data['props'].keys())})"
@@ -668,7 +685,7 @@ class InertiaResponse:
                     "X-Inertia": "true",
                     "Vary": "X-Inertia",
                 },
-                status_code=200,
+                status_code=status_code,
             )
         else:
             # Return HTML response for initial page load
@@ -715,11 +732,14 @@ class InertiaResponse:
             if view_data:
                 template_context.update(view_data)
                 logger.debug(f"Adding view_data to template: {list(view_data.keys())}")
-            return self.templates.TemplateResponse(
+            response = self.templates.TemplateResponse(
                 request,
                 "app.html",
                 template_context,
+                status_code=status_code,
             )
+            response.headers["Vary"] = "X-Inertia"
+            return response
 
 
 # Singleton instance - lazy loaded to avoid initialization issues during testing

@@ -145,6 +145,9 @@ class InertiaConfig:
     ssr_health_path: str = "/health"
     """Health check path for SSR server."""
 
+    vite_react_refresh: bool = field(default=True, kw_only=True)
+    """Whether to inject the React Refresh preamble in development."""
+
     # Internal state (set after initialization)
     _resolved_vite_port: int | None = field(default=None, repr=False)
 
@@ -195,6 +198,7 @@ def configure_inertia(
     vite_entry: str = "frontend/app.tsx",
     vite_command: str | list[str] = "bun run dev",
     vite_timeout: float = 30.0,
+    vite_react_refresh: bool = True,
     template_dir: str = "templates",
     manifest_path: str = "static/build/.vite/manifest.json",
     asset_url_prefix: str = "/static/build",
@@ -215,6 +219,8 @@ def configure_inertia(
         vite_entry: Entry point for Vite (e.g., 'frontend/app.tsx', 'src/main.tsx').
         vite_command: Command to start Vite dev server.
         vite_timeout: Timeout for Vite server startup.
+        vite_react_refresh: Whether to inject the React Refresh preamble. Disable
+            this for Vue, Svelte, and other non-React frontends.
         template_dir: Directory containing Jinja2 templates.
         manifest_path: Path to Vite manifest for production.
         asset_url_prefix: Public URL prefix for built frontend assets.
@@ -249,6 +255,7 @@ def configure_inertia(
         vite_entry=vite_entry,
         vite_command=vite_command,
         vite_timeout=vite_timeout,
+        vite_react_refresh=vite_react_refresh,
         template_dir=template_dir,
         manifest_path=manifest_path,
         asset_url_prefix=asset_url_prefix,

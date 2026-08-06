@@ -41,6 +41,7 @@ DEFAULTS: dict[str, Any] = {
     "VITE_ENTRY": "src/main.tsx",
     "VITE_COMMAND": "bun run dev",
     "VITE_TIMEOUT": 30.0,
+    "VITE_REACT_REFRESH": True,
     # Production settings
     "MANIFEST_PATH": "static/build/.vite/manifest.json",
     "ASSET_URL_PREFIX": "/static/build",
@@ -61,6 +62,7 @@ SHARED_CONFIG_ATTRS: dict[str, str] = {
     "VITE_ENTRY": "vite_entry",
     "VITE_COMMAND": "vite_command",
     "VITE_TIMEOUT": "vite_timeout",
+    "VITE_REACT_REFRESH": "vite_react_refresh",
     "MANIFEST_PATH": "manifest_path",
     "ASSET_URL_PREFIX": "asset_url_prefix",
     "SSR_ENABLED": "ssr_enabled",
