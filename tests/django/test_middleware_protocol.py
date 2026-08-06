@@ -3,6 +3,7 @@
 import asyncio
 
 import pytest
+from asgiref.sync import iscoroutinefunction
 from django.db import connection
 from django.http import HttpResponse, HttpResponseRedirect
 
@@ -52,6 +53,15 @@ def test_async_inertia_mutation_redirect_is_converted_to_303(rf):
     response = asyncio.run(middleware(request))
 
     assert response.status_code == 303
+
+
+def test_async_middleware_is_marked_as_coroutine_function():
+    async def get_response(request):
+        return HttpResponse()
+
+    middleware = InertiaMiddleware(get_response)
+
+    assert iscoroutinefunction(middleware)
 
 
 @pytest.mark.django_db

@@ -11,7 +11,7 @@ import sys
 import threading
 from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
-from asgiref.sync import iscoroutinefunction, sync_to_async
+from asgiref.sync import iscoroutinefunction, markcoroutinefunction, sync_to_async
 
 from .._ssr import SyncSSRServer
 from .._vite import SyncViteProcess, is_port_in_use
@@ -92,6 +92,7 @@ class InertiaMiddleware:
         # Check if the response handler is async
         if iscoroutinefunction(get_response):
             self._is_async = True
+            markcoroutinefunction(self)
         else:
             self._is_async = False
 
