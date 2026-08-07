@@ -1,3 +1,14 @@
+0.21.1 - 2026-08-07
+-------------------
+
+Fix synchronous Django share callbacks under ASGI
+
+- Run synchronous shared-data callbacks in Django's thread-sensitive sync context
+- Mark async middleware instances so Django does not adapt them as synchronous callables
+- Add regression coverage for database access from shared data
+
+This release was contributed by [@patrick91](https://github.com/patrick91) in [#136](https://github.com/usecross/cross-inertia/pull/136)
+
 0.21.0 - 2026-08-06
 -------------------
 
