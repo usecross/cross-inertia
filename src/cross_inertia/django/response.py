@@ -11,7 +11,6 @@ import warnings
 from pathlib import Path
 from typing import Any
 
-import httpx
 from cross_web import DjangoHTTPRequestAdapter
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -103,25 +102,18 @@ class DjangoInertiaResponse:
         return is_prefetch_request_headers(request.headers)  # type: ignore[arg-type]
 
     def is_dev_mode(self) -> bool:
-        """Check if Vite dev server is running."""
+        """Check if running in development mode.
+
+        Uses Django's DEBUG setting (via inertia_settings) rather than probing
+        the Vite dev server, which avoids race conditions when the middleware
+        is still starting Vite.
+        """
         if self._is_dev is not None:
             return self._is_dev
 
-        logger.info(f"Checking Vite dev server at {self.vite_dev_url}...")
-        try:
-            response = httpx.get(f"{self.vite_dev_url}/@vite/client", timeout=0.1)
-            self._is_dev = response.status_code == 200
-            if self._is_dev:
-                logger.info("Vite dev server detected - running in DEVELOPMENT mode")
-            else:
-                logger.info(
-                    f"Vite dev server responded with {response.status_code} - running in PRODUCTION mode"
-                )
-        except Exception as e:
-            self._is_dev = False
-            logger.info(
-                f"Vite dev server not reachable ({e.__class__.__name__}) - running in PRODUCTION mode"
-            )
+        self._is_dev = inertia_settings.is_dev_mode()
+        mode = "DEVELOPMENT" if self._is_dev else "PRODUCTION"
+        logger.info(f"Running in {mode} mode")
 
         return self._is_dev
 
