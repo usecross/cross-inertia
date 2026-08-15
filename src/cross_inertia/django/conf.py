@@ -40,6 +40,7 @@ DEFAULTS: dict[str, Any] = {
     "VITE_HOST": "localhost",
     "VITE_ENTRY": "src/main.tsx",
     "VITE_COMMAND": "bun run dev",
+    "VITE_BASE": "/",
     "VITE_TIMEOUT": 30.0,
     "VITE_REACT_REFRESH": True,
     # Production settings
@@ -61,6 +62,7 @@ SHARED_CONFIG_ATTRS: dict[str, str] = {
     "VITE_HOST": "vite_host",
     "VITE_ENTRY": "vite_entry",
     "VITE_COMMAND": "vite_command",
+    "VITE_BASE": "vite_base",
     "VITE_TIMEOUT": "vite_timeout",
     "VITE_REACT_REFRESH": "vite_react_refresh",
     "MANIFEST_PATH": "manifest_path",

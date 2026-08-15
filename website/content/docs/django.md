@@ -44,6 +44,7 @@ CROSS_INERTIA = {
     'LAYOUT': 'base.html',              # Template for initial page loads
     'VITE_ENTRY': 'src/main.tsx',       # Vite entry point
     'VITE_PORT': 5173,                  # Vite dev server port (or 'auto')
+    'VITE_BASE': '/',                   # Must match `base` in vite.config
     'VITE_REACT_REFRESH': True,         # Set False for Vue/Svelte entries
     'MANIFEST_PATH': 'static/build/.vite/manifest.json',
     'SSR_ENABLED': False,               # Enable for server-side rendering
@@ -213,6 +214,28 @@ In development mode (`DEBUG=True`), Vite also handles SSR via its `/__inertia_ss
 In production, supervise the standalone SSR process alongside Django and point
 `SSR_URL` at it. The middleware only manages subprocesses while Django's
 `runserver` command is serving requests.
+
+The middleware runs `VITE_COMMAND` with `--port <VITE_PORT>` appended and waits
+for `http://localhost:<VITE_PORT><VITE_BASE>@vite/client` to answer. Two things
+to keep in mind:
+
+- The command must accept a trailing `--port` (for example
+  `'VITE_COMMAND': 'bun run --cwd frontend dev'`; `bun --cwd frontend run dev`
+  rejects flags placed after the script name).
+- If `vite.config` sets `base` (common when Django serves the built assets from
+  `/static/build/`), set `VITE_BASE` to the same value or Vite will never look
+  healthy and the injected script tags will 404. Alternatively keep the base for
+  production builds only:
+
+  ```ts
+  export default defineConfig(({ command }) => ({
+    base: command === "build" ? "/static/build/" : "/",
+    // ...
+  }))
+  ```
+
+If Vite fails to start, the error printed by `runserver` includes the resolved
+command, the health-check URL and the last lines of Vite's output.
 
 ## URL Configuration
 

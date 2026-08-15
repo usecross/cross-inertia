@@ -17,7 +17,12 @@ from cross_web import DjangoHTTPRequestAdapter
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.template.response import TemplateResponse
 
-from .._assets import build_asset_url, resolve_manifest_entry
+from .._assets import (
+    build_asset_url,
+    build_vite_dev_url,
+    normalize_vite_base,
+    resolve_manifest_entry,
+)
 from .._exceptions import ManifestNotFoundError
 from .._ssr import VITE_DEV_SSR_ENDPOINT, InertiaSSR
 from .conf import inertia_settings
@@ -71,9 +76,13 @@ class DjangoInertiaResponse:
         ssr_url: str | None = None,
         *,
         vite_react_refresh: bool | None = None,
+        vite_base: str | None = None,
     ):
         self.template_name = template_name or inertia_settings.LAYOUT
         self.vite_dev_url = vite_dev_url or inertia_settings.VITE_DEV_URL
+        self.vite_base = normalize_vite_base(
+            vite_base if vite_base is not None else inertia_settings.VITE_BASE
+        )
         self.manifest_path = manifest_path or inertia_settings.MANIFEST_PATH
         self.asset_url_prefix = inertia_settings.ASSET_URL_PREFIX
         self.vite_entry = vite_entry or inertia_settings.VITE_ENTRY
@@ -102,14 +111,19 @@ class DjangoInertiaResponse:
         """Check if request is an Inertia prefetch request."""
         return is_prefetch_request_headers(request.headers)  # type: ignore[arg-type]
 
+    def vite_dev_asset_url(self, path: str) -> str:
+        """Build a URL served by the Vite dev server, honouring its ``base``."""
+        return build_vite_dev_url(self.vite_dev_url, self.vite_base, path)
+
     def is_dev_mode(self) -> bool:
         """Check if Vite dev server is running."""
         if self._is_dev is not None:
             return self._is_dev
 
-        logger.info(f"Checking Vite dev server at {self.vite_dev_url}...")
+        probe_url = self.vite_dev_asset_url("@vite/client")
+        logger.info(f"Checking Vite dev server at {probe_url}...")
         try:
-            response = httpx.get(f"{self.vite_dev_url}/@vite/client", timeout=0.1)
+            response = httpx.get(probe_url, timeout=0.1)
             self._is_dev = response.status_code == 200
             if self._is_dev:
                 logger.info("Vite dev server detected - running in DEVELOPMENT mode")
@@ -180,11 +194,14 @@ class DjangoInertiaResponse:
             logger.info(
                 f"Generating DEV mode script tags (Vite server: {self.vite_dev_url})"
             )
+            vite_client_url = self.vite_dev_asset_url("@vite/client")
+            entry_url = self.vite_dev_asset_url(self.vite_entry)
+            react_refresh_url = self.vite_dev_asset_url("@react-refresh")
             react_refresh = ""
             if self.vite_react_refresh:
                 react_refresh = f"""
                 <script type="module">
-                    import RefreshRuntime from "{self.vite_dev_url}/@react-refresh"
+                    import RefreshRuntime from "{react_refresh_url}"
                     RefreshRuntime.injectIntoGlobalHook(window)
                     window.$RefreshReg$ = () => {{}}
                     window.$RefreshSig$ = () => (type) => type
@@ -194,8 +211,8 @@ class DjangoInertiaResponse:
 
             return f"""
                 {react_refresh}
-                <script type="module" src="{self.vite_dev_url}/@vite/client"></script>
-                <script type="module" src="{self.vite_dev_url}/{self.vite_entry}"></script>
+                <script type="module" src="{vite_client_url}"></script>
+                <script type="module" src="{entry_url}"></script>
             """
         else:
             manifest = self.get_manifest()

@@ -18,7 +18,12 @@ from jinja2 import pass_context
 from markupsafe import Markup
 from starlette.responses import Response
 
-from ._assets import build_asset_url, resolve_manifest_entry
+from ._assets import (
+    build_asset_url,
+    build_vite_dev_url,
+    normalize_vite_base,
+    resolve_manifest_entry,
+)
 from ._exceptions import ManifestNotFoundError
 from ._page import (
     PageRenderOptions,
@@ -346,12 +351,16 @@ class InertiaResponse:
         ssr_enabled: bool | None = None,
         asset_url_prefix: str | None = None,
         vite_react_refresh: bool | None = None,
+        vite_base: str | None = None,
     ):
         # Import here to avoid circular imports
         from cross_inertia._config import get_config
 
         config = get_config()
         self.vite_dev_url = vite_dev_url or config.vite_dev_url
+        self.vite_base = normalize_vite_base(
+            vite_base if vite_base is not None else config.vite_base
+        )
         self.manifest_path = manifest_path or config.manifest_path
         self.asset_url_prefix = asset_url_prefix or config.asset_url_prefix
         self._is_dev: bool | None = None
@@ -403,14 +412,19 @@ class InertiaResponse:
         """
         return is_prefetch_request_headers(adapter.headers)
 
+    def vite_dev_asset_url(self, path: str) -> str:
+        """Build a URL served by the Vite dev server, honouring its ``base``."""
+        return build_vite_dev_url(self.vite_dev_url, self.vite_base, path)
+
     def is_dev_mode(self) -> bool:
         """Check if Vite dev server is running"""
         if self._is_dev is not None:
             return self._is_dev
 
-        logger.info(f"Checking Vite dev server at {self.vite_dev_url}...")
+        probe_url = self.vite_dev_asset_url("@vite/client")
+        logger.info(f"Checking Vite dev server at {probe_url}...")
         try:
-            response = httpx.get(f"{self.vite_dev_url}/@vite/client", timeout=0.1)
+            response = httpx.get(probe_url, timeout=0.1)
             self._is_dev = response.status_code == 200
             if self._is_dev:
                 logger.info("✓ Vite dev server detected - running in DEVELOPMENT mode")
@@ -550,11 +564,14 @@ class InertiaResponse:
             logger.info(
                 f"Generating DEV mode script tags (Vite server: {self.vite_dev_url})"
             )
+            vite_client_url = self.vite_dev_asset_url("@vite/client")
+            entry_url = self.vite_dev_asset_url(self.vite_entry)
+            react_refresh_url = self.vite_dev_asset_url("@react-refresh")
             react_refresh = ""
             if self.vite_react_refresh:
                 react_refresh = f'''
                 <script type="module">
-                    import RefreshRuntime from "{self.vite_dev_url}/@react-refresh"
+                    import RefreshRuntime from "{react_refresh_url}"
                     RefreshRuntime.injectIntoGlobalHook(window)
                     window.$RefreshReg$ = () => {{}}
                     window.$RefreshSig$ = () => (type) => type
@@ -564,8 +581,8 @@ class InertiaResponse:
 
             return f'''
                 {react_refresh}
-                <script type="module" src="{self.vite_dev_url}/@vite/client"></script>
-                <script type="module" src="{self.vite_dev_url}/{self.vite_entry}"></script>
+                <script type="module" src="{vite_client_url}"></script>
+                <script type="module" src="{entry_url}"></script>
             '''
         else:
             # Production mode - use built assets from manifest

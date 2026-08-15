@@ -36,9 +36,15 @@ import subprocess
 import sys
 import threading
 import time
+from collections import deque
 from typing import Any
 
+from cross_inertia._assets import build_vite_dev_url, normalize_vite_base
+
 logger = logging.getLogger(__name__)
+
+# Number of Vite output lines kept for startup error messages.
+RECENT_OUTPUT_LINES = 20
 
 
 def is_port_in_use(port: int, host: str = "localhost") -> bool:
@@ -59,6 +65,7 @@ class BaseViteProcess:
         command: str | list[str] = "bun run dev",
         port: int | None = None,
         startup_timeout: float = 30.0,
+        base: str | None = None,
     ):
         """
         Initialize the Vite process manager.
@@ -67,13 +74,34 @@ class BaseViteProcess:
             command: Command to start Vite dev server.
             port: Port for the Vite dev server. If None, reads from config (default: "auto").
             startup_timeout: Maximum time to wait for server to become healthy.
+            base: Vite's ``base`` path. If None, reads from config (default: "/").
         """
         from cross_inertia._config import get_config
 
+        config = get_config()
         self.command = command
-        self.port = port if port is not None else get_config().resolved_vite_port
+        self.port = port if port is not None else config.resolved_vite_port
         self.startup_timeout = startup_timeout
-        self.health_url = f"http://localhost:{self.port}/@vite/client"
+        self.base = normalize_vite_base(base if base is not None else config.vite_base)
+        self.health_url = build_vite_dev_url(
+            f"http://localhost:{self.port}", self.base, "@vite/client"
+        )
+        self._recent_output: deque[str] = deque(maxlen=RECENT_OUTPUT_LINES)
+
+    def _remember_output(self, line: str) -> None:
+        """Keep the last few output lines so startup errors can show them."""
+        self._recent_output.append(line)
+
+    def _startup_error(self, reason: str) -> RuntimeError:
+        """Build a startup error that includes the command and recent output."""
+        message = (
+            f"{reason} (command: {self.get_command_with_port()!r}, "
+            f"health check: {self.health_url})"
+        )
+        if self._recent_output:
+            output = "\n".join(f"  [vite] {line}" for line in self._recent_output)
+            message = f"{message}\nRecent Vite output:\n{output}"
+        return RuntimeError(message)
 
     def get_command_with_port(self) -> str | list[str]:
         """Get the command with port argument appended."""
@@ -90,8 +118,9 @@ class SyncViteProcess(BaseViteProcess):
         command: str | list[str] = "bun run dev",
         port: int | None = None,
         startup_timeout: float = 30.0,
+        base: str | None = None,
     ):
-        super().__init__(command, port, startup_timeout)
+        super().__init__(command, port, startup_timeout, base)
         self._process: subprocess.Popen[str] | None = None
         self._output_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
@@ -132,6 +161,13 @@ class SyncViteProcess(BaseViteProcess):
         self._wait_for_health()
         logger.info(f"Vite dev server running at http://localhost:{self.port}")
 
+    def _startup_error(self, reason: str) -> RuntimeError:
+        # Give the reader thread a moment to flush what Vite printed before dying,
+        # so the error message actually contains it.
+        if self._output_thread is not None:
+            self._output_thread.join(timeout=1.0)
+        return super()._startup_error(reason)
+
     def _log_output(self) -> None:
         """Log Vite output to stdout."""
         if self._process is None or self._process.stdout is None:
@@ -141,7 +177,9 @@ class SyncViteProcess(BaseViteProcess):
             if self._stop_event.is_set():
                 break
             if line:
-                print(f"[vite] {line.rstrip()}")
+                text = line.rstrip()
+                self._remember_output(text)
+                print(f"[vite] {text}")
 
     def _wait_for_health(self) -> None:
         """Wait for Vite to become healthy."""
@@ -154,13 +192,13 @@ class SyncViteProcess(BaseViteProcess):
                 elapsed = time.time() - start_time
                 if elapsed > self.startup_timeout:
                     self.stop()
-                    raise RuntimeError(
+                    raise self._startup_error(
                         f"Vite did not start within {self.startup_timeout}s"
                     )
 
                 # Check if process exited
                 if self._process is not None and self._process.poll() is not None:
-                    raise RuntimeError(
+                    raise self._startup_error(
                         f"Vite exited with code {self._process.returncode}"
                     )
 
@@ -173,7 +211,7 @@ class SyncViteProcess(BaseViteProcess):
                             self._process is not None
                             and self._process.poll() is not None
                         ):
-                            raise RuntimeError(
+                            raise self._startup_error(
                                 f"Vite exited with code {self._process.returncode}"
                             )
                         return
@@ -229,8 +267,9 @@ class AsyncViteProcess(BaseViteProcess):
         port: int | None = None,
         startup_timeout: float = 30.0,
         env: dict[str, str] | None = None,
+        base: str | None = None,
     ):
-        super().__init__(command, port, startup_timeout)
+        super().__init__(command, port, startup_timeout, base)
         self.env = env
         self._process: asyncio.subprocess.Process | None = None
         self._output_task: asyncio.Task[Any] | None = None
@@ -279,6 +318,15 @@ class AsyncViteProcess(BaseViteProcess):
         await self._wait_for_health()
         logger.info(f"Vite dev server running at http://localhost:{self.port}")
 
+    async def _startup_error_async(self, reason: str) -> RuntimeError:
+        # Let the output task flush what Vite printed before dying.
+        if self._output_task is not None:
+            try:
+                await asyncio.wait_for(asyncio.shield(self._output_task), timeout=1.0)
+            except (asyncio.TimeoutError, asyncio.CancelledError):
+                pass
+        return self._startup_error(reason)
+
     async def _log_output(self) -> None:
         """Log stdout and stderr from the Vite dev server."""
         if self._process is None:
@@ -293,6 +341,7 @@ class AsyncViteProcess(BaseViteProcess):
                     break
                 text = line.decode().rstrip()
                 if text:
+                    self._remember_output(text)
                     logger.debug(f"[vite] {prefix}: {text}")
 
         if self._process.stdout and self._process.stderr:
@@ -312,13 +361,13 @@ class AsyncViteProcess(BaseViteProcess):
                 elapsed = asyncio.get_event_loop().time() - start_time
                 if elapsed > self.startup_timeout:
                     await self.stop()
-                    raise RuntimeError(
+                    raise await self._startup_error_async(
                         f"Vite did not start within {self.startup_timeout}s"
                     )
 
                 # Check if process exited
                 if self._process is not None and self._process.returncode is not None:
-                    raise RuntimeError(
+                    raise await self._startup_error_async(
                         f"Vite exited with code {self._process.returncode}"
                     )
 

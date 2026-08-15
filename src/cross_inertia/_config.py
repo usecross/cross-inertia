@@ -113,6 +113,13 @@ class InertiaConfig:
     vite_command: str | list[str] = "bun run dev"
     """Command to start Vite dev server. Port will be appended automatically."""
 
+    vite_base: str = "/"
+    """Public base path the Vite dev server serves from (Vite's ``base`` option).
+
+    Must match ``base`` in ``vite.config``; the dev-server health check and the
+    injected ``@vite/client`` / entry script tags are prefixed with it.
+    """
+
     vite_timeout: float = 30.0
     """Timeout in seconds for Vite dev server startup."""
 
@@ -197,6 +204,7 @@ def configure_inertia(
     vite_host: str = "localhost",
     vite_entry: str = "frontend/app.tsx",
     vite_command: str | list[str] = "bun run dev",
+    vite_base: str = "/",
     vite_timeout: float = 30.0,
     vite_react_refresh: bool = True,
     template_dir: str = "templates",
@@ -218,6 +226,7 @@ def configure_inertia(
         vite_host: Host for Vite dev server.
         vite_entry: Entry point for Vite (e.g., 'frontend/app.tsx', 'src/main.tsx').
         vite_command: Command to start Vite dev server.
+        vite_base: Vite's ``base`` path (e.g. ``"/static/build/"``). Defaults to ``"/"``.
         vite_timeout: Timeout for Vite server startup.
         vite_react_refresh: Whether to inject the React Refresh preamble. Disable
             this for Vue, Svelte, and other non-React frontends.
@@ -254,6 +263,7 @@ def configure_inertia(
         vite_host=vite_host,
         vite_entry=vite_entry,
         vite_command=vite_command,
+        vite_base=vite_base,
         vite_timeout=vite_timeout,
         vite_react_refresh=vite_react_refresh,
         template_dir=template_dir,

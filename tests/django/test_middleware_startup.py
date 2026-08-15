@@ -261,3 +261,68 @@ def test_ssr_cwd_falls_back_to_shared_config():
     finally:
         reset_config()
         inertia_settings.reload()
+
+
+def test_vite_base_falls_back_to_shared_config():
+    from cross_inertia import configure_inertia
+    from cross_inertia._config import reset_config
+
+    try:
+        configure_inertia(vite_base="/static/build/")
+        with override_settings(CROSS_INERTIA={}):
+            inertia_settings.reload()
+            assert inertia_settings.VITE_BASE == "/static/build/"
+    finally:
+        reset_config()
+        inertia_settings.reload()
+
+
+def test_vite_base_defaults_to_root():
+    from cross_inertia._config import reset_config
+
+    reset_config()
+    try:
+        with override_settings(CROSS_INERTIA={}):
+            inertia_settings.reload()
+            assert inertia_settings.VITE_BASE == "/"
+    finally:
+        reset_config()
+        inertia_settings.reload()
+
+
+def test_middleware_passes_vite_base_to_process(monkeypatch):
+    """The auto-started Vite process must health-check under VITE_BASE."""
+    from cross_inertia.django import middleware as middleware_module
+
+    reset_vite_state()
+    created: list[object] = []
+
+    class FakeViteProcess:
+        def __init__(self, command, port, startup_timeout, base=None):
+            self.command = command
+            self.port = port
+            self.startup_timeout = startup_timeout
+            self.base = base
+            created.append(self)
+
+        def get_command_with_port(self):
+            return f"{self.command} --port {self.port}"
+
+        def start(self):
+            return None
+
+    monkeypatch.setattr(middleware_module, "SyncViteProcess", FakeViteProcess)
+    monkeypatch.setattr(middleware_module, "is_port_in_use", lambda port: False)
+    monkeypatch.setattr(middleware_module.atexit, "register", lambda fn: None)
+
+    with override_settings(
+        CROSS_INERTIA={"VITE_PORT": 5177, "VITE_BASE": "/static/build/"}
+    ):
+        inertia_settings.reload()
+        InertiaMiddleware._start_vite_dev_server()
+
+    inertia_settings.reload()
+    reset_vite_state()
+    assert len(created) == 1
+    assert created[0].port == 5177
+    assert created[0].base == "/static/build/"

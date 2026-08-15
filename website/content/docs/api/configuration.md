@@ -28,7 +28,8 @@ configure_inertia(
 | `vite_port` | `int \| "auto"` | `"auto"` | Port for Vite dev server. Use `"auto"` to find an available port automatically. |
 | `vite_host` | `str` | `"localhost"` | Host for Vite dev server. |
 | `vite_entry` | `str` | `"frontend/app.tsx"` | Entry point for Vite (e.g., `"src/main.tsx"`). |
-| `vite_command` | `str \| list[str]` | `"bun run dev"` | Command to start Vite dev server. Port is appended automatically. |
+| `vite_command` | `str \| list[str]` | `"bun run dev"` | Command to start Vite dev server. `--port <port>` is appended automatically, so the command must accept it as a trailing argument (e.g. `bun run --cwd frontend dev`, not `bun --cwd frontend run dev`). |
+| `vite_base` | `str` | `"/"` | Vite's [`base`](https://vite.dev/config/shared-options.html#base) path. Vite serves `@vite/client`, `@react-refresh` and your entry under it in dev too, so set this to match `vite.config` if you set `base` there (e.g. `"/static/build/"`). |
 | `vite_timeout` | `float` | `30.0` | Timeout in seconds for Vite dev server startup. |
 | `vite_react_refresh` | `bool` | `True` | Inject the React Refresh preamble. Set to `False` for Vue, Svelte, and other non-React frontends. |
 
@@ -87,6 +88,7 @@ configure_inertia(
     vite_host="localhost",
     vite_entry="src/main.tsx",
     vite_command="npm run dev",
+    vite_base="/",
     vite_timeout=30.0,
     vite_react_refresh=True,
 

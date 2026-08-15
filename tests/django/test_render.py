@@ -3,7 +3,7 @@
 import asyncio
 import json
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 from unittest.mock import patch
 
 from django.test import override_settings
@@ -383,3 +383,73 @@ def test_django_vite_tags_allow_explicit_react_refresh_configuration():
     )
     vue_response._is_dev = True
     assert "@react-refresh" not in vue_response.get_vite_tags()
+
+
+def test_dev_vite_tags_default_to_root_base():
+    from cross_inertia.django.response import DjangoInertiaResponse
+
+    response = DjangoInertiaResponse(
+        vite_dev_url="http://127.0.0.1:5174",
+        vite_entry="src/app.tsx",
+    )
+    response._is_dev = True
+    tags = response.get_vite_tags()
+
+    assert 'src="http://127.0.0.1:5174/@vite/client"' in tags
+    assert 'src="http://127.0.0.1:5174/src/app.tsx"' in tags
+    assert 'from "http://127.0.0.1:5174/@react-refresh"' in tags
+
+
+@override_settings(CROSS_INERTIA={"VITE_BASE": "/static/build/"})
+def test_dev_vite_tags_honour_vite_base_setting():
+    """Vite serves everything under its `base` in dev, so the tags must too."""
+    from cross_inertia.django.conf import inertia_settings
+    from cross_inertia.django.response import DjangoInertiaResponse
+
+    inertia_settings.reload()
+    try:
+        response = DjangoInertiaResponse(
+            vite_dev_url="http://127.0.0.1:5174",
+            vite_entry="src/app.tsx",
+        )
+        response._is_dev = True
+        tags = response.get_vite_tags()
+    finally:
+        inertia_settings.reload()
+
+    assert 'src="http://127.0.0.1:5174/static/build/@vite/client"' in tags
+    assert 'src="http://127.0.0.1:5174/static/build/src/app.tsx"' in tags
+    assert 'from "http://127.0.0.1:5174/static/build/@react-refresh"' in tags
+    assert "5174/@vite/client" not in tags
+
+
+def test_dev_vite_tags_accept_explicit_vite_base_and_normalize_it():
+    from cross_inertia.django.response import DjangoInertiaResponse
+
+    response = DjangoInertiaResponse(
+        vite_dev_url="http://localhost:5173",
+        vite_entry="src/main.tsx",
+        vite_base="static/build",
+    )
+    response._is_dev = True
+    tags = response.get_vite_tags()
+
+    assert response.vite_base == "/static/build/"
+    assert 'src="http://localhost:5173/static/build/src/main.tsx"' in tags
+
+
+def test_dev_mode_probe_uses_vite_base():
+    """The Vite reachability probe must hit /@vite/client under the base path."""
+    from cross_inertia.django.response import DjangoInertiaResponse
+
+    response = DjangoInertiaResponse(
+        vite_dev_url="http://127.0.0.1:5174",
+        vite_base="/static/build/",
+    )
+    probe = MagicMock(status_code=200)
+
+    with patch("cross_inertia.django.response.httpx.get", return_value=probe) as get:
+        assert response.is_dev_mode() is True
+
+    get.assert_called_once()
+    assert get.call_args.args[0] == "http://127.0.0.1:5174/static/build/@vite/client"
