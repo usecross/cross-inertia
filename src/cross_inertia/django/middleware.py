@@ -161,6 +161,7 @@ class InertiaMiddleware:
             port=vite_port,
             startup_timeout=inertia_settings.VITE_TIMEOUT,
             base=inertia_settings.VITE_BASE,
+            host=inertia_settings.VITE_HOST,
         )
         print(
             f"Starting Vite dev server on port {vite_port}: "
@@ -169,7 +170,7 @@ class InertiaMiddleware:
 
         try:
             cls._vite_process.start()
-            print(f"Vite dev server running at http://localhost:{vite_port}")
+            print(f"Vite dev server running at {cls._vite_process.dev_url}")
             atexit.register(cls._stop_vite_dev_server)
         except Exception as e:
             logger.error(f"Failed to start Vite: {e}")

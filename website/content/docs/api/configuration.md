@@ -195,8 +195,34 @@ export default defineConfig({
       input: 'frontend/app.tsx',
     },
   },
+  server: {
+    // Cross-Inertia picks the port; make relative asset URLs (fonts, images
+    // referenced from CSS) resolve against Vite rather than your backend.
+    origin: process.env.INERTIA_VITE_URL,
+    strictPort: true,
+  },
 })
 ```
+
+### Environment passed to the Vite dev server
+
+When Cross-Inertia starts Vite it appends `--port <port>` to `vite_command` and
+exports these variables to the subprocess so `vite.config` can adapt to the
+port it picked (there is no need to hard-code one):
+
+| Variable | Example | Use |
+|----------|---------|-----|
+| `INERTIA_VITE_URL` | `http://localhost:5188` | `server.origin`, so asset URLs Vite emits in dev point at Vite instead of your app. |
+| `INERTIA_VITE_PORT` | `5188` | The chosen port. |
+| `INERTIA_VITE_BASE` | `/` | The configured `vite_base`. |
+
+Do not set `server.port` in `vite.config` when using `vite_port="auto"`; the CLI
+flag wins anyway, and a hard-coded value only misleads. `strictPort: true` is
+fine — it applies to the port Cross-Inertia passed.
+
+The Django adapter reads the same defaults: every `VITE_*`, `MANIFEST_PATH`,
+`ASSET_URL_PREFIX` and `SSR_*` key in `CROSS_INERTIA` defaults to the value
+`configure_inertia()` would use, so both adapters behave the same out of the box.
 
 ## Exceptions
 

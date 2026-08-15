@@ -8,12 +8,16 @@ Usage in settings.py:
 
     CROSS_INERTIA = {
         'LAYOUT': 'base.html',
-        'VITE_ENTRY': 'src/main.tsx',
-        'VITE_PORT': 5173,
+        'VITE_ENTRY': 'frontend/app.tsx',
+        'VITE_PORT': 'auto',  # or a fixed port number
         'MANIFEST_PATH': BASE_DIR / 'static/build/.vite/manifest.json',
         'SSR_ENABLED': False,
         'SHARE': 'myapp.inertia.share_data',  # Optional: shared data function
     }
+
+Every ``VITE_*``, ``MANIFEST_PATH``, ``ASSET_URL_PREFIX`` and ``SSR_*`` key
+shares its default with ``cross_inertia.configure_inertia()`` so the Django and
+FastAPI adapters behave the same out of the box.
 
 Then access settings via:
 
@@ -26,37 +30,19 @@ Then access settings via:
 from __future__ import annotations
 
 import os
-import socket
 from pathlib import Path
 from typing import Any
 
-from cross_inertia._config import get_config, is_config_explicitly_set
+from cross_inertia._config import (
+    InertiaConfig,
+    find_available_port,
+    get_config,
+    is_config_explicitly_set,
+)
 
-DEFAULTS: dict[str, Any] = {
-    # Template settings
-    "LAYOUT": "base.html",
-    # Vite settings
-    "VITE_PORT": 5173,
-    "VITE_HOST": "localhost",
-    "VITE_ENTRY": "src/main.tsx",
-    "VITE_COMMAND": "bun run dev",
-    "VITE_BASE": "/",
-    "VITE_TIMEOUT": 30.0,
-    "VITE_REACT_REFRESH": True,
-    # Production settings
-    "MANIFEST_PATH": "static/build/.vite/manifest.json",
-    "ASSET_URL_PREFIX": "/static/build",
-    # SSR settings
-    "SSR_ENABLED": False,
-    "SSR_URL": "http://127.0.0.1:13714",
-    "SSR_COMMAND": "bun dist/ssr/ssr.js",
-    "SSR_TIMEOUT": 10.0,
-    "SSR_HEALTH_PATH": "/health",
-    "SSR_CWD": None,
-    # Shared data
-    "SHARE": None,  # Dotted path to share function, e.g. 'myapp.inertia.share_data'
-}
-
+# Django settings that mirror an ``InertiaConfig`` field. Their defaults are
+# read from ``InertiaConfig`` so both adapters stay in sync, and when
+# ``configure_inertia()`` was called its values win over these defaults.
 SHARED_CONFIG_ATTRS: dict[str, str] = {
     "VITE_PORT": "vite_port",
     "VITE_HOST": "vite_host",
@@ -75,17 +61,19 @@ SHARED_CONFIG_ATTRS: dict[str, str] = {
     "SSR_CWD": "ssr_cwd",
 }
 
+_SHARED_DEFAULTS = InertiaConfig()
 
-def _find_available_port(start: int = 5173, end: int = 5273) -> int:
-    """Find an available port in the given range."""
-    for port in range(start, end):
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind(("127.0.0.1", port))
-                return port
-        except OSError:
-            continue
-    raise RuntimeError(f"No available port found in range {start}-{end}")
+DEFAULTS: dict[str, Any] = {
+    # Template settings
+    "LAYOUT": "base.html",
+    # Vite / production / SSR settings shared with configure_inertia()
+    **{
+        key: getattr(_SHARED_DEFAULTS, attr)
+        for key, attr in SHARED_CONFIG_ATTRS.items()
+    },
+    # Shared data
+    "SHARE": None,  # Dotted path to share function, e.g. 'myapp.inertia.share_data'
+}
 
 
 class InertiaSettings:
@@ -163,7 +151,7 @@ class InertiaSettings:
 
         port = self.VITE_PORT
         if port == "auto":
-            self._resolved_vite_port = _find_available_port()
+            self._resolved_vite_port = find_available_port()
         else:
             self._resolved_vite_port = int(port)
 

@@ -57,6 +57,13 @@ def is_port_in_use(port: int, host: str = "localhost") -> bool:
             return True
 
 
+# Environment variables exported to the Vite subprocess so ``vite.config`` can
+# adapt to the port Cross-Inertia picked (e.g. ``server.origin``).
+VITE_URL_ENV = "INERTIA_VITE_URL"
+VITE_PORT_ENV = "INERTIA_VITE_PORT"
+VITE_BASE_ENV = "INERTIA_VITE_BASE"
+
+
 class BaseViteProcess:
     """Base class with shared Vite configuration and utilities."""
 
@@ -66,6 +73,8 @@ class BaseViteProcess:
         port: int | None = None,
         startup_timeout: float = 30.0,
         base: str | None = None,
+        host: str | None = None,
+        env: dict[str, str] | None = None,
     ):
         """
         Initialize the Vite process manager.
@@ -75,6 +84,8 @@ class BaseViteProcess:
             port: Port for the Vite dev server. If None, reads from config (default: "auto").
             startup_timeout: Maximum time to wait for server to become healthy.
             base: Vite's ``base`` path. If None, reads from config (default: "/").
+            host: Host the dev server is reached on. If None, reads from config.
+            env: Extra environment variables for the subprocess.
         """
         from cross_inertia._config import get_config
 
@@ -83,10 +94,27 @@ class BaseViteProcess:
         self.port = port if port is not None else config.resolved_vite_port
         self.startup_timeout = startup_timeout
         self.base = normalize_vite_base(base if base is not None else config.vite_base)
-        self.health_url = build_vite_dev_url(
-            f"http://localhost:{self.port}", self.base, "@vite/client"
-        )
+        self.host = host or config.vite_host
+        self.env = env
+        self.dev_url = f"http://{self.host}:{self.port}"
+        self.health_url = build_vite_dev_url(self.dev_url, self.base, "@vite/client")
         self._recent_output: deque[str] = deque(maxlen=RECENT_OUTPUT_LINES)
+
+    def get_process_env(self) -> dict[str, str]:
+        """Environment for the Vite subprocess.
+
+        Starts from the current environment, adds ``INERTIA_VITE_URL``,
+        ``INERTIA_VITE_PORT`` and ``INERTIA_VITE_BASE`` so ``vite.config`` can
+        read them (for example ``server.origin = process.env.INERTIA_VITE_URL``),
+        then applies any explicit ``env`` overrides.
+        """
+        process_env = os.environ.copy()
+        process_env[VITE_URL_ENV] = self.dev_url
+        process_env[VITE_PORT_ENV] = str(self.port)
+        process_env[VITE_BASE_ENV] = self.base
+        if self.env:
+            process_env.update(self.env)
+        return process_env
 
     def _remember_output(self, line: str) -> None:
         """Keep the last few output lines so startup errors can show them."""
@@ -119,8 +147,10 @@ class SyncViteProcess(BaseViteProcess):
         port: int | None = None,
         startup_timeout: float = 30.0,
         base: str | None = None,
+        host: str | None = None,
+        env: dict[str, str] | None = None,
     ):
-        super().__init__(command, port, startup_timeout, base)
+        super().__init__(command, port, startup_timeout, base, host, env)
         self._process: subprocess.Popen[str] | None = None
         self._output_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
@@ -134,11 +164,14 @@ class SyncViteProcess(BaseViteProcess):
         full_command = self.get_command_with_port()
         logger.info(f"Starting Vite dev server: {full_command}")
 
+        process_env = self.get_process_env()
+
         # Start the process
         if isinstance(full_command, str):
             self._process = subprocess.Popen(
                 full_command,
                 shell=True,
+                env=process_env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
@@ -147,6 +180,7 @@ class SyncViteProcess(BaseViteProcess):
         else:
             self._process = subprocess.Popen(
                 full_command,
+                env=process_env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
@@ -159,7 +193,7 @@ class SyncViteProcess(BaseViteProcess):
 
         # Wait for health
         self._wait_for_health()
-        logger.info(f"Vite dev server running at http://localhost:{self.port}")
+        logger.info(f"Vite dev server running at {self.dev_url}")
 
     def _startup_error(self, reason: str) -> RuntimeError:
         # Give the reader thread a moment to flush what Vite printed before dying,
@@ -268,9 +302,9 @@ class AsyncViteProcess(BaseViteProcess):
         startup_timeout: float = 30.0,
         env: dict[str, str] | None = None,
         base: str | None = None,
+        host: str | None = None,
     ):
-        super().__init__(command, port, startup_timeout, base)
-        self.env = env
+        super().__init__(command, port, startup_timeout, base, host, env)
         self._process: asyncio.subprocess.Process | None = None
         self._output_task: asyncio.Task[Any] | None = None
 
@@ -280,10 +314,7 @@ class AsyncViteProcess(BaseViteProcess):
             logger.warning("Vite dev server is already running")
             return
 
-        # Prepare environment
-        process_env = os.environ.copy()
-        if self.env:
-            process_env.update(self.env)
+        process_env = self.get_process_env()
 
         full_command = self.get_command_with_port()
         logger.info(f"Starting Vite dev server: {full_command}")
@@ -316,7 +347,7 @@ class AsyncViteProcess(BaseViteProcess):
 
         # Wait for server to become healthy
         await self._wait_for_health()
-        logger.info(f"Vite dev server running at http://localhost:{self.port}")
+        logger.info(f"Vite dev server running at {self.dev_url}")
 
     async def _startup_error_async(self, reason: str) -> RuntimeError:
         # Let the output task flush what Vite printed before dying.

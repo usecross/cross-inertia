@@ -35,6 +35,48 @@ class TestHealthUrl:
         process = AsyncViteProcess(port=5190, base="/assets/")
         assert process.health_url == "http://localhost:5190/assets/@vite/client"
 
+    def test_host_defaults_to_shared_config(self):
+        configure_inertia(vite_port=5194, vite_host="127.0.0.1")
+        process = SyncViteProcess()
+        assert process.dev_url == "http://127.0.0.1:5194"
+        assert process.health_url == "http://127.0.0.1:5194/@vite/client"
+
+    def test_explicit_host(self):
+        process = AsyncViteProcess(port=5195, host="0.0.0.0")
+        assert process.dev_url == "http://0.0.0.0:5195"
+
+
+class TestProcessEnv:
+    def test_exports_vite_url_port_and_base(self, monkeypatch):
+        monkeypatch.setenv("KEEP_ME", "1")
+        process = SyncViteProcess(port=5196, base="static/build", host="127.0.0.1")
+        env = process.get_process_env()
+        assert env["KEEP_ME"] == "1"
+        assert env["INERTIA_VITE_URL"] == "http://127.0.0.1:5196"
+        assert env["INERTIA_VITE_PORT"] == "5196"
+        assert env["INERTIA_VITE_BASE"] == "/static/build/"
+
+    def test_explicit_env_overrides(self):
+        process = AsyncViteProcess(
+            port=5197, env={"INERTIA_VITE_URL": "custom", "X": "y"}
+        )
+        env = process.get_process_env()
+        assert env["INERTIA_VITE_URL"] == "custom"
+        assert env["X"] == "y"
+
+    def test_subprocess_receives_env(self):
+        """The spawned command really sees INERTIA_VITE_URL."""
+        script = 'import os, sys; print("URL=" + os.environ["INERTIA_VITE_URL"]); sys.exit(3)'
+        process = SyncViteProcess(
+            command=[sys.executable, "-c", script],
+            port=5198,
+            host="127.0.0.1",
+            startup_timeout=5.0,
+        )
+        with pytest.raises(RuntimeError) as excinfo:
+            process.start()
+        assert "URL=http://127.0.0.1:5198" in str(excinfo.value)
+
 
 class TestStartupErrors:
     def test_exit_error_includes_command_and_recent_output(self):

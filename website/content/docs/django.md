@@ -42,8 +42,8 @@ Configure Inertia using the `CROSS_INERTIA` settings dict (similar to Django RES
 
 CROSS_INERTIA = {
     'LAYOUT': 'base.html',              # Template for initial page loads
-    'VITE_ENTRY': 'src/main.tsx',       # Vite entry point
-    'VITE_PORT': 5173,                  # Vite dev server port (or 'auto')
+    'VITE_ENTRY': 'frontend/app.tsx',   # Vite entry point
+    'VITE_PORT': 'auto',                # Free port picked at startup, or a number
     'VITE_BASE': '/',                   # Must match `base` in vite.config
     'VITE_REACT_REFRESH': True,         # Set False for Vue/Svelte entries
     'MANIFEST_PATH': 'static/build/.vite/manifest.json',
@@ -52,7 +52,11 @@ CROSS_INERTIA = {
 }
 ```
 
-All settings are optional and have sensible defaults.
+All settings are optional. The `VITE_*`, `MANIFEST_PATH`, `ASSET_URL_PREFIX`
+and `SSR_*` keys share their defaults with
+[`configure_inertia()`](/docs/api/configuration), so a Django project and a
+FastAPI project behave the same out of the box (Vite entry `frontend/app.tsx`,
+a free port, `bun run dev`).
 
 ## Creating Views
 
@@ -215,9 +219,23 @@ In production, supervise the standalone SSR process alongside Django and point
 `SSR_URL` at it. The middleware only manages subprocesses while Django's
 `runserver` command is serving requests.
 
-The middleware runs `VITE_COMMAND` with `--port <VITE_PORT>` appended and waits
-for `http://localhost:<VITE_PORT><VITE_BASE>@vite/client` to answer. Two things
-to keep in mind:
+The middleware runs `VITE_COMMAND` with `--port <port>` appended (a free port
+by default) and waits for `http://<VITE_HOST>:<port><VITE_BASE>@vite/client` to
+answer. The chosen URL is exported to Vite as `INERTIA_VITE_URL` (plus
+`INERTIA_VITE_PORT` and `INERTIA_VITE_BASE`), so `vite.config` should use it as
+`server.origin` instead of hard-coding a port:
+
+```ts
+export default defineConfig({
+  // ...
+  server: {
+    origin: process.env.INERTIA_VITE_URL,
+    strictPort: true,
+  },
+})
+```
+
+Two more things to keep in mind:
 
 - The command must accept a trailing `--port` (for example
   `'VITE_COMMAND': 'bun run --cwd frontend dev'`; `bun --cwd frontend run dev`
