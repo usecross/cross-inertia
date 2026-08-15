@@ -57,13 +57,6 @@ def is_port_in_use(port: int, host: str = "localhost") -> bool:
             return True
 
 
-# Environment variables exported to the Vite subprocess so ``vite.config`` can
-# adapt to the port Cross-Inertia picked (e.g. ``server.origin``).
-VITE_URL_ENV = "INERTIA_VITE_URL"
-VITE_PORT_ENV = "INERTIA_VITE_PORT"
-VITE_BASE_ENV = "INERTIA_VITE_BASE"
-
-
 class BaseViteProcess:
     """Base class with shared Vite configuration and utilities."""
 
@@ -103,15 +96,12 @@ class BaseViteProcess:
     def get_process_env(self) -> dict[str, str]:
         """Environment for the Vite subprocess.
 
-        Starts from the current environment, adds ``INERTIA_VITE_URL``,
-        ``INERTIA_VITE_PORT`` and ``INERTIA_VITE_BASE`` so ``vite.config`` can
-        read them (for example ``server.origin = process.env.INERTIA_VITE_URL``),
-        then applies any explicit ``env`` overrides.
+        Starts from the current environment, adds ``INERTIA_VITE_URL`` so
+        ``vite.config`` can set ``server.origin``, then applies any explicit
+        ``env`` overrides.
         """
         process_env = os.environ.copy()
-        process_env[VITE_URL_ENV] = self.dev_url
-        process_env[VITE_PORT_ENV] = str(self.port)
-        process_env[VITE_BASE_ENV] = self.base
+        process_env["INERTIA_VITE_URL"] = self.dev_url
         if self.env:
             process_env.update(self.env)
         return process_env

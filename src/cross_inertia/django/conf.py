@@ -15,9 +15,9 @@ Usage in settings.py:
         'SHARE': 'myapp.inertia.share_data',  # Optional: shared data function
     }
 
-Every ``VITE_*``, ``MANIFEST_PATH``, ``ASSET_URL_PREFIX`` and ``SSR_*`` key
-shares its default with ``cross_inertia.configure_inertia()`` so the Django and
-FastAPI adapters behave the same out of the box.
+The settings backed by ``InertiaConfig`` share its defaults so the Django and
+FastAPI adapters behave the same out of the box. ``ASSET_URL_PREFIX`` remains
+Django-aware and derives from ``STATIC_URL`` unless explicitly configured.
 
 Then access settings via:
 

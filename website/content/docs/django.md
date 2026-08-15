@@ -52,11 +52,10 @@ CROSS_INERTIA = {
 }
 ```
 
-All settings are optional. The `VITE_*`, `MANIFEST_PATH`, `ASSET_URL_PREFIX`
-and `SSR_*` keys share their defaults with
-[`configure_inertia()`](/docs/api/configuration), so a Django project and a
-FastAPI project behave the same out of the box (Vite entry `frontend/app.tsx`,
-a free port, `bun run dev`).
+All settings are optional. Settings backed by `InertiaConfig` share its
+defaults, so Django and FastAPI behave the same out of the box (Vite entry
+`frontend/app.tsx`, a free port, `bun run dev`). `ASSET_URL_PREFIX` is derived
+from Django's `STATIC_URL` unless explicitly configured.
 
 ## Creating Views
 
@@ -221,9 +220,8 @@ In production, supervise the standalone SSR process alongside Django and point
 
 The middleware runs `VITE_COMMAND` with `--port <port>` appended (a free port
 by default) and waits for `http://<VITE_HOST>:<port><VITE_BASE>@vite/client` to
-answer. The chosen URL is exported to Vite as `INERTIA_VITE_URL` (plus
-`INERTIA_VITE_PORT` and `INERTIA_VITE_BASE`), so `vite.config` should use it as
-`server.origin` instead of hard-coding a port:
+answer. The chosen URL is exported to Vite as `INERTIA_VITE_URL`, so
+`vite.config` should use it as `server.origin` instead of hard-coding a port:
 
 ```ts
 export default defineConfig({
@@ -240,6 +238,9 @@ Two more things to keep in mind:
 - The command must accept a trailing `--port` (for example
   `'VITE_COMMAND': 'bun run --cwd frontend dev'`; `bun --cwd frontend run dev`
   rejects flags placed after the script name).
+- To run Vite yourself in a second terminal, set a fixed `VITE_PORT`. With
+  `VITE_PORT: 'auto'`, Cross-Inertia deliberately picks a free port rather than
+  attaching to an arbitrary process that already occupies Vite's default port.
 - If `vite.config` sets `base` (common when Django serves the built assets from
   `/static/build/`), set `VITE_BASE` to the same value or Vite will never look
   healthy and the injected script tags will 404. Alternatively keep the base for

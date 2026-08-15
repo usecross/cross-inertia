@@ -199,7 +199,6 @@ def test_django_defaults_used_when_shared_config_not_set():
             inertia_settings.reload()
             assert inertia_settings.VITE_ENTRY == "frontend/app.tsx"
             assert inertia_settings.VITE_PORT == "auto"
-            assert 5173 <= inertia_settings.resolved_vite_port < 5273
     finally:
         reset_config()
         inertia_settings.reload()

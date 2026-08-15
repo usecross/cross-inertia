@@ -47,14 +47,12 @@ class TestHealthUrl:
 
 
 class TestProcessEnv:
-    def test_exports_vite_url_port_and_base(self, monkeypatch):
+    def test_exports_vite_url(self, monkeypatch):
         monkeypatch.setenv("KEEP_ME", "1")
         process = SyncViteProcess(port=5196, base="static/build", host="127.0.0.1")
         env = process.get_process_env()
         assert env["KEEP_ME"] == "1"
         assert env["INERTIA_VITE_URL"] == "http://127.0.0.1:5196"
-        assert env["INERTIA_VITE_PORT"] == "5196"
-        assert env["INERTIA_VITE_BASE"] == "/static/build/"
 
     def test_explicit_env_overrides(self):
         process = AsyncViteProcess(
