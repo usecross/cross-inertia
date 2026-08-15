@@ -2,7 +2,9 @@
 
 from cross_inertia._assets import (
     build_asset_url,
+    build_vite_dev_url,
     normalize_entry_key,
+    normalize_vite_base,
     resolve_manifest_entry,
 )
 
@@ -110,4 +112,41 @@ class TestBuildAssetUrl:
         assert (
             build_asset_url("/static/build/", "/assets/app.js")
             == "/static/build/assets/app.js"
+        )
+
+
+class TestNormalizeViteBase:
+    def test_defaults_to_root(self):
+        assert normalize_vite_base(None) == "/"
+        assert normalize_vite_base("") == "/"
+        assert normalize_vite_base("/") == "/"
+
+    def test_adds_missing_slashes(self):
+        assert normalize_vite_base("static/build") == "/static/build/"
+        assert normalize_vite_base("/static/build") == "/static/build/"
+        assert normalize_vite_base("static/build/") == "/static/build/"
+
+    def test_keeps_normalized_value(self):
+        assert normalize_vite_base("/static/build/") == "/static/build/"
+
+
+class TestBuildViteDevUrl:
+    def test_root_base(self):
+        assert (
+            build_vite_dev_url("http://localhost:5173", "/", "@vite/client")
+            == "http://localhost:5173/@vite/client"
+        )
+
+    def test_custom_base(self):
+        assert (
+            build_vite_dev_url("http://127.0.0.1:5174", "/static/build/", "src/app.tsx")
+            == "http://127.0.0.1:5174/static/build/src/app.tsx"
+        )
+
+    def test_normalizes_slashes(self):
+        assert (
+            build_vite_dev_url(
+                "http://localhost:5173/", "static/build", "/@vite/client"
+            )
+            == "http://localhost:5173/static/build/@vite/client"
         )

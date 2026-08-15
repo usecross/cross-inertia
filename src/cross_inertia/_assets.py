@@ -54,3 +54,26 @@ def build_asset_url(asset_url_prefix: str, relative_path: str) -> str:
     prefix = asset_url_prefix.rstrip("/")
     path = relative_path.lstrip("/")
     return f"{prefix}/{path}"
+
+
+def normalize_vite_base(base: str | None) -> str:
+    """Normalize a Vite ``base`` path so it has leading and trailing slashes.
+
+    Vite serves everything (``/@vite/client``, ``/@react-refresh``, the entry
+    module, static assets) under ``config.base`` in dev too, so any URL we
+    emit for the dev server must be prefixed with it. ``None`` and ``""``
+    mean the Vite default (``"/"``).
+    """
+    value = (base or "/").strip()
+    if not value.startswith("/"):
+        value = f"/{value}"
+    if not value.endswith("/"):
+        value = f"{value}/"
+    return value
+
+
+def build_vite_dev_url(vite_dev_url: str, vite_base: str | None, path: str) -> str:
+    """Build a URL served by the Vite dev server, honouring its ``base``."""
+    return (
+        f"{vite_dev_url.rstrip('/')}{normalize_vite_base(vite_base)}{path.lstrip('/')}"
+    )

@@ -20,8 +20,8 @@ Example usage:
     # Configure Inertia (all settings are optional)
     CROSS_INERTIA = {
         'LAYOUT': 'base.html',           # Template for initial page loads
-        'VITE_ENTRY': 'src/main.tsx',    # Vite entry point
-        'VITE_PORT': 5173,               # Vite dev server port (or 'auto')
+        'VITE_ENTRY': 'frontend/app.tsx',  # Vite entry point
+        'VITE_PORT': 'auto',              # Free port, or a fixed port number
         'MANIFEST_PATH': 'static/build/.vite/manifest.json',
         'SSR_ENABLED': False,            # Enable for server-side rendering
         'SHARE': 'myapp.inertia.share_data',  # Shared data for all pages

@@ -190,18 +190,28 @@ def test_django_settings_fall_back_to_shared_config():
 
 
 def test_django_defaults_used_when_shared_config_not_set():
-    """When configure_inertia() was never called, Django's own defaults apply."""
+    """When configure_inertia() was never called, the shared defaults apply."""
     from cross_inertia._config import reset_config
 
     reset_config()
     try:
         with override_settings(CROSS_INERTIA={}):
             inertia_settings.reload()
-            assert inertia_settings.VITE_ENTRY == "src/main.tsx"
-            assert inertia_settings.VITE_PORT == 5173
+            assert inertia_settings.VITE_ENTRY == "frontend/app.tsx"
+            assert inertia_settings.VITE_PORT == "auto"
     finally:
         reset_config()
         inertia_settings.reload()
+
+
+def test_django_defaults_mirror_shared_config():
+    """Every shared Django setting defaults to the InertiaConfig value."""
+    from cross_inertia._config import InertiaConfig
+    from cross_inertia.django.conf import DEFAULTS, SHARED_CONFIG_ATTRS
+
+    shared = InertiaConfig()
+    for key, attr in SHARED_CONFIG_ATTRS.items():
+        assert DEFAULTS[key] == getattr(shared, attr), key
 
 
 def test_shared_config_asset_url_prefix_overrides_static_url():
@@ -261,3 +271,75 @@ def test_ssr_cwd_falls_back_to_shared_config():
     finally:
         reset_config()
         inertia_settings.reload()
+
+
+def test_vite_base_falls_back_to_shared_config():
+    from cross_inertia import configure_inertia
+    from cross_inertia._config import reset_config
+
+    try:
+        configure_inertia(vite_base="/static/build/")
+        with override_settings(CROSS_INERTIA={}):
+            inertia_settings.reload()
+            assert inertia_settings.VITE_BASE == "/static/build/"
+    finally:
+        reset_config()
+        inertia_settings.reload()
+
+
+def test_vite_base_defaults_to_root():
+    from cross_inertia._config import reset_config
+
+    reset_config()
+    try:
+        with override_settings(CROSS_INERTIA={}):
+            inertia_settings.reload()
+            assert inertia_settings.VITE_BASE == "/"
+    finally:
+        reset_config()
+        inertia_settings.reload()
+
+
+def test_middleware_passes_vite_base_to_process(monkeypatch):
+    """The auto-started Vite process must health-check under VITE_BASE."""
+    from cross_inertia.django import middleware as middleware_module
+
+    reset_vite_state()
+    created: list[object] = []
+
+    class FakeViteProcess:
+        def __init__(self, command, port, startup_timeout, base=None, host=None):
+            self.command = command
+            self.port = port
+            self.startup_timeout = startup_timeout
+            self.base = base
+            self.host = host
+            self.dev_url = f"http://{host}:{port}"
+            created.append(self)
+
+        def get_command_with_port(self):
+            return f"{self.command} --port {self.port}"
+
+        def start(self):
+            return None
+
+    monkeypatch.setattr(middleware_module, "SyncViteProcess", FakeViteProcess)
+    monkeypatch.setattr(middleware_module, "is_port_in_use", lambda port: False)
+    monkeypatch.setattr(middleware_module.atexit, "register", lambda fn: None)
+
+    with override_settings(
+        CROSS_INERTIA={
+            "VITE_PORT": 5177,
+            "VITE_HOST": "127.0.0.1",
+            "VITE_BASE": "/static/build/",
+        }
+    ):
+        inertia_settings.reload()
+        InertiaMiddleware._start_vite_dev_server()
+
+    inertia_settings.reload()
+    reset_vite_state()
+    assert len(created) == 1
+    assert created[0].port == 5177
+    assert created[0].host == "127.0.0.1"
+    assert created[0].base == "/static/build/"

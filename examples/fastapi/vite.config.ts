@@ -18,7 +18,9 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    // Cross-Inertia picks a free port and passes it via --port; use the URL it
+    // exports so asset URLs emitted in dev point at Vite, not the FastAPI app.
+    origin: process.env.INERTIA_VITE_URL,
     strictPort: true,
   },
 })

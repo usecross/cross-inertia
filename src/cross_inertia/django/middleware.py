@@ -156,21 +156,29 @@ class InertiaMiddleware:
             )
             return
 
-        print(f"Starting Vite dev server on port {vite_port}...")
-
         cls._vite_process = SyncViteProcess(
             command=inertia_settings.VITE_COMMAND,
             port=vite_port,
             startup_timeout=inertia_settings.VITE_TIMEOUT,
+            base=inertia_settings.VITE_BASE,
+            host=inertia_settings.VITE_HOST,
+        )
+        print(
+            f"Starting Vite dev server on port {vite_port}: "
+            f"{cls._vite_process.get_command_with_port()!r}"
         )
 
         try:
             cls._vite_process.start()
-            print(f"Vite dev server running at http://localhost:{vite_port}")
+            print(f"Vite dev server running at {cls._vite_process.dev_url}")
             atexit.register(cls._stop_vite_dev_server)
         except Exception as e:
             logger.error(f"Failed to start Vite: {e}")
-            print(f"Failed to start Vite: {e}")
+            print(
+                f"Failed to start Vite: {e}\n"
+                "Pages will fall back to the production manifest until the "
+                "Vite dev server is reachable."
+            )
             cls._vite_process = None
 
     @classmethod

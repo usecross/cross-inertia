@@ -62,6 +62,7 @@ class TestInertiaConfig:
         assert config.vite_host == "localhost"
         assert config.vite_entry == "frontend/app.tsx"
         assert config.vite_command == "bun run dev"
+        assert config.vite_base == "/"
         assert config.vite_react_refresh is True
         assert config.template_dir == "templates"
         assert config.asset_url_prefix == "/static/build"
@@ -141,6 +142,7 @@ class TestConfigureInertia:
             vite_host="0.0.0.0",
             vite_entry="src/main.tsx",
             vite_command="npm run dev",
+            vite_base="/static/build/",
             vite_timeout=60.0,
             vite_react_refresh=False,
             template_dir="views",
@@ -156,6 +158,7 @@ class TestConfigureInertia:
         assert config.vite_host == "0.0.0.0"
         assert config.vite_entry == "src/main.tsx"
         assert config.vite_command == "npm run dev"
+        assert config.vite_base == "/static/build/"
         assert config.vite_timeout == 60.0
         assert config.vite_react_refresh is False
         assert config.template_dir == "views"

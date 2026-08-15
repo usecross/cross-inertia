@@ -102,7 +102,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    origin: process.env.INERTIA_VITE_URL,
     strictPort: true,
   },
 })
@@ -112,6 +112,10 @@ Key settings:
 - **`manifest: true`** - Generates a manifest file for production asset loading
 - **`outDir: 'static/build'`** - Where built files are placed
 - **`input: 'frontend/app.tsx'`** - Your app's entry point
+- **`server.origin`** - Cross-Inertia starts Vite on a free port and exports it as
+  `INERTIA_VITE_URL`; using it as the origin makes asset URLs Vite emits in dev
+  (fonts and images referenced from CSS) resolve against Vite instead of your app.
+  Don't hard-code `server.port` — Cross-Inertia passes `--port` itself.
 
 ## Step 3: Configure TypeScript
 
