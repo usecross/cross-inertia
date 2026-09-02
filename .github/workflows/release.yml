@@ -82,7 +82,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Download .autopub artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: autopub-data
           path: .autopub
