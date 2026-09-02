@@ -85,16 +85,16 @@ wheels = [
 
 [[package]]
 name = "cross-inertia"
-version = "0.15.0"
+version = "0.18.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cross-web" },
     { name = "httpx" },
     { name = "itsdangerous" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5d/b2/aeac04392c7a62d434d99c5db5480d530359d54b98e508dac868ea2606b4/cross_inertia-0.15.0.tar.gz", hash = "sha256:219822d2f9c9264c0d444fe78ef4caaa624bdf16ac3ab62aac28aa2cba14c214", size = 2542848, upload-time = "2026-02-12T00:42:03.237Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1e/0d/c6bfe9ee1af06eddb820b9c2eb80d5c781a30248b1e243c5f966b32b4d5c/cross_inertia-0.18.0.tar.gz", hash = "sha256:df7344ef7cdcae2c277502bd876d135cc4319a85e9c9279ddf5019da516bf9ed", size = 2558843, upload-time = "2026-04-04T11:21:33.718Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bf/fd/87ab6dc5f25ed4f0369c0fe5a94ab362790b0b20cda739d18c6031eb48c5/cross_inertia-0.15.0-py3-none-any.whl", hash = "sha256:c2e71148300c0dc1f67731f331d6156e75039621f46e79f79357a0f7895be28d", size = 46191, upload-time = "2026-02-12T00:42:05.633Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/c0/384b0660e1e15e2d4719bfcfa570393982176e1640e8e0f1a86ccd2b0dd1/cross_inertia-0.18.0-py3-none-any.whl", hash = "sha256:8e7c8fb85cb647990c7665be78f6dd8ab6c47515a780d8956054de077341a18d", size = 51996, upload-time = "2026-04-04T11:21:35.35Z" },
 ]
 
 [[package]]
