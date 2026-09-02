@@ -68,7 +68,7 @@ jobs:
       
       - run: nox -r -t tests -s "${{ matrix.session.session }}"
       
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-${{ matrix.session.session }}
