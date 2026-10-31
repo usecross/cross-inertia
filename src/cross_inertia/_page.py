@@ -184,7 +184,8 @@ def build_inertia_page(
             value=value,
             path=key,
             context=context,
-            is_partial=is_partial,
+            # Like Laravel's adapter, errors are sent on partial reloads too.
+            is_partial=is_partial and key != "errors",
             metadata=metadata,
         )
         if include:

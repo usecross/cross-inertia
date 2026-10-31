@@ -133,6 +133,21 @@ def test_errors_prop_is_kept_when_there_are_no_validation_errors() -> None:
     assert result.page_data["props"] == {"errors": {"name": "From the app"}}
 
 
+def test_partial_reload_keeps_errors_prop() -> None:
+    result = build_result(
+        {"profile": {"name": "John"}, "errors": {"name": "From the app"}},
+        headers={"X-Inertia": "true"},
+        partial_component="TestComponent",
+        partial_only=["profile"],
+    )
+
+    assert result.page_data is not None
+    assert result.page_data["props"] == {
+        "errors": {"name": "From the app"},
+        "profile": {"name": "John"},
+    }
+
+
 def test_page_json_is_safe_to_embed_in_script_tag() -> None:
     result = build_result(
         {

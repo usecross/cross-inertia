@@ -860,7 +860,8 @@ async def partial_errors_demo(inertia: InertiaDep):
 async def partial_errors_save(inertia: InertiaDep):
     """Save the profile name and render the page again."""
     form_data = await inertia.request.json()
-    name = str(form_data.get("name", "")).strip()
+    name = form_data.get("name")
+    name = name.strip() if isinstance(name, str) else ""
 
     if len(name) < 2:
         return inertia.render(
