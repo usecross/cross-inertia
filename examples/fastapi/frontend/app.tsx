@@ -18,6 +18,7 @@ import LazyDemo from './pages/LazyDemo'
 import DeferredDemo from './pages/DeferredDemo'
 import OnceDemo from './pages/OnceDemo'
 import ErrorBagsDemo from './pages/ErrorBagsDemo'
+import PartialErrorsDemo from './pages/PartialErrorsDemo'
 
 const pages: Record<string, React.ComponentType<any>> = {
   Home,
@@ -34,6 +35,7 @@ const pages: Record<string, React.ComponentType<any>> = {
   DeferredDemo,
   OnceDemo,
   ErrorBagsDemo,
+  PartialErrorsDemo,
 }
 
 createInertiaApp({

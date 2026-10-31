@@ -76,9 +76,61 @@ def test_partial_except_takes_precedence_when_both_headers_are_present() -> None
 
     assert result.page_data is not None
     assert result.page_data["props"] == {
+        "errors": {},
         "profile": {"name": "John"},
         "stats": {"count": 42},
     }
+
+
+def test_partial_reload_without_errors_sends_empty_errors() -> None:
+    result = build_result(
+        {"profile": {"name": "John"}, "stats": {"count": 42}},
+        headers={"X-Inertia": "true"},
+        partial_component="TestComponent",
+        partial_only=["profile"],
+    )
+
+    assert result.page_data is not None
+    assert result.page_data["props"] == {
+        "errors": {},
+        "profile": {"name": "John"},
+    }
+
+
+def test_partial_reload_with_errors_sends_errors() -> None:
+    result = build_result(
+        {"profile": {"name": "John"}, "stats": {"count": 42}},
+        headers={"X-Inertia": "true"},
+        partial_component="TestComponent",
+        partial_only=["profile"],
+        errors={"name": "Invalid"},
+    )
+
+    assert result.page_data is not None
+    assert result.page_data["props"] == {
+        "errors": {"name": "Invalid"},
+        "profile": {"name": "John"},
+    }
+
+
+def test_error_bag_without_errors_sends_empty_errors() -> None:
+    result = build_result(
+        {"profile": {"name": "John"}},
+        headers={"X-Inertia": "true", "X-Inertia-Error-Bag": "profile"},
+    )
+
+    assert result.page_data is not None
+    assert result.page_data["props"]["errors"] == {}
+
+
+def test_errors_prop_is_kept_when_there_are_no_validation_errors() -> None:
+    result = build_result(
+        {"errors": {"name": "From the app"}},
+        headers={"X-Inertia": "true"},
+    )
+
+    assert result.page_data is not None
+    assert result.page_data["props"] == {"errors": {"name": "From the app"}}
 
 
 def test_page_json_is_safe_to_embed_in_script_tag() -> None:
@@ -140,7 +192,7 @@ def test_nested_optional_props_are_excluded_until_explicitly_requested() -> None
     )
 
     assert initial.page_data is not None
-    assert initial.page_data["props"] == {"profile": {"name": "John"}}
+    assert initial.page_data["props"] == {"errors": {}, "profile": {"name": "John"}}
 
     partial = build_result(
         {
@@ -155,7 +207,10 @@ def test_nested_optional_props_are_excluded_until_explicitly_requested() -> None
     )
 
     assert partial.page_data is not None
-    assert partial.page_data["props"] == {"profile": {"permissions": ["invite"]}}
+    assert partial.page_data["props"] == {
+        "errors": {},
+        "profile": {"permissions": ["invite"]},
+    }
 
 
 def test_once_props_emit_metadata_and_skip_remembered_values() -> None:
@@ -204,7 +259,7 @@ def test_once_wrapped_deferred_props_are_removed_from_deferred_metadata_when_rem
     )
 
     assert result.page_data is not None
-    assert result.page_data["props"] == {}
+    assert result.page_data["props"] == {"errors": {}}
     assert "deferredProps" not in result.page_data
     assert result.page_data["onceProps"]["permissions-cache"]["prop"] == "permissions"
 

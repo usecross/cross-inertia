@@ -174,6 +174,7 @@ def test_share_resolves_postponed_dependency_annotations(
 
     assert response.status_code == 200
     assert response.json()["props"] == {
+        "errors": {},
         "since": "2026-08-02",
         "user": "alice",
     }

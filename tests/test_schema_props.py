@@ -229,6 +229,7 @@ def test_page_builder_applies_schema_after_resolving_callables() -> None:
     )
 
     assert page["props"] == {
+        "errors": {},
         "user": {"id": 1, "name": "Ada"},
         "posts": [{"id": 10, "title": "Draft", "status": "draft"}],
         "counts": {"draft": 1, "published": 0},
@@ -258,6 +259,7 @@ def test_partial_reload_validates_only_included_props_and_skips_callable() -> No
 
     assert called is False
     assert page["props"] == {
+        "errors": {},
         "posts": [{"id": 10, "title": "Draft", "status": "draft"}],
     }
 
@@ -299,6 +301,7 @@ def test_inertia_render_accepts_schema_argument(inertia_response) -> None:
 
     assert response.status_code == 200
     assert response.json()["props"] == {
+        "errors": {},
         "user": {"id": 1, "name": "Ada"},
         "posts": [{"id": 10, "title": "Draft", "status": "draft"}],
         "counts": {"draft": 1, "published": 0},
