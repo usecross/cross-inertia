@@ -1,3 +1,12 @@
+0.22.1 - 2026-11-01
+-------------------
+
+Always include `errors` in page props, as an empty object when there are no validation errors.
+
+Previously, `errors` was left out when empty. Inertia merges a partial reload into the current page, so a valid submission made with `only` kept the errors from an earlier invalid one and called `onError` instead of `onSuccess`. An `errors` prop set by the app is still kept when there are no validation errors, and is now sent on partial reloads too.
+
+This release was contributed by [@patrick91](https://github.com/patrick91) in [#142](https://github.com/usecross/cross-inertia/pull/142)
+
 0.22.0 - 2026-08-15
 -------------------
 
