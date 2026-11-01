@@ -185,6 +185,7 @@ def test_render_shortcut_accepts_schema_argument(rf, setup_inertia):
     assert response.status_code == 200
     assert response["X-Inertia"] == "true"
     assert data["props"] == {
+        "errors": {},
         "user": {"id": 1, "name": "Ada"},
         "posts": [{"id": 10, "title": "Draft"}],
         "counts": {"draft": 1, "published": 0},

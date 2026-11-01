@@ -79,6 +79,8 @@ When you pass `errors` to `inertia.render()`:
 2. The Inertia client automatically calls `onError()` instead of `onSuccess()`
 3. Your frontend receives the errors in the component props
 
+When there are no errors, `page.props.errors` is an empty object. Every response includes it, partial reloads too, so a valid submission clears errors left by an earlier one and calls `onSuccess()`.
+
 ## Frontend Error Display
 
 On the React side, you can access errors from props:

@@ -126,7 +126,7 @@ def test_fastapi_validation_errors_redirect_back_and_store_to_errors_prop(
     assert data["props"]["errors"]["name"] == "Field required"
 
     next_visit = client.get("/users/create", headers={"X-Inertia": "true"})
-    assert "errors" not in next_visit.json()["props"]
+    assert next_visit.json()["props"]["errors"] == {}
 
 
 def test_fastapi_validation_errors_redirect_to_previous_inertia_page_without_referer(
@@ -181,7 +181,7 @@ def test_fastapi_validation_errors_are_scoped_to_inertia_dependency(
     assert response.status_code == 303
 
     redirected = client.get("/users/create", headers={"X-Inertia": "true"})
-    assert "errors" not in redirected.json()["props"]
+    assert redirected.json()["props"]["errors"] == {}
 
 
 def test_fastapi_validation_errors_respect_error_bag(

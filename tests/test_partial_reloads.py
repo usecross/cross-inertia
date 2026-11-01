@@ -75,7 +75,7 @@ class TestPartialReloads:
 
         data = response.json()
         # Should return ALL props because component doesn't match
-        assert len(data["props"]) == 4  # message, user, count, items
+        assert len(data["props"]) == 5  # message, user, count, items, errors
         assert "message" in data["props"]
         assert "user" in data["props"]
         assert "count" in data["props"]

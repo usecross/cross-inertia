@@ -833,6 +833,47 @@ async def error_bags_register(inertia: InertiaDep):
     return RedirectResponse(url="/error-bags-demo", status_code=303)
 
 
+partial_errors_profile = {"name": "Ada"}
+
+
+def partial_errors_props() -> dict:
+    return {
+        "title": "Partial Errors Demo",
+        "message": "This form saves with a partial reload of the profile prop.",
+        "profile": dict(partial_errors_profile),
+    }
+
+
+@app.get("/partial-errors-demo")
+async def partial_errors_demo(inertia: InertiaDep):
+    """
+    Partial reload validation demo.
+
+    The form submits with `only: ['profile']`. A valid submission after an
+    invalid one must clear the old errors, so every response includes an
+    errors prop, even when it is empty.
+    """
+    return inertia.render("PartialErrorsDemo", partial_errors_props())
+
+
+@app.post("/partial-errors-demo")
+async def partial_errors_save(inertia: InertiaDep):
+    """Save the profile name and render the page again."""
+    form_data = await inertia.request.json()
+    name = form_data.get("name")
+    name = name.strip() if isinstance(name, str) else ""
+
+    if len(name) < 2:
+        return inertia.render(
+            "PartialErrorsDemo",
+            partial_errors_props(),
+            errors={"name": "Name must be at least 2 characters"},
+        )
+
+    partial_errors_profile["name"] = name
+    return inertia.render("PartialErrorsDemo", partial_errors_props())
+
+
 if __name__ == "__main__":
     import uvicorn
 

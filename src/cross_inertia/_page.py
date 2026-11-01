@@ -184,7 +184,8 @@ def build_inertia_page(
             value=value,
             path=key,
             context=context,
-            is_partial=is_partial,
+            # Like Laravel's adapter, errors are sent on partial reloads too.
+            is_partial=is_partial and key != "errors",
             metadata=metadata,
         )
         if include:
@@ -212,6 +213,10 @@ def build_inertia_page(
             resolved_props["errors"] = {context.error_bag: options.errors}
         else:
             resolved_props["errors"] = options.errors
+    else:
+        # The client keeps the previous errors when a response omits them, so a
+        # successful partial reload needs an empty object to clear them.
+        resolved_props.setdefault("errors", {})
 
     page_data: dict[str, Any] = {
         "component": options.component,
