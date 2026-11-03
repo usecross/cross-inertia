@@ -65,7 +65,15 @@ class _DeprecatedViteTags(str):
         return super().__str__()
 
 
-__all__ = ["ManifestNotFoundError", "always", "broadcast_props", "defer", "live", "once", "optional"]
+__all__ = [
+    "ManifestNotFoundError",
+    "always",
+    "broadcast_props",
+    "defer",
+    "live",
+    "once",
+    "optional",
+]
 
 
 class Inertia:

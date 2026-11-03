@@ -118,14 +118,18 @@ class _CollectedMetadata:
         listeners = []
         if channels:
             for channel in channels:
-                listeners.append({
-                    "channel": channel,
-                    "events": events,
-                })
+                listeners.append(
+                    {
+                        "channel": channel,
+                        "events": events,
+                    }
+                )
         else:
-            listeners.append({
-                "events": events,
-            })
+            listeners.append(
+                {
+                    "events": events,
+                }
+            )
 
         live_metadata: dict[str, Any] = {
             "listeners": listeners,

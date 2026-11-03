@@ -32,13 +32,12 @@ class MockAdapter:
 
 def test_live_prop_basic():
     """Test basic live prop creation and invocation."""
+
     def get_order():
         return {"id": 1, "status": "shipped"}
 
     prop = live(
-        get_order,
-        on="order.updated",
-        channel={"name": "orders.1", "type": "private"}
+        get_order, on="order.updated", channel={"name": "orders.1", "type": "private"}
     )
 
     assert callable(prop)
@@ -50,6 +49,7 @@ def test_live_prop_basic():
 
 def test_live_prop_with_args():
     """Test live prop with arguments."""
+
     def get_order(order_id, include_items=False):
         result = {"id": order_id, "status": "shipped"}
         if include_items:
@@ -61,7 +61,7 @@ def test_live_prop_with_args():
         42,
         include_items=True,
         on="order.updated",
-        channel={"name": "orders.42", "type": "private"}
+        channel={"name": "orders.42", "type": "private"},
     )
 
     assert prop() == {"id": 42, "status": "shipped", "items": []}
@@ -69,13 +69,14 @@ def test_live_prop_with_args():
 
 def test_live_prop_multiple_events():
     """Test live prop listening to multiple events."""
+
     def get_order():
         return {"id": 1}
 
     prop = live(
         get_order,
         on=["order.updated", "order.cancelled"],
-        channel={"name": "orders.1", "type": "private"}
+        channel={"name": "orders.1", "type": "private"},
     )
 
     assert prop.on == ["order.updated", "order.cancelled"]
@@ -83,6 +84,7 @@ def test_live_prop_multiple_events():
 
 def test_live_prop_multiple_channels():
     """Test live prop listening on multiple channels."""
+
     def get_metrics():
         return {"total": 100}
 
@@ -91,8 +93,8 @@ def test_live_prop_multiple_channels():
         on="metrics.updated",
         channel=[
             {"name": "dashboard", "type": "private"},
-            {"name": "metrics", "type": "public"}
-        ]
+            {"name": "metrics", "type": "public"},
+        ],
     )
 
     assert len(prop.channel) == 2
@@ -100,6 +102,7 @@ def test_live_prop_multiple_channels():
 
 def test_live_prop_with_throttle():
     """Test live prop with custom throttle."""
+
     def get_count():
         return 5
 
@@ -107,7 +110,7 @@ def test_live_prop_with_throttle():
         get_count,
         on="count.changed",
         channel={"name": "counter", "type": "public"},
-        throttle=5000
+        throttle=5000,
     )
 
     assert prop.throttle == 5000
@@ -121,6 +124,7 @@ def test_live_prop_requires_callable():
 
 def test_live_prop_in_page_metadata():
     """Test that live props appear in page metadata."""
+
     def get_order():
         return {"id": 1, "status": "shipped"}
 
@@ -149,7 +153,7 @@ def test_live_prop_in_page_metadata():
             "order": live(
                 get_order,
                 on="order.updated",
-                channel={"name": "orders.1", "type": "private"}
+                channel={"name": "orders.1", "type": "private"},
             )
         },
     )
@@ -171,6 +175,7 @@ def test_live_prop_in_page_metadata():
 
 def test_live_prop_with_multiple_events_metadata():
     """Test live prop metadata with multiple events."""
+
     def get_order():
         return {"id": 1}
 
@@ -199,7 +204,7 @@ def test_live_prop_with_multiple_events_metadata():
             "order": live(
                 get_order,
                 on=["order.updated", "order.cancelled"],
-                channel={"name": "orders.1", "type": "private"}
+                channel={"name": "orders.1", "type": "private"},
             )
         },
     )
@@ -212,6 +217,7 @@ def test_live_prop_with_multiple_events_metadata():
 
 def test_live_prop_with_throttle_metadata():
     """Test that throttle appears in metadata."""
+
     def get_metrics():
         return {"total": 100}
 
@@ -241,7 +247,7 @@ def test_live_prop_with_throttle_metadata():
                 get_metrics,
                 on="metrics.updated",
                 channel={"name": "dashboard", "type": "private"},
-                throttle=2000
+                throttle=2000,
             )
         },
     )
@@ -253,6 +259,7 @@ def test_live_prop_with_throttle_metadata():
 
 def test_live_prop_resolves_value():
     """Test that live prop values are resolved in props."""
+
     def get_order():
         return {"id": 1, "status": "shipped"}
 
@@ -281,7 +288,7 @@ def test_live_prop_resolves_value():
             "order": live(
                 get_order,
                 on="order.updated",
-                channel={"name": "orders.1", "type": "private"}
+                channel={"name": "orders.1", "type": "private"},
             )
         },
     )
@@ -293,14 +300,17 @@ def test_live_prop_resolves_value():
 
 def test_live_prop_in_partial_reload():
     """Test live prop behavior during partial reloads."""
+
     def get_order():
         return {"id": 1, "status": "shipped"}
 
-    adapter = MockAdapter(headers={
-        "X-Inertia": "true",
-        "X-Inertia-Partial-Component": "Orders/Show",
-        "X-Inertia-Partial-Data": "order"
-    })
+    adapter = MockAdapter(
+        headers={
+            "X-Inertia": "true",
+            "X-Inertia-Partial-Component": "Orders/Show",
+            "X-Inertia-Partial-Data": "order",
+        }
+    )
     context = PageRequestContext(
         method="GET",
         headers=adapter.headers,
@@ -325,9 +335,9 @@ def test_live_prop_in_partial_reload():
             "order": live(
                 get_order,
                 on="order.updated",
-                channel={"name": "orders.1", "type": "private"}
+                channel={"name": "orders.1", "type": "private"},
             ),
-            "other": "value"
+            "other": "value",
         },
     )
 
@@ -340,10 +350,7 @@ def test_live_prop_in_partial_reload():
 
 def test_broadcast_props_structure():
     """Test broadcast_props helper returns correct structure."""
-    props = {
-        "order": {"id": 1, "status": "shipped"},
-        "user.name": "John Doe"
-    }
+    props = {"order": {"id": 1, "status": "shipped"}, "user.name": "John Doe"}
 
     result = broadcast_props(props)
 
@@ -362,13 +369,11 @@ def test_broadcast_props_empty():
 
 def test_live_prop_no_channels():
     """Test live prop without explicit channels."""
+
     def get_data():
         return {"value": 42}
 
-    prop = live(
-        get_data,
-        on="data.changed"
-    )
+    prop = live(get_data, on="data.changed")
 
     assert prop.on == ["data.changed"]
     assert prop.channel == []
@@ -376,6 +381,7 @@ def test_live_prop_no_channels():
 
 def test_live_prop_no_channels_metadata():
     """Test live prop metadata without channels."""
+
     def get_data():
         return {"value": 42}
 
@@ -400,9 +406,7 @@ def test_live_prop_no_channels_metadata():
 
     options = PageRenderOptions(
         component="Test",
-        props={
-            "data": live(get_data, on="data.changed")
-        },
+        props={"data": live(get_data, on="data.changed")},
     )
 
     result = build_inertia_page(context, options)
@@ -414,6 +418,7 @@ def test_live_prop_no_channels_metadata():
 
 def test_live_prop_multiple_channels_metadata():
     """Test live prop metadata with multiple channels."""
+
     def get_metrics():
         return {"total": 100}
 
@@ -444,8 +449,8 @@ def test_live_prop_multiple_channels_metadata():
                 on="metrics.updated",
                 channel=[
                     {"name": "dashboard", "type": "private"},
-                    {"name": "metrics", "type": "public"}
-                ]
+                    {"name": "metrics", "type": "public"},
+                ],
             )
         },
     )
