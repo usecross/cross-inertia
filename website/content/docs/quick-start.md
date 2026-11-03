@@ -11,10 +11,10 @@ Before you begin, make sure you have:
 
 - Python 3.10 or higher
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
-- Node.js 22+ or Bun
+- Node.js (18+ recommended; 22+ required for SSR) or Bun
 - Basic familiarity with FastAPI and React
 
-> **Note:** Cross-Inertia uses [Inertia.js v3](https://inertiajs.com), which requires Node.js 22+ and React 19+.
+> **Note:** Cross-Inertia uses [Inertia.js v3](https://inertiajs.com), which requires React 19+. Node.js 22+ is required only if you plan to use server-side rendering (SSR).
 
 ## Step 1: Create your project
 
@@ -139,16 +139,11 @@ Create a `frontend/app.tsx` file:
 
 ```tsx
 import { createInertiaApp } from '@inertiajs/react'
-import { createRoot } from 'react-dom/client'
 
-createInertiaApp({
-  setup({ el, App, props }) {
-    createRoot(el).render(<App {...props} />)
-  },
-})
+createInertiaApp()
 ```
 
-> The `@inertiajs/vite` plugin automatically resolves page components from the `./pages` directory relative to this entry point. No manual `resolve` callback or `import.meta.glob` is needed.
+The `@inertiajs/vite` plugin handles everything automatically: it resolves page components from the `./pages` directory, mounts the app, and even enables SSR in development without any extra setup.
 
 ## Step 8: Create your first page
 

@@ -21,7 +21,7 @@ uv add cross-inertia
 
 ## Client-side installation
 
-Cross-Inertia uses [Inertia.js v3](https://inertiajs.com), which requires Node.js 22+.
+Cross-Inertia uses [Inertia.js v3](https://inertiajs.com), which requires React 19+, Vue 3.5+, or Svelte 5+. Node.js 22+ is required only for server-side rendering (SSR); Node.js 18+ is recommended for development.
 
 Install the Inertia.js client adapter and Vite plugin for your framework of choice:
 
