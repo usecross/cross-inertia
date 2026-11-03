@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping, Protocol
+from typing import Any, Protocol
 from urllib.parse import urlparse
 
 from ._exceptions import InertiaSchemaError
-from ._props import always, defer, once, optional
+from ._props import always, defer, live, once, optional
 from ._schema import validate_props_with_schema
 from ._types import ValidationErrors
 from ._utils import _resolve_props_sync_with_rescues
 
-_SPECIAL_PROP_TYPES = (optional, always, defer, once)
+_SPECIAL_PROP_TYPES = (optional, always, defer, once, live)
 
 
 class PageRequestAdapter(Protocol):
@@ -86,12 +87,14 @@ class _PropTraits:
     always: always | None = None
     deferred: defer | None = None
     once: once | None = None
+    live: live | None = None
 
 
 @dataclass(slots=True)
 class _CollectedMetadata:
     deferred_props: dict[str, list[str]] = field(default_factory=dict)
     once_props: dict[str, dict[str, Any]] = field(default_factory=dict)
+    live_props: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def add_deferred(self, group: str, path: str) -> None:
         group_props = self.deferred_props.setdefault(group, [])
@@ -103,6 +106,34 @@ class _CollectedMetadata:
             "prop": prop_path,
             "expiresAt": expires_at,
         }
+
+    def add_live(
+        self,
+        prop_path: str,
+        events: list[str],
+        channels: list[dict[str, str]],
+        throttle: int | None,
+    ) -> None:
+        """Add a live prop to metadata."""
+        listeners = []
+        if channels:
+            for channel in channels:
+                listeners.append({
+                    "channel": channel,
+                    "events": events,
+                })
+        else:
+            listeners.append({
+                "events": events,
+            })
+
+        live_metadata: dict[str, Any] = {
+            "listeners": listeners,
+        }
+        if throttle is not None:
+            live_metadata["throttle"] = throttle
+
+        self.live_props[prop_path] = live_metadata
 
 
 def parse_header_list(value: str | None) -> list[str]:
@@ -279,6 +310,8 @@ def build_inertia_page(
         page_data["rescuedProps"] = rescued_props
     if metadata.once_props:
         page_data["onceProps"] = metadata.once_props
+    if metadata.live_props:
+        page_data["liveProps"] = metadata.live_props
 
     return PageBuildResult(
         is_inertia=context.is_inertia,
@@ -336,6 +369,14 @@ def _walk_node(
         path, traits, context, is_partial
     ):
         metadata.add_deferred(traits.deferred.group, path)
+
+    if traits.live and _should_emit_live_metadata(path, traits, context, is_partial):
+        metadata.add_live(
+            path,
+            traits.live.on,
+            traits.live.channel,
+            traits.live.throttle,
+        )
 
     if isinstance(value, _SPECIAL_PROP_TYPES):
         if _should_include_special_prop(path, traits, context, is_partial):
@@ -402,6 +443,8 @@ def _collect_prop_traits(value: Any) -> _PropTraits:
             traits.optional = current
         elif isinstance(current, always) and traits.always is None:
             traits.always = current
+        elif isinstance(current, live) and traits.live is None:
+            traits.live = current
 
         nested = _extract_nested_special_prop(current)
         if nested is None:
@@ -422,7 +465,7 @@ def _extract_nested_special_prop(value: Any) -> Any | None:
         nested = value.value_or_callback
         return nested if isinstance(nested, _SPECIAL_PROP_TYPES) else None
 
-    if isinstance(value, (optional, defer)):
+    if isinstance(value, (optional, defer, live)):
         if value.args or value.kwargs:
             return None
         nested = value.callback
@@ -493,6 +536,22 @@ def _should_emit_once_metadata(
         return True
 
     if traits.always is not None:
+        return True
+
+    return _path_allowed_for_partial(path, context.partial_only, context.partial_except)
+
+
+def _should_emit_live_metadata(
+    path: str,
+    traits: _PropTraits,
+    context: PageRequestContext,
+    is_partial: bool,
+) -> bool:
+    """Determine if live prop metadata should be emitted."""
+    if traits.live is None:
+        return False
+
+    if not is_partial:
         return True
 
     return _path_allowed_for_partial(path, context.partial_only, context.partial_except)
