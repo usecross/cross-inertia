@@ -8,7 +8,7 @@ import logging
 from collections.abc import Callable, Generator
 from typing import Any
 
-from ._props import optional, always, defer, once
+from ._props import optional, always, defer, live, once
 
 
 _OMITTED = object()
@@ -86,6 +86,8 @@ def _walk_value(
     rescued_props: list[str] | None,
 ) -> Resolution:
     """Resolve a single value, which may be callable, optional, always, defer, dict, or list."""
+    while isinstance(value, live):
+        value = value.value_or_callback
     if _is_optional_prop(value):
         if (
             not value.args

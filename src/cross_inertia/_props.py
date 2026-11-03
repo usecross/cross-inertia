@@ -214,3 +214,139 @@ class once:
             return int((datetime.now().timestamp() + self.until.total_seconds()) * 1000)
 
         return int((datetime.now().timestamp() + self.until) * 1000)
+
+
+CHANNEL_TYPES = ("public", "private", "presence", "encrypted-private")
+
+
+class Channel:
+    """
+    A broadcast channel a live prop listens on.
+
+    Names are unprefixed: the client transport (and the broadcaster, when it
+    publishes) applies a broadcaster's prefixes, such as Pusher's `private-`.
+
+    Example:
+        Channel.private(f"orders.{order.id}")
+    """
+
+    def __init__(
+        self,
+        name: str,
+        type: str = "private",
+        params: dict[str, Any] | None = None,
+    ):
+        if not name:
+            raise ValueError("A channel needs a name")
+        self.name = name
+        self.type = type
+        self.params = params
+
+    @classmethod
+    def public(cls, name: str, params: dict[str, Any] | None = None) -> Channel:
+        return cls(name, "public", params)
+
+    @classmethod
+    def private(cls, name: str, params: dict[str, Any] | None = None) -> Channel:
+        return cls(name, "private", params)
+
+    @classmethod
+    def presence(cls, name: str, params: dict[str, Any] | None = None) -> Channel:
+        return cls(name, "presence", params)
+
+    @classmethod
+    def encrypted(cls, name: str, params: dict[str, Any] | None = None) -> Channel:
+        return cls(name, "encrypted-private", params)
+
+    def to_dict(self) -> dict[str, Any]:
+        data: dict[str, Any] = {"name": self.name, "type": self.type}
+        if self.params is not None:
+            data["params"] = self.params
+        return data
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, Channel)
+            and self.name == other.name
+            and self.type == other.type
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.name, self.type))
+
+    def __repr__(self) -> str:
+        return f"Channel({self.name!r}, {self.type!r})"
+
+
+class live:
+    """
+    Mark a prop as live: the client listens for broadcast events on the given
+    channels and refreshes the prop when one arrives (Inertia v3 live props).
+
+    An event either delivers the prop's new value (see
+    `cross_inertia.broadcasting.envelope`), or the client reloads the prop with
+    a throttled partial reload. The wrapped value can be anything a prop can
+    be, including a callable or another wrapper such as `optional` or `defer`.
+
+    Example:
+        return inertia.render("Orders/Show", {
+            "order": live(
+                lambda: order_data(order),
+                Channel.private(f"orders.{order.id}"),
+                "OrderShipped",
+                "OrderCancelled",
+            ),
+        })
+
+        # More channels:
+        live(get_feed, Channel.public("feed"), "Posted").on(
+            Channel.private(f"users.{user.id}"), "Mentioned"
+        )
+
+    Args:
+        value_or_callback: The prop's value, or a callable that returns it.
+        channel: The first channel to listen on (a string is a private channel).
+        *events: The events on that channel that refresh the prop.
+        throttle: Milliseconds between refreshes of this prop (the client's
+            default when omitted).
+    """
+
+    def __init__(
+        self,
+        value_or_callback: Any,
+        channel: Channel | str | None = None,
+        *events: str,
+        throttle: int | None = None,
+    ):
+        self.value_or_callback = value_or_callback
+        self.listeners: list[tuple[Channel, list[str]]] = []
+        self.throttle = throttle
+        if channel is not None:
+            self.on(channel, *events)
+
+    def on(self, channel: Channel | str, *events: str) -> live:
+        """Also listen for `events` on `channel`."""
+        if isinstance(channel, str):
+            channel = Channel.private(channel)
+        if not events:
+            raise ValueError("A live prop listener needs at least one event")
+        for existing, existing_events in self.listeners:
+            if existing == channel:
+                existing_events.extend(e for e in events if e not in existing_events)
+                return self
+        self.listeners.append((channel, list(dict.fromkeys(events))))
+        return self
+
+    def metadata(self) -> dict[str, Any]:
+        """The prop's entry in the page's `liveProps`."""
+        if not self.listeners:
+            raise ValueError("A live prop needs at least one channel and event")
+        data: dict[str, Any] = {
+            "listeners": [
+                {"channel": channel.to_dict(), "events": events}
+                for channel, events in self.listeners
+            ]
+        }
+        if self.throttle is not None:
+            data["throttle"] = self.throttle
+        return data
