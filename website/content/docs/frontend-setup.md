@@ -5,9 +5,12 @@ description: Set up React with Vite for your Inertia.js + FastAPI application
 
 This guide walks you through setting up a React frontend with Vite for your Inertia.js + FastAPI application.
 
+> **Note:** Cross-Inertia uses [Inertia.js v3](https://inertiajs.com). The `@inertiajs/vite` plugin greatly simplifies frontend setup by automatically handling page component resolution and mounting.
+
 ## Prerequisites
 
-- Node.js 18+ (or Bun)
+- Node.js (18+ recommended; 22+ required for SSR) or Bun
+- React 19+
 - A FastAPI application with cross-inertia installed
 
 ## Project Structure
@@ -51,11 +54,12 @@ Create a `package.json` with the required dependencies:
     "preview": "vite preview"
   },
   "dependencies": {
-    "@inertiajs/react": "^3.6.1",
+    "@inertiajs/react": "^3.11.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
+    "@inertiajs/vite": "^3.11.0",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.1",
@@ -85,10 +89,11 @@ Create `vite.config.ts`:
 ```typescript
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import inertia from '@inertiajs/vite'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), inertia()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './frontend'),
@@ -109,6 +114,7 @@ export default defineConfig({
 ```
 
 Key settings:
+- **`inertia()`** - The Inertia.js Vite plugin, which automatically resolves page components from the `./pages` directory relative to your entry point
 - **`manifest: true`** - Generates a manifest file for production asset loading
 - **`outDir: 'static/build'`** - Where built files are placed
 - **`input: 'frontend/app.tsx'`** - Your app's entry point
@@ -154,63 +160,74 @@ Create `frontend/app.tsx`:
 
 ```tsx
 import { createInertiaApp } from '@inertiajs/react'
-import { createRoot } from 'react-dom/client'
 import './globals.css'
 
-// Option 1: Explicit imports (recommended for smaller apps)
-import Home from './pages/Home'
-import About from './pages/About'
-import UsersIndex from './pages/Users/Index'
-import UsersShow from './pages/Users/Show'
+createInertiaApp()
+```
 
-const pages: Record<string, React.ComponentType<any>> = {
-  Home,
-  About,
-  'Users/Index': UsersIndex,
-  'Users/Show': UsersShow,
-}
+That's it! The `@inertiajs/vite` plugin automatically:
+- Resolves page components from the `./pages` directory
+- Mounts the app to the DOM
+- Handles SSR during development (no separate server needed)
+
+### Customizing the App
+
+To wrap your app with providers (e.g., React Query, context providers), use the `withApp` callback:
+
+```tsx
+import { createInertiaApp } from '@inertiajs/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
 
 createInertiaApp({
-  defaults: {
-    future: {
-      useScriptElementForInitialPage: true,
-    },
-  },
-  resolve: (name) => {
-    const page = pages[name]
-    if (!page) {
-      throw new Error(`Page component "${name}" not found`)
-    }
-    return page
-  },
-  setup({ el, App, props }) {
-    createRoot(el).render(<App {...props} />)
+  withApp(app) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        {app}
+      </QueryClientProvider>
+    )
   },
 })
 ```
 
-### Dynamic Imports (Alternative)
+The `withApp` callback receives the React element and must return a new element with your providers wrapped around it.
 
-For larger apps, use dynamic imports with `import.meta.glob`:
+### Custom Page Resolution
+
+You may customize the pages directory using the `pages` shorthand:
+
+```tsx
+createInertiaApp({
+  pages: './components/pages',  // Look in a different directory
+})
+```
+
+For more control, pass an object:
+
+```tsx
+createInertiaApp({
+  pages: {
+    path: './pages',
+    extension: ['.tsx', '.jsx'],  // Support multiple extensions
+    lazy: true,                   // Enable code splitting (default)
+    transform: (name) => name.replace('/', '-'),  // Transform page names
+  },
+})
+```
+
+### Manual Setup (Advanced)
+
+If you need full control and don't want to use the Vite plugin's automatic setup, you can provide `resolve` and `setup` callbacks manually. Note that this prevents the Vite plugin from auto-generating SSR handling.
 
 ```tsx
 import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
-import './globals.css'
 
 createInertiaApp({
-  defaults: {
-    future: {
-      useScriptElementForInitialPage: true,
-    },
-  },
   resolve: (name) => {
     const pages = import.meta.glob('./pages/**/*.tsx', { eager: true })
-    const page = pages[`./pages/${name}.tsx`]
-    if (!page) {
-      throw new Error(`Page component "${name}" not found`)
-    }
-    return page
+    return pages[`./pages/${name}.tsx`]()
   },
   setup({ el, App, props }) {
     createRoot(el).render(<App {...props} />)
@@ -238,7 +255,7 @@ Create `templates/app.html`:
 </html>
 ```
 
-This template matches Inertia's script-element bootstrap. Be sure your client setup enables `future.useScriptElementForInitialPage`.
+Inertia v3 uses a `<script>` element to pass the initial page data to the client.
 
 The `{{ vite() }}` function automatically includes:
 - React Fast Refresh scripts (dev mode)

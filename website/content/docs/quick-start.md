@@ -11,8 +11,10 @@ Before you begin, make sure you have:
 
 - Python 3.10 or higher
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
-- Node.js 18+ or Bun
+- Node.js (18+ recommended; 22+ required for SSR) or Bun
 - Basic familiarity with FastAPI and React
+
+> **Note:** Cross-Inertia uses [Inertia.js v3](https://inertiajs.com), which requires React 19+. Node.js 22+ is required only if you plan to use server-side rendering (SSR).
 
 ## Step 1: Create your project
 
@@ -41,7 +43,7 @@ Initialize your frontend and install the required packages:
 ```bash
 bun init -y
 bun add react react-dom @inertiajs/react
-bun add -d vite @vitejs/plugin-react typescript @types/react @types/react-dom @types/node
+bun add -d vite @vitejs/plugin-react @inertiajs/vite typescript @types/react @types/react-dom @types/node
 ```
 
 ## Step 4: Configure Vite
@@ -51,10 +53,11 @@ Create a `vite.config.ts` file:
 ```ts
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import inertia from '@inertiajs/vite'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), inertia()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './frontend'),
@@ -136,26 +139,11 @@ Create a `frontend/app.tsx` file:
 
 ```tsx
 import { createInertiaApp } from '@inertiajs/react'
-import { createRoot } from 'react-dom/client'
 
-const pages = import.meta.glob('./pages/**/*.tsx', { eager: true })
-
-createInertiaApp({
-  defaults: {
-    future: {
-      useScriptElementForInitialPage: true,
-    },
-  },
-  resolve: (name) => {
-    const page = pages[`./pages/${name}.tsx`]
-    if (!page) throw new Error(`Page ${name} not found`)
-    return page
-  },
-  setup({ el, App, props }) {
-    createRoot(el).render(<App {...props} />)
-  },
-})
+createInertiaApp()
 ```
+
+The `@inertiajs/vite` plugin handles everything automatically: it resolves page components from the `./pages` directory, mounts the app, and even enables SSR in development without any extra setup.
 
 ## Step 8: Create your first page
 
