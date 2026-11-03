@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Any, Callable
+from typing import Any
 
 
 class optional:
@@ -214,3 +215,128 @@ class once:
             return int((datetime.now().timestamp() + self.until.total_seconds()) * 1000)
 
         return int((datetime.now().timestamp() + self.until) * 1000)
+
+
+class live:
+    """
+    Mark a prop as live - automatically refreshes when a broadcast event fires.
+
+    Live props listen for broadcast events and refresh themselves using partial
+    reloads. This is ideal for real-time updates like order statuses, unread
+    message counts, or dashboard metrics without polling.
+
+    When a broadcast event fires, Inertia makes a partial reload to fetch the
+    latest value of the prop. Props listening for the same event on the same
+    channel are refreshed together in a single request.
+
+    Live props can be combined with other prop wrappers like defer(), once(),
+    optional(), and always() for flexible behavior.
+
+    Example:
+        @app.get("/orders/{order_id}")
+        async def show_order(order_id: int, inertia: InertiaDep):
+            order = get_order(order_id)
+            return inertia.render("Orders/Show", {
+                "order": live(
+                    lambda: get_order(order_id),
+                    on="order.updated",
+                    channel={"name": f"orders.{order_id}", "type": "private"}
+                ),
+            })
+
+        # Combine with defer for background loading + live updates:
+        "metrics": defer(get_metrics).live(
+            on="metrics.updated",
+            channel={"name": "dashboard", "type": "private"}
+        )
+
+        # Frontend setup with Laravel Echo:
+        createInertiaApp({
+            live: echo()
+        })
+
+    Reference:
+        https://inertiajs.com/live-props
+    """
+
+    def __init__(
+        self,
+        callback: Callable[..., Any],
+        *args: Any,
+        on: str | list[str] | None = None,
+        channel: dict[str, str] | list[dict[str, str]] | None = None,
+        throttle: int | None = None,
+        **kwargs: Any,
+    ):
+        """
+        Create a live prop.
+
+        Args:
+            callback: A callable that returns the prop value when invoked.
+            *args: Positional arguments to pass to the callback.
+            on: Event name(s) that trigger refresh. Can be a single event name
+                or a list of event names.
+            channel: Broadcasting channel(s) to listen on. Each channel should be
+                     a dict with 'name' and 'type' keys. Type can be 'public',
+                     'private', 'presence', or 'encrypted-private'. If not provided,
+                     events should include channel information.
+            throttle: Optional throttle in milliseconds. Limits refresh rate to
+                      at most once per throttle period. Defaults to 1000ms (1 second).
+            **kwargs: Keyword arguments to pass to the callback.
+        """
+        if not callable(callback):
+            raise ValueError("live() requires a callable")
+        self.callback = callback
+        self.args = args
+        self.kwargs = kwargs
+        self.on = [on] if isinstance(on, str) else (on or [])
+        self.channel = [channel] if isinstance(channel, dict) else (channel or [])
+        self.throttle = throttle
+
+    def __call__(self) -> Any:
+        """Invoke the callback with stored args/kwargs to get the value."""
+        return self.callback(*self.args, **self.kwargs)
+
+
+def broadcast_props(props: dict[str, Any]) -> dict[str, Any]:
+    """
+    Prepare props to be broadcast with an event, avoiding server requests.
+
+    When a broadcast event includes prop values using this helper, Inertia
+    clients can update the page without making a server request. This is
+    especially useful for high-traffic scenarios (e.g., a dashboard open
+    in many tabs).
+
+    Use this in your event's broadcast payload:
+
+    Example:
+        class OrderUpdated:
+            def __init__(self, order):
+                self.order = order
+
+            def broadcast_with(self):
+                return {
+                    "order_id": self.order.id,
+                    **broadcast_props({
+                        "order": OrderResource(self.order).dict(),
+                    })
+                }
+
+    The broadcast event payload should include these under the __inertia.props
+    key for the Inertia client to recognize them.
+
+    Args:
+        props: Dictionary mapping prop paths to values. Supports dot notation
+               for nested props (e.g., "user.profile.name").
+
+    Returns:
+        Dictionary with "__inertia" key containing the props structure.
+
+    Reference:
+        https://inertiajs.com/live-props#broadcasting-props
+    """
+    return {
+        "__inertia": {
+            "props": props,
+        }
+    }
