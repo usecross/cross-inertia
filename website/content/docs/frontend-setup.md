@@ -9,7 +9,7 @@ This guide walks you through setting up a React frontend with Vite for your Iner
 
 ## Prerequisites
 
-- Node.js 24+ (or Bun) — required by Inertia.js v3
+- Node.js 22+ (or Bun) — required by Inertia.js v3
 - React 19+
 - A FastAPI application with cross-inertia installed
 

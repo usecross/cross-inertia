@@ -11,10 +11,10 @@ Before you begin, make sure you have:
 
 - Python 3.10 or higher
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
-- Node.js 24+ or Bun
+- Node.js 22+ or Bun
 - Basic familiarity with FastAPI and React
 
-> **Note:** Cross-Inertia uses [Inertia.js v3](https://inertiajs.com) (currently in beta), which requires Node.js 24+ and React 19+.
+> **Note:** Cross-Inertia uses [Inertia.js v3](https://inertiajs.com), which requires Node.js 22+ and React 19+.
 
 ## Step 1: Create your project
 
@@ -42,8 +42,8 @@ Initialize your frontend and install the required packages:
 
 ```bash
 bun init -y
-bun add react react-dom @inertiajs/react@beta
-bun add -d vite @vitejs/plugin-react @inertiajs/vite@beta typescript @types/react @types/react-dom @types/node
+bun add react react-dom @inertiajs/react
+bun add -d vite @vitejs/plugin-react @inertiajs/vite typescript @types/react @types/react-dom @types/node
 ```
 
 ## Step 4: Configure Vite
