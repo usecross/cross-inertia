@@ -19,7 +19,7 @@ Configuration (single source of truth):
     app = FastAPI(lifespan=inertia_lifespan)
 
 Prop types (following Laravel Inertia conventions):
-    from cross_inertia import optional, always, defer, once
+    from cross_inertia import Channel, optional, always, defer, live, once
 
     return inertia.render("Page", {
         "user": get_user(),                        # Regular prop
@@ -27,6 +27,7 @@ Prop types (following Laravel Inertia conventions):
         "flash": always(get_flash),                # Always included, even in partial reloads
         "analytics": defer(get_analytics),         # Loaded after initial render
         "plans": once(load_plans),                 # Remembered across navigations
+        "orders": live(get_orders, Channel.private("orders"), "OrderShipped"),
     })
 """
 
@@ -34,7 +35,7 @@ from importlib.metadata import version
 
 from cross_inertia._config import configure_inertia, get_config, InertiaConfig
 from cross_inertia._exceptions import InertiaSchemaError, ManifestNotFoundError
-from cross_inertia._props import optional, always, defer, once
+from cross_inertia._props import Channel, always, defer, live, once, optional
 from cross_inertia._types import ValidationErrors, ValidationErrorValue
 
 __version__ = version("cross-inertia")
@@ -43,6 +44,8 @@ __all__ = [
     "always",
     "defer",
     "once",
+    "live",
+    "Channel",
     "configure_inertia",
     "get_config",
     "InertiaConfig",

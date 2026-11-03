@@ -8,7 +8,7 @@ from typing import Any, Mapping, Protocol
 from urllib.parse import urlparse
 
 from ._exceptions import InertiaSchemaError
-from ._props import always, defer, once, optional
+from ._props import always, defer, live, once, optional
 from ._schema import validate_props_with_schema
 from ._types import ValidationErrors
 from ._utils import _resolve_props_sync_with_rescues
@@ -175,6 +175,9 @@ def build_inertia_page(
         )
 
     merged_props = {**context.shared_data, **options.props}
+    # Every response lists every live prop, partial reloads included: the
+    # client rebuilds its subscriptions from each page it receives.
+    live_props = _collect_live_props(merged_props)
     metadata = _CollectedMetadata()
     filtered_props: dict[str, Any] = {}
     omitted_props: set[str] = set()
@@ -279,6 +282,8 @@ def build_inertia_page(
         page_data["rescuedProps"] = rescued_props
     if metadata.once_props:
         page_data["onceProps"] = metadata.once_props
+    if live_props:
+        page_data["liveProps"] = live_props
 
     return PageBuildResult(
         is_inertia=context.is_inertia,
@@ -323,6 +328,9 @@ def _walk_node(
     is_partial: bool,
     metadata: _CollectedMetadata,
 ) -> tuple[bool, Any]:
+    # A live prop is its wrapped value here; its listeners are in liveProps.
+    while isinstance(value, live):
+        value = value.value_or_callback
     traits = _collect_prop_traits(value)
 
     if traits.once and _should_emit_once_metadata(path, traits, context, is_partial):
@@ -381,6 +389,28 @@ def _walk_node(
     if _should_include_container(path, context, is_partial):
         return True, value
     return False, None
+
+
+def _collect_live_props(
+    props: Mapping[str, Any], path_prefix: str = ""
+) -> dict[str, Any]:
+    """Each live prop's listeners, by prop path (dot notation when nested)."""
+    collected: dict[str, Any] = {}
+
+    def walk(value: Any, path: str) -> None:
+        if isinstance(value, live):
+            collected[path] = value.metadata()
+            value = value.value_or_callback
+        if isinstance(value, Mapping):
+            for key, child in value.items():
+                walk(child, f"{path}.{key}")
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                walk(child, f"{path}.{index}")
+
+    for key, value in props.items():
+        walk(value, f"{path_prefix}.{key}" if path_prefix else key)
+    return collected
 
 
 def _collect_prop_traits(value: Any) -> _PropTraits:

@@ -5,9 +5,10 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
+from collections.abc import Callable, Generator
 from typing import Any
 
-from ._props import optional, always, defer, once
+from ._props import optional, always, defer, live, once
 
 
 _OMITTED = object()
@@ -46,6 +47,178 @@ def _is_callable_prop(value: Any) -> bool:
     )
 
 
+# Resolution is written once, as generators that yield every callable they
+# need called and receive its result. Two drivers run them: the sync driver
+# calls sync callables in the current thread, outside any event loop, so code
+# that must not run inside one (Django's ORM raises SynchronousOnlyOperation
+# there) works in callable, optional, always, deferred and once props. Only a
+# coroutine a callable returns gets an event loop. The async driver awaits as
+# before.
+
+Resolution = Generator[Callable[[], Any], Any, Any]
+
+
+def _walk_props(
+    props: dict[str, Any],
+    *,
+    path_prefix: str = "",
+    rescued_props: list[str] | None = None,
+) -> Resolution:
+    resolved: dict[str, Any] = {}
+
+    for key, value in props.items():
+        path = f"{path_prefix}.{key}" if path_prefix else key
+        resolved_value = yield from _walk_value(
+            value,
+            path=path,
+            rescued_props=rescued_props,
+        )
+        if resolved_value is not _OMITTED:
+            resolved[key] = resolved_value
+
+    return resolved
+
+
+def _walk_value(
+    value: Any,
+    *,
+    path: str,
+    rescued_props: list[str] | None,
+) -> Resolution:
+    """Resolve a single value, which may be callable, optional, always, defer, dict, or list."""
+    while isinstance(value, live):
+        value = value.value_or_callback
+    if _is_optional_prop(value):
+        if (
+            not value.args
+            and not value.kwargs
+            and isinstance(value.callback, (optional, always, defer, once))
+        ):
+            return (
+                yield from _walk_value(
+                    value.callback,
+                    path=path,
+                    rescued_props=rescued_props,
+                )
+            )
+        return (yield value)
+    elif _is_always_prop(value):
+        if (
+            not value.args
+            and not value.kwargs
+            and isinstance(value.value_or_callback, (optional, always, defer, once))
+        ):
+            return (
+                yield from _walk_value(
+                    value.value_or_callback,
+                    path=path,
+                    rescued_props=rescued_props,
+                )
+            )
+        return (yield value)
+    elif _is_deferred_prop(value):
+        try:
+            if (
+                not value.args
+                and not value.kwargs
+                and isinstance(value.callback, (optional, always, defer, once))
+            ):
+                return (
+                    yield from _walk_value(
+                        value.callback,
+                        path=path,
+                        rescued_props=rescued_props,
+                    )
+                )
+            return (yield value)
+        except Exception:
+            if not value.rescue:
+                raise
+            logger.exception("Rescued deferred Inertia prop %r", path)
+            if rescued_props is not None:
+                rescued_props.append(path)
+            return _OMITTED
+    elif _is_once_prop(value):
+        if isinstance(value.value_or_callback, (optional, always, defer, once)):
+            return (
+                yield from _walk_value(
+                    value.value_or_callback,
+                    path=path,
+                    rescued_props=rescued_props,
+                )
+            )
+        return (yield value)
+    elif _is_callable_prop(value):
+        return (yield value)
+    elif isinstance(value, dict):
+        return (
+            yield from _walk_props(
+                value,
+                path_prefix=path,
+                rescued_props=rescued_props,
+            )
+        )
+    elif isinstance(value, list):
+        resolved_items = []
+        for index, item in enumerate(value):
+            resolved_item = yield from _walk_value(
+                item,
+                path=f"{path}.{index}",
+                rescued_props=rescued_props,
+            )
+            if resolved_item is not _OMITTED:
+                resolved_items.append(resolved_item)
+        return resolved_items
+    else:
+        return value
+
+
+def _run_coroutine(coroutine: Any) -> Any:
+    """Run a coroutine to completion from sync code, in a fresh event loop
+    (on another thread when this one already runs a loop)."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coroutine)
+
+    import concurrent.futures
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        return executor.submit(asyncio.run, coroutine).result()
+
+
+def _drive_sync(resolution: Resolution) -> Any:
+    try:
+        request = next(resolution)
+        while True:
+            try:
+                result = request()
+                if inspect.iscoroutine(result):
+                    result = _run_coroutine(result)
+            except Exception as error:
+                request = resolution.throw(error)
+            else:
+                request = resolution.send(result)
+    except StopIteration as stop:
+        return stop.value
+
+
+async def _drive_async(resolution: Resolution) -> Any:
+    try:
+        request = next(resolution)
+        while True:
+            try:
+                result = request()
+                if inspect.iscoroutine(result):
+                    result = await result
+            except Exception as error:
+                request = resolution.throw(error)
+            else:
+                request = resolution.send(result)
+    except StopIteration as stop:
+        return stop.value
+
+
 async def _resolve_callable(value: Any) -> Any:
     """Resolve a callable value, handling both sync and async callables.
 
@@ -75,19 +248,9 @@ async def _resolve_props(
 
     Non-callable values are passed through unchanged.
     """
-    resolved: dict[str, Any] = {}
-
-    for key, value in props.items():
-        path = f"{path_prefix}.{key}" if path_prefix else key
-        resolved_value = await _resolve_value(
-            value,
-            path=path,
-            rescued_props=rescued_props,
-        )
-        if resolved_value is not _OMITTED:
-            resolved[key] = resolved_value
-
-    return resolved
+    return await _drive_async(
+        _walk_props(props, path_prefix=path_prefix, rescued_props=rescued_props)
+    )
 
 
 async def _resolve_value(
@@ -97,101 +260,17 @@ async def _resolve_value(
     rescued_props: list[str] | None,
 ) -> Any:
     """Resolve a single value, which may be callable, optional, always, defer, dict, or list."""
-    if _is_optional_prop(value):
-        if (
-            not value.args
-            and not value.kwargs
-            and isinstance(value.callback, (optional, always, defer, once))
-        ):
-            return await _resolve_value(
-                value.callback,
-                path=path,
-                rescued_props=rescued_props,
-            )
-        return await _resolve_callable(value)
-    elif _is_always_prop(value):
-        if (
-            not value.args
-            and not value.kwargs
-            and isinstance(value.value_or_callback, (optional, always, defer, once))
-        ):
-            return await _resolve_value(
-                value.value_or_callback,
-                path=path,
-                rescued_props=rescued_props,
-            )
-        return await _resolve_callable(value)
-    elif _is_deferred_prop(value):
-        try:
-            if (
-                not value.args
-                and not value.kwargs
-                and isinstance(value.callback, (optional, always, defer, once))
-            ):
-                return await _resolve_value(
-                    value.callback,
-                    path=path,
-                    rescued_props=rescued_props,
-                )
-            return await _resolve_callable(value)
-        except Exception:
-            if not value.rescue:
-                raise
-            logger.exception("Rescued deferred Inertia prop %r", path)
-            if rescued_props is not None:
-                rescued_props.append(path)
-            return _OMITTED
-    elif _is_once_prop(value):
-        if isinstance(value.value_or_callback, (optional, always, defer, once)):
-            return await _resolve_value(
-                value.value_or_callback,
-                path=path,
-                rescued_props=rescued_props,
-            )
-        return await _resolve_callable(value)
-    elif _is_callable_prop(value):
-        return await _resolve_callable(value)
-    elif isinstance(value, dict):
-        return await _resolve_props(
-            value,
-            path_prefix=path,
-            rescued_props=rescued_props,
-        )
-    elif isinstance(value, list):
-        resolved_items = []
-        for index, item in enumerate(value):
-            resolved_item = await _resolve_value(
-                item,
-                path=f"{path}.{index}",
-                rescued_props=rescued_props,
-            )
-            if resolved_item is not _OMITTED:
-                resolved_items.append(resolved_item)
-        return resolved_items
-    else:
-        return value
+    return await _drive_async(
+        _walk_value(value, path=path, rescued_props=rescued_props)
+    )
 
 
 def _resolve_props_sync(props: dict[str, Any]) -> dict[str, Any]:
     """
-    Synchronous wrapper for resolving callable props.
-    Uses asyncio.run() to execute the async resolution.
+    Resolve callable props synchronously: sync callables run in the calling
+    thread, outside any event loop; async ones get a fresh loop.
     """
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        has_running_loop = False
-    else:
-        has_running_loop = True
-
-    if not has_running_loop:
-        return asyncio.run(_resolve_props(props))
-
-    import concurrent.futures
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(asyncio.run, _resolve_props(props))
-        return future.result()
+    return _drive_sync(_walk_props(props))
 
 
 def _resolve_props_sync_with_rescues(
@@ -200,23 +279,5 @@ def _resolve_props_sync_with_rescues(
     """Resolve props and collect deferred prop paths rescued after failures."""
 
     rescued_props: list[str] = []
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        has_running_loop = False
-    else:
-        has_running_loop = True
-
-    if not has_running_loop:
-        resolved_props = asyncio.run(_resolve_props(props, rescued_props=rescued_props))
-    else:
-        import concurrent.futures
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(
-                asyncio.run,
-                _resolve_props(props, rescued_props=rescued_props),
-            )
-            resolved_props = future.result()
-
+    resolved_props = _drive_sync(_walk_props(props, rescued_props=rescued_props))
     return resolved_props, rescued_props
