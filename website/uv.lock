@@ -1,10 +1,11 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version == '3.13.*'",
-    "python_full_version < '3.13'",
+    "python_full_version >= '3.11' and python_full_version < '3.13'",
+    "python_full_version < '3.11'",
 ]
 
 [[package]]
@@ -85,16 +86,16 @@ wheels = [
 
 [[package]]
 name = "cross-inertia"
-version = "0.17.0"
+version = "0.22.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cross-web" },
     { name = "httpx" },
     { name = "itsdangerous" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/84/a1/860de24db58f63bef9863ee38802db5841a850ed5bed6e61fd6501be541f/cross_inertia-0.17.0.tar.gz", hash = "sha256:95833f59200a536b8f0dbd46388fb8cd93bc6497aab8671492aca6b9e644d47b", size = 2553262, upload-time = "2026-03-25T22:37:02.477Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/0e/fdd1f176e1400d03f233a273d126d13e96adb68d20f73c88fa2c5ef91a8a/cross_inertia-0.22.1.tar.gz", hash = "sha256:d6dfbe63cc1749c294645b709e4ef09b599cf4c0e655537941150fbebc706b2a", size = 2571713, upload-time = "2026-11-01T00:04:48.906Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6b/56/e61dbfd7b4a1d462c54d300003e0b20c4233c5a2cae48302c292ef3a9050/cross_inertia-0.17.0-py3-none-any.whl", hash = "sha256:6ec74c1300740c64f085aa3584d79170d60701fce22e11fe444dd3e200d85c00", size = 47694, upload-time = "2026-03-25T22:37:01.522Z" },
+    { url = "https://files.pythonhosted.org/packages/82/ad/9e49554363ea857fa209ad8b5b471ae969c63bd37e04e221e67e5c8a0ee3/cross_inertia-0.22.1-py3-none-any.whl", hash = "sha256:77e11e649a9702800e1ebf595ce023fed470a211ba1557825252ead5534c07d6", size = 60060, upload-time = "2026-11-01T00:04:47.52Z" },
 ]
 
 [[package]]
@@ -108,18 +109,19 @@ dependencies = [
     { name = "httpx" },
     { name = "jinja2" },
     { name = "pybun" },
-    { name = "python-multipart" },
+    { name = "python-multipart", version = "0.0.32", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "python-multipart", version = "0.0.33", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "cross-docs", specifier = ">=0.13.1" },
-    { name = "cross-inertia", specifier = ">=0.10.0" },
+    { name = "cross-inertia", specifier = ">=0.22.1" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.135.3" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "jinja2", specifier = ">=3.1.0" },
     { name = "pybun", specifier = ">=1.3.12" },
-    { name = "python-multipart", specifier = ">=0.0.9" },
+    { name = "python-multipart", specifier = ">=0.0.26" },
 ]
 
 [package.metadata.requires-dev]
@@ -164,7 +166,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -195,7 +197,8 @@ standard = [
     { name = "jinja2" },
     { name = "pydantic-extra-types" },
     { name = "pydantic-settings" },
-    { name = "python-multipart" },
+    { name = "python-multipart", version = "0.0.32", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "python-multipart", version = "0.0.33", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -773,11 +776,28 @@ wheels = [
 
 [[package]]
 name = "python-multipart"
-version = "0.0.22"
+version = "0.0.32"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/94/01/979e98d542a70714b0cb2b6728ed0b7c46792b695e3eaec3e20711271ca3/python_multipart-0.0.22.tar.gz", hash = "sha256:7340bef99a7e0032613f56dc36027b959fd3b30a787ed62d310e951f7c3a3a58", size = 37612, upload-time = "2026-01-25T10:15:56.219Z" }
+resolution-markers = [
+    "python_full_version < '3.11'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5b/42/55c32bb9b12693c092ad250a0e82edb5b31ddeda6eb772de5f308b3804ad/python_multipart-0.0.32.tar.gz", hash = "sha256:be54b7f3fa167bb83e4fcd936b887b708f4e57fe75911c02aebf53efaf8d938e", size = 46881, upload-time = "2026-06-04T16:18:58.647Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1b/d0/397f9626e711ff749a95d96b7af99b9c566a9bb5129b8e4c10fc4d100304/python_multipart-0.0.22-py3-none-any.whl", hash = "sha256:2b2cd894c83d21bf49d702499531c7bafd057d730c201782048f7945d82de155", size = 24579, upload-time = "2026-01-25T10:15:54.811Z" },
+    { url = "https://files.pythonhosted.org/packages/e1/04/e8135ebd1ad02c56ec633277529b2602ff99ff634be76cdba5744cf554fd/python_multipart-0.0.32-py3-none-any.whl", hash = "sha256:ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23", size = 30042, upload-time = "2026-06-04T16:18:57.319Z" },
+]
+
+[[package]]
+name = "python-multipart"
+version = "0.0.33"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14'",
+    "python_full_version == '3.13.*'",
+    "python_full_version >= '3.11' and python_full_version < '3.13'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9f/b7/15b905f6142a9a8a68f66900788da1a32e4d4254452783b37ad1eccb0506/python_multipart-0.0.33.tar.gz", hash = "sha256:b8112424a6abd162ec08d390565dd113ad699f2fe6fef3c987b8bbcbfe9e390d", size = 50499, upload-time = "2026-10-31T14:23:47.461Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dd/1b/6b1b4164ec734cac911460ab599bfbe46afedd42c5c9627fe4235942c314/python_multipart-0.0.33-py3-none-any.whl", hash = "sha256:8f16c07b36add9da6b2ee87d3efcaf0a45a6de9c3d0a5dd94e9ccf7675a7bc45", size = 32253, upload-time = "2026-10-31T14:23:46.33Z" },
 ]
 
 [[package]]
