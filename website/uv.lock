@@ -581,14 +581,10 @@ wheels = [
 
 [[package]]
 name = "pybun"
-version = "1.3.12"
+version = "1.4.3"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/01/de97bef6a1259a0262b54b8b481a793e54762c9fe8e21102d101fae0a2a4/pybun-1.3.12-py3-none-macosx_12_0_arm64.whl", hash = "sha256:5f1e01c4bb78becae0cd5fd3f8698836dd935312c3624e3246294223c7ec3f5b", size = 22265931, upload-time = "2026-04-10T14:28:10.263Z" },
-    { url = "https://files.pythonhosted.org/packages/3a/3d/be695b6529a1da6601f19eae36b304f92679e25e5921fe7609f32d1e25cf/pybun-1.3.12-py3-none-macosx_12_0_x86_64.whl", hash = "sha256:e96be762abc7b473a1d627120d9798a1bafeae682e1886f070644c8c5e60a635", size = 24989997, upload-time = "2026-04-10T14:28:12.799Z" },
-    { url = "https://files.pythonhosted.org/packages/3d/d4/0124e36e4cc17abb507ae0764986a3e2275b8252a6c427745235ffe95661/pybun-1.3.12-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.musllinux_1_1_x86_64.whl", hash = "sha256:3a88280e5f4047d2eea6a1fb993f629db908644769d63211a1b9d87d2a4a7a7f", size = 38615517, upload-time = "2026-04-10T14:28:15.611Z" },
-    { url = "https://files.pythonhosted.org/packages/1a/0a/f8f1b1dceca05062c46b543bb622672bb2f0ce0a06cc248c14eed37a7037/pybun-1.3.12-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.musllinux_1_1_aarch64.whl", hash = "sha256:3a27f22bb3f01bcd6b0c0998d9ae9a9d1838debf20cadbde7057369fec7cfe10", size = 38317212, upload-time = "2026-04-10T14:28:22.977Z" },
-    { url = "https://files.pythonhosted.org/packages/60/3f/98a77ff16e7cb285534c2ea7b4137a72967dea4aa4eef2d55ae82576927c/pybun-1.3.12-py3-none-win_amd64.whl", hash = "sha256:28a6ac8a4b8fb852ea770932cec6225c3872784561d4d1b5499bb4f9d3405f8a", size = 41549338, upload-time = "2026-04-10T14:28:25.573Z" },
+    { url = "https://files.pythonhosted.org/packages/25/c9/e4578121021d58991f82be7a4cde6cb41eb71f5b97d4832fd019c8dca783/pybun-1.4.3-py3-none-macosx_12_0_arm64.whl", hash = "sha256:5114219a24c2853d899c77b676e1d276130eb3b8b1d596406560950be30ca7d0", size = 30532674, upload-time = "2026-10-10T18:17:12.233Z" },
 ]
 
 [[package]]
