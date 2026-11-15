@@ -1,3 +1,16 @@
+0.22.3 - 2026-11-15
+-------------------
+
+Props in a sync render share one context again, as they did before 0.22.2. A
+`ContextVar` that one prop sets is visible to later props, including async ones,
+and async props see the context the request set before rendering, even inside a
+running event loop. Changes still do not leak back to the caller. On Python
+3.10, an async prop's own changes stay inside that prop.
+
+This release was contributed by [@patrick91](https://github.com/patrick91) in [#153](https://github.com/usecross/cross-inertia/pull/153)
+
+Additional contributors: [@ampagent](https://github.com/ampagent)
+
 0.22.2 - 2026-11-15
 -------------------
 
