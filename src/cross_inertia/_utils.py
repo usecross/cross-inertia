@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import inspect
 import logging
 from collections.abc import Callable, Generator
@@ -51,9 +52,9 @@ def _is_callable_prop(value: Any) -> bool:
 # need called and receive its result. Two drivers run them: the sync driver
 # calls sync callables in the current thread, outside any event loop, so code
 # that must not run inside one (Django's ORM raises SynchronousOnlyOperation
-# there) works in callable, optional, always, deferred and once props. Only a
-# coroutine a callable returns gets an event loop. The async driver awaits as
-# before.
+# there) works in callable, optional, always, deferred and once props. Only
+# coroutines that callables return get an event loop, one per resolution. The
+# async driver awaits as before.
 
 Resolution = Generator[Callable[[], Any], Any, Any]
 
@@ -171,34 +172,65 @@ def _walk_value(
         return value
 
 
-def _run_coroutine(coroutine: Any) -> Any:
-    """Run a coroutine to completion from sync code, in a fresh event loop
-    (on another thread when this one already runs a loop)."""
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(coroutine)
+class _CoroutineRunner:
+    """Runs the coroutines of one sync resolution on a single event loop, so a
+    task or loop-bound client one prop creates works in later props. The loop
+    runs on one worker thread when the calling thread already runs a loop."""
 
-    import concurrent.futures
+    def __init__(self) -> None:
+        self._loop = asyncio.new_event_loop()
+        self._executor: concurrent.futures.ThreadPoolExecutor | None = None
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            pass
+        else:
+            self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        return executor.submit(asyncio.run, coroutine).result()
+    def run(self, coroutine: Any) -> Any:
+        if self._executor is None:
+            return self._loop.run_until_complete(coroutine)
+        return self._executor.submit(self._loop.run_until_complete, coroutine).result()
+
+    def close(self) -> None:
+        """Cancel leftover tasks and close the loop, as asyncio.run does."""
+        try:
+            self.run(self._shutdown())
+        finally:
+            self._loop.close()
+            if self._executor is not None:
+                self._executor.shutdown()
+
+    async def _shutdown(self) -> None:
+        tasks = asyncio.all_tasks() - {asyncio.current_task()}
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        await self._loop.shutdown_asyncgens()
+        await self._loop.shutdown_default_executor()
 
 
 def _drive_sync(resolution: Resolution) -> Any:
+    # Created only when a prop returns a coroutine: resolving plain values and
+    # sync callables never creates an event loop or a thread.
+    runner: _CoroutineRunner | None = None
     try:
         request = next(resolution)
         while True:
             try:
                 result = request()
                 if inspect.iscoroutine(result):
-                    result = _run_coroutine(result)
+                    runner = runner or _CoroutineRunner()
+                    result = runner.run(result)
             except Exception as error:
                 request = resolution.throw(error)
             else:
                 request = resolution.send(result)
     except StopIteration as stop:
         return stop.value
+    finally:
+        if runner is not None:
+            runner.close()
 
 
 async def _drive_async(resolution: Resolution) -> Any:
@@ -266,7 +298,7 @@ async def _resolve_value(
 def _resolve_props_sync(props: dict[str, Any]) -> dict[str, Any]:
     """
     Resolve callable props synchronously: sync callables run in the calling
-    thread, outside any event loop; async ones get a fresh loop.
+    thread, outside any event loop; coroutines they return share one event loop.
     """
     return _drive_sync(_walk_props(props))
 

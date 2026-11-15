@@ -6,6 +6,7 @@ SynchronousOnlyOperation there) must work in every kind of callable prop.
 
 import asyncio
 import threading
+from unittest.mock import patch
 
 import pytest
 
@@ -65,6 +66,29 @@ def test_async_callables_still_resolve():
     assert resolved == {"plain": "async", "deferred": "async"}
 
 
+def test_async_callables_share_one_event_loop_per_resolution():
+    async def start():
+        state["task"] = asyncio.create_task(asyncio.sleep(0, result="awaited"))
+        return "started"
+
+    async def finish():
+        return await state["task"]
+
+    props = {"start": start, "between": where, "finish": defer(finish)}
+
+    state: dict = {}
+    resolved, _ = _resolve_props_sync_with_rescues(props)
+    assert resolved == {"start": "started", "between": HERE, "finish": "awaited"}
+
+    async def main():
+        return _resolve_props_sync_with_rescues(props)[0]
+
+    state = {}
+    resolved = asyncio.run(main())
+    assert resolved["finish"] == "awaited"
+    assert resolved["between"]["loop"] is True  # Sync props stay inline.
+
+
 def test_rescued_deferred_props_are_left_out():
     def broken():
         raise RuntimeError("boom")
@@ -84,12 +108,16 @@ def test_unrescued_errors_propagate():
         _resolve_props_sync_with_rescues({"broken": broken})
 
 
-def test_sync_resolution_inside_a_running_loop_still_works():
+def test_sync_resolution_inside_a_running_loop_starts_no_thread():
+    # Runtimes without threads, such as Pyodide, render sync props this way.
     async def main():
-        resolved, _ = _resolve_props_sync_with_rescues({"value": lambda: "x"})
+        with patch.object(threading.Thread, "start", side_effect=AssertionError):
+            resolved, _ = _resolve_props_sync_with_rescues(
+                {"value": lambda: "x", "plain": 1, "deferred": defer(lambda: "y")}
+            )
         return resolved
 
-    assert asyncio.run(main()) == {"value": "x"}
+    assert asyncio.run(main()) == {"value": "x", "plain": 1, "deferred": "y"}
 
 
 def test_async_api_is_unchanged():
