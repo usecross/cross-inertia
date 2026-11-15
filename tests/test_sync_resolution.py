@@ -118,7 +118,10 @@ def test_props_share_one_context_that_does_not_leak(running_loop):
     }
 
     async def in_loop():
-        return _resolve_props_sync_with_rescues(props)[0]
+        resolved = _resolve_props_sync_with_rescues(props)[0]
+        # asyncio.run gives this task its own context, so check it here too.
+        assert REQUEST_STATE.get() == "unset"
+        return resolved
 
     if running_loop:
         resolved = asyncio.run(in_loop())
