@@ -5,6 +5,8 @@ SynchronousOnlyOperation there) must work in every kind of callable prop.
 """
 
 import asyncio
+import contextvars
+import sys
 import threading
 from unittest.mock import patch
 
@@ -87,6 +89,46 @@ def test_async_callables_share_one_event_loop_per_resolution():
     resolved = asyncio.run(main())
     assert resolved["finish"] == "awaited"
     assert resolved["between"]["loop"] is True  # Sync props stay inline.
+
+
+REQUEST_STATE: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "REQUEST_STATE", default="unset"
+)
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 11), reason="Tasks take a shared context from 3.11"
+)
+@pytest.mark.parametrize("running_loop", [False, True], ids=["no-loop", "in-loop"])
+def test_props_share_one_context_that_does_not_leak(running_loop):
+    def set_in_sync():
+        REQUEST_STATE.set("sync")
+        return "set"
+
+    async def read_then_set_in_async():
+        seen = REQUEST_STATE.get()
+        REQUEST_STATE.set("async")
+        return seen
+
+    props = {
+        "a": set_in_sync,
+        "b": read_then_set_in_async,
+        "c": REQUEST_STATE.get,
+        "d": defer(read_then_set_in_async),
+    }
+
+    async def in_loop():
+        resolved = _resolve_props_sync_with_rescues(props)[0]
+        # asyncio.run gives this task its own context, so check it here too.
+        assert REQUEST_STATE.get() == "unset"
+        return resolved
+
+    if running_loop:
+        resolved = asyncio.run(in_loop())
+    else:
+        resolved = _resolve_props_sync_with_rescues(props)[0]
+    assert resolved == {"a": "set", "b": "sync", "c": "async", "d": "async"}
+    assert REQUEST_STATE.get() == "unset"
 
 
 def test_rescued_deferred_props_are_left_out():
