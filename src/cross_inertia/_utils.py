@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+import contextvars
 import inspect
+import sys
 import logging
 from collections.abc import Callable, Generator
 from typing import Any
@@ -187,15 +189,24 @@ class _CoroutineRunner:
         else:
             self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
-    def run(self, coroutine: Any) -> Any:
+    def run(self, coroutine: Any, context: contextvars.Context) -> Any:
         if self._executor is None:
-            return self._loop.run_until_complete(coroutine)
-        return self._executor.submit(self._loop.run_until_complete, coroutine).result()
+            return self._run_in(coroutine, context)
+        return self._executor.submit(self._run_in, coroutine, context).result()
+
+    def _run_in(self, coroutine: Any, context: contextvars.Context) -> Any:
+        if sys.version_info >= (3, 11):
+            task = self._loop.create_task(coroutine, context=context)
+        else:
+            # Python 3.10 tasks copy the context: they see earlier changes but
+            # their own changes stay inside the task.
+            task = context.run(self._loop.create_task, coroutine)
+        return self._loop.run_until_complete(task)
 
     def close(self) -> None:
         """Cancel leftover tasks and close the loop, as asyncio.run does."""
         try:
-            self.run(self._shutdown())
+            self.run(self._shutdown(), contextvars.copy_context())
         finally:
             self._loop.close()
             if self._executor is not None:
@@ -214,14 +225,18 @@ def _drive_sync(resolution: Resolution) -> Any:
     # Created only when a prop returns a coroutine: resolving plain values and
     # sync callables never creates an event loop or a thread.
     runner: _CoroutineRunner | None = None
+    # All props share one copy of the caller's context, as they did when one
+    # asyncio.run task resolved them: a ContextVar one prop sets reaches later
+    # props, but not the caller.
+    context = contextvars.copy_context()
     try:
         request = next(resolution)
         while True:
             try:
-                result = request()
+                result = context.run(request)
                 if inspect.iscoroutine(result):
                     runner = runner or _CoroutineRunner()
-                    result = runner.run(result)
+                    result = runner.run(result, context)
             except Exception as error:
                 request = resolution.throw(error)
             else:
