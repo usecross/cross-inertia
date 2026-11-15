@@ -1,3 +1,18 @@
+0.22.2 - 2026-11-15
+-------------------
+
+Callable props now resolve outside the event loop on sync requests. Sync
+callables, including those in `optional`, `always`, `defer` and `once`, run in
+the request's own thread, so Django ORM queries work in them instead of raising
+`SynchronousOnlyOperation`. Only coroutines that callables return get an event
+loop, and all of them in one render share it, so a task or client one async
+prop creates still works in the next. Plain values and sync callables never
+create a loop or a thread. Async callables resolve as before.
+
+This release was contributed by [@patrick91](https://github.com/patrick91) in [#146](https://github.com/usecross/cross-inertia/pull/146)
+
+Additional contributors: [@ampagent](https://github.com/ampagent)
+
 0.22.1 - 2026-11-01
 -------------------
 
