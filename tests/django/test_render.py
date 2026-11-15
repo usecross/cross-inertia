@@ -454,3 +454,36 @@ def test_dev_mode_probe_uses_vite_base():
 
     get.assert_called_once()
     assert get.call_args.args[0] == "http://127.0.0.1:5174/static/build/@vite/client"
+
+
+@pytest.mark.django_db
+def test_callable_props_can_query_the_database(rf, setup_inertia):
+    """Django refuses ORM calls inside an event loop; callable props run outside one."""
+    from django.db import connection
+
+    from cross_inertia import defer, optional
+    from cross_inertia.django import render
+
+    def count():
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            return cursor.fetchone()[0]
+
+    request = rf.get("/test/", HTTP_X_INERTIA="true")
+    response = render(request, "Test", {"plain": count, "lazy": optional(count)})
+    assert json.loads(response.content)["props"]["plain"] == 1
+
+    request = rf.get(
+        "/test/",
+        HTTP_X_INERTIA="true",
+        HTTP_X_INERTIA_PARTIAL_COMPONENT="Test",
+        HTTP_X_INERTIA_PARTIAL_DATA="lazy,deferred",
+    )
+    response = render(
+        request, "Test", {"lazy": optional(count), "deferred": defer(count)}
+    )
+    assert json.loads(response.content)["props"] == {
+        "lazy": 1,
+        "deferred": 1,
+        "errors": {},
+    }
