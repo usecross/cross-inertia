@@ -19,7 +19,7 @@ Configuration (single source of truth):
     app = FastAPI(lifespan=inertia_lifespan)
 
 Prop types (following Laravel Inertia conventions):
-    from cross_inertia import optional, always, defer, once
+    from cross_inertia import optional, always, defer, once, live, broadcast_props
 
     return inertia.render("Page", {
         "user": get_user(),                        # Regular prop
@@ -27,28 +27,31 @@ Prop types (following Laravel Inertia conventions):
         "flash": always(get_flash),                # Always included, even in partial reloads
         "analytics": defer(get_analytics),         # Loaded after initial render
         "plans": once(load_plans),                 # Remembered across navigations
+        "order": live(get_order, on="order.updated", channel={"name": "orders.1", "type": "private"}),  # Auto-refreshes on broadcast
     })
 """
 
 from importlib.metadata import version
 
-from cross_inertia._config import configure_inertia, get_config, InertiaConfig
+from cross_inertia._config import InertiaConfig, configure_inertia, get_config
 from cross_inertia._exceptions import InertiaSchemaError, ManifestNotFoundError
-from cross_inertia._props import optional, always, defer, once
+from cross_inertia._props import always, broadcast_props, defer, live, once, optional
 from cross_inertia._types import ValidationErrors, ValidationErrorValue
 
 __version__ = version("cross-inertia")
 __all__ = [
-    "optional",
-    "always",
-    "defer",
-    "once",
-    "configure_inertia",
-    "get_config",
     "InertiaConfig",
-    "ManifestNotFoundError",
     "InertiaSchemaError",
-    "ValidationErrors",
+    "ManifestNotFoundError",
     "ValidationErrorValue",
+    "ValidationErrors",
     "__version__",
+    "always",
+    "broadcast_props",
+    "configure_inertia",
+    "defer",
+    "get_config",
+    "live",
+    "once",
+    "optional",
 ]
