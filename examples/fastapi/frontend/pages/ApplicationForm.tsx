@@ -173,7 +173,7 @@ export default function ApplicationForm({ cat }: ApplicationFormPageProps) {
                         onChange={(e) => setData('why_adopt', e.target.value)}
                         placeholder="I'm looking for a companion who..."
                         rows={6}
-                        className={`w-full px-3 py-2 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring ${
+                        className={`w-full px-3 py-2 border rounded-md resize-none focus:outline-hidden focus:ring-2 focus:ring-ring ${
                           displayErrors.why_adopt ? 'border-red-500' : 'border-input'
                         }`}
                       />

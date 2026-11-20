@@ -201,7 +201,7 @@ export default function Browse({ title, cats, total, page, has_more, filters }: 
               id="breed-filter"
               value={filters.breed || ''}
               onChange={handleBreedChange}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus:outline-hidden focus:ring-1 focus:ring-ring"
               data-testid="breed-filter"
             >
               <option value="">All Breeds</option>
@@ -222,7 +222,7 @@ export default function Browse({ title, cats, total, page, has_more, filters }: 
               id="age-filter"
               value={filters.age_range || ''}
               onChange={handleAgeChange}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus:outline-hidden focus:ring-1 focus:ring-ring"
               data-testid="age-filter"
             >
               <option value="">All Ages</option>

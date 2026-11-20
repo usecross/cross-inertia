@@ -201,7 +201,7 @@ export default function CatProfile({ cat, shelter, similar_cats = [] }: CatProfi
               <div>
                 <p className="font-semibold">{shelter.name}</p>
                 <div className="flex items-start gap-2 text-sm text-muted-foreground mt-1">
-                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
                   <div>
                     <p>{shelter.address}</p>
                     <p>{shelter.city}, {shelter.state}</p>
