@@ -44,7 +44,8 @@ examples/fastapi/
 
 ## Prerequisites
 
-- Python 3.12+
+- `uv` and Python 3.12+
+- Node.js 22+
 - [Bun](https://bun.sh) (for package management and faster installs)
   - Or npm/yarn/pnpm if you prefer
 
@@ -74,7 +75,7 @@ npm install
 This will install:
 - React and TypeScript
 - Inertia.js React adapter
-- Tailwind CSS
+- Tailwind CSS v4 via its Vite plugin
 - shadcn/ui component dependencies (Radix UI, etc.)
 - Vite and build tools
 
@@ -99,19 +100,12 @@ See all available commands with `just --list` from the project root.
 ### Option 2: Quick Start Script
 
 ```bash
-# Make sure dependencies are installed first (only needed once)
-bun install  # or: npm install
-
-# Run the convenience script (starts both servers)
 ./run-dev.sh
 ```
 
-This will:
-1. Check for frontend dependencies
-2. Start Vite dev server on http://localhost:5173
-3. Start FastAPI server on http://127.0.0.1:8000
+The launcher installs missing frontend dependencies and waits for Vite to serve assets at http://127.0.0.1:5173. It then syncs the locked Python dependencies with `uv` and starts FastAPI.
 
-Then visit http://127.0.0.1:8000 in your browser.
+Then visit http://127.0.0.1:8000 in your browser. If a port is in use, stop the previous server or set `INERTIA_VITE_PORT` and `FASTAPI_PORT` before launching.
 
 ### Option 3: Manual Start
 
@@ -124,7 +118,7 @@ bun run dev
 # or: npm run dev
 ```
 
-This starts Vite on http://localhost:5173 with Hot Module Replacement (HMR).
+This starts Vite on http://127.0.0.1:5173 with Hot Module Replacement (HMR).
 
 **Terminal 2: Start FastAPI Server**
 

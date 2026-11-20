@@ -30,6 +30,7 @@ inertia.encrypt_history().render("AdminPanel", {...})
 
 import sys
 import logging
+import os
 from pathlib import Path
 
 # Add parent package to path for development
@@ -39,12 +40,18 @@ from fastapi import Depends, FastAPI, Query, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from cross_inertia.fastapi import InertiaDep, inertia_share
-from cross_inertia import optional, always, defer, once
+from cross_inertia import optional, always, configure_inertia, defer, once
 import mock_data
 
 # Configure logging for this module
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
+
+# Vite is started separately for this example, so use its port even if occupied.
+configure_inertia(
+    vite_host="127.0.0.1",
+    vite_port=int(os.environ.get("INERTIA_VITE_PORT", "5173")),
+)
 
 ONCE_DEMO_REQUEST_COUNT = 0
 ONCE_DEMO_VALUE_COUNT = 0
