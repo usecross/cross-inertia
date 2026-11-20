@@ -13,7 +13,7 @@ Thank you for your interest in contributing to Cross-Inertia! We welcome contrib
 
 ### Prerequisites
 
-- **Python 3.10+** (we test on 3.10-3.14)
+- **Python 3.10+** (we test on 3.10-3.15)
 - **uv** - Fast Python package installer ([install guide](https://docs.astral.sh/uv/))
 - **Git**
 - **Bun or Node.js** (for E2E tests and docs)

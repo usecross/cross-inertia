@@ -10,6 +10,14 @@ authors = [
     { name = "Patrick Arminio", email = "patrick.arminio@gmail.com" }
 ]
 requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+]
 dependencies = [
     "itsdangerous>=2.2.0",
     "cross-web>=0.4.0",

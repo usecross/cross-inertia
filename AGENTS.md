@@ -56,7 +56,7 @@ See `website/RELEASING.md` for full details.
 - **Unit Tests**: `nox -s tests-3.14`
 - **E2E Tests**: `nox -s e2e-3.14` (requires frontend build)
 - **Coverage**: Maintain 70%+ coverage
-- **All Python Versions**: CI tests on 3.10-3.14
+- **All Python Versions**: CI tests on 3.10-3.15
 
 ## Commit Messages
 
