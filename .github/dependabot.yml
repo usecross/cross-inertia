@@ -7,6 +7,10 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "deps"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
 
   # Website Python dependencies (uv)
   - package-ecosystem: "uv"
@@ -15,8 +19,34 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "deps(website)"
+    groups:
+      website-python-dependencies:
+        patterns:
+          - "*"
 
-  # Note: Website uses bun for npm dependencies, which Dependabot doesn't support yet
+  # Website frontend dependencies (Bun)
+  - package-ecosystem: "bun"
+    directory: "/website"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps(website)"
+    groups:
+      website-bun-dependencies:
+        patterns:
+          - "*"
+
+  # FastAPI example frontend dependencies (Bun)
+  - package-ecosystem: "bun"
+    directory: "/examples/fastapi"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps(example)"
+    groups:
+      example-bun-dependencies:
+        patterns:
+          - "*"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
@@ -25,3 +55,7 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

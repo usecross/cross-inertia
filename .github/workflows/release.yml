@@ -22,15 +22,17 @@ jobs:
       has_release: ${{ steps.check.outputs.has_release }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          version: "0.13.9"
 
       - name: Check for release
         id: check
         run: |
-           if uvx --from autopub==1.0.0a63 --with pygithub autopub check; then
+           if uvx --from autopub==1.0.0a63 --with pygithub==2.10.0 autopub check; then
              echo "has_release=true" >> $GITHUB_OUTPUT
            else
              echo "has_release=false" >> $GITHUB_OUTPUT
@@ -53,7 +55,7 @@ jobs:
 
       - name: Upload .autopub artifact
         if: steps.check.outputs.has_release == 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: autopub-data
           path: .autopub
@@ -76,13 +78,15 @@ jobs:
           echo "GitHub ref: ${{ github.ref }}"
           echo "has_release: ${{ needs.check-release.outputs.has_release }}"
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          version: "0.13.9"
 
       - name: Download .autopub artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: autopub-data
           path: .autopub
@@ -90,10 +94,10 @@ jobs:
       - name: Build and publish
         run: |
           echo "✨ Preparing release..."
-          uvx --from autopub==1.0.0a63 --with pygithub autopub prepare
+          uvx --from autopub==1.0.0a63 --with pygithub==2.10.0 autopub prepare
           echo "✨ Building package..."
-          uvx --from autopub==1.0.0a63 --with pygithub autopub build
+          uvx --from autopub==1.0.0a63 --with pygithub==2.10.0 autopub build
           echo "✨ Publishing to PyPI..."
-          uvx --from autopub==1.0.0a63 --with pygithub autopub publish
+          uvx --from autopub==1.0.0a63 --with pygithub==2.10.0 autopub publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
