@@ -1,8 +1,17 @@
 #!/bin/bash
 # Development runner script for the Inertia FastAPI example
 
-set -e
+set -e -o pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+
+export INERTIA_VITE_PORT="${INERTIA_VITE_PORT-5173}"
+if [[ ! $INERTIA_VITE_PORT =~ ^[0-9]{1,5}$ ]] ||
+    (( 10#$INERTIA_VITE_PORT < 1 || 10#$INERTIA_VITE_PORT > 65535 )); then
+    printf 'INERTIA_VITE_PORT must be an integer from 1 to 65535 (got %q).\n' "$INERTIA_VITE_PORT" >&2
+    exit 1
+fi
+vite_url="http://127.0.0.1:$((10#$INERTIA_VITE_PORT))"
+api_port="${FASTAPI_PORT:-8000}"
 
 # Use an installed Node when a global Vite+ shim would provision its own runtime.
 case "$(command -v node)" in
@@ -26,17 +35,13 @@ if [ ! -x node_modules/.bin/vite ]; then
     fi
 fi
 
-export INERTIA_VITE_PORT="${INERTIA_VITE_PORT:-5173}"
-export INERTIA_VITE_URL="http://127.0.0.1:$INERTIA_VITE_PORT"
-api_port="${FASTAPI_PORT:-8000}"
-
-vite_ready() {
-    curl --noproxy '*' --fail --silent --max-time 1 \
-        "$INERTIA_VITE_URL/@vite/client" -o /dev/null
+vite_headers() {
+    curl --noproxy '*' --fail --silent --max-time 1 --dump-header - \
+        "$vite_url/@vite/client" -o /dev/null
 }
 
-if vite_ready; then
-    echo "A server is already serving Vite assets at $INERTIA_VITE_URL. Stop it or set INERTIA_VITE_PORT." >&2
+if vite_headers >/dev/null; then
+    echo "A server is already serving Vite assets at $vite_url. Stop it or set INERTIA_VITE_PORT." >&2
     exit 1
 fi
 
@@ -53,21 +58,27 @@ trap 'exit 143' TERM
 
 # Give each server its own process group so cleanup includes its children.
 set -m
-node_modules/.bin/vite --port "$INERTIA_VITE_PORT" </dev/null &
+launcher_id="$$-$RANDOM-$RANDOM"
+INERTIA_VITE_LAUNCHER_ID="$launcher_id" node_modules/.bin/vite </dev/null &
 vite_pid=$!
 
 deadline=$((SECONDS + 30))
-until vite_ready; do
-    if ! kill -0 "$vite_pid" 2>/dev/null; then
-        echo "Vite stopped before it was ready." >&2
-        exit 1
+while kill -0 "$vite_pid" 2>/dev/null; do
+    # Another launcher can win the bind while this Vite process is starting.
+    if vite_headers | tr -d '\r' | grep -Fxi "X-Inertia-Vite-Launcher: $launcher_id" >/dev/null; then
+        break
     fi
     if (( SECONDS >= deadline )); then
-        echo "Vite did not become ready at $INERTIA_VITE_URL within 30 seconds." >&2
+        echo "Vite did not become ready at $vite_url within 30 seconds." >&2
         exit 1
     fi
     sleep 0.2
 done
+
+if ! kill -0 "$vite_pid" 2>/dev/null; then
+    echo "Vite stopped before it was ready." >&2
+    exit 1
+fi
 
 echo "Open http://127.0.0.1:$api_port once FastAPI starts. Press Ctrl+C to stop both servers."
 UV_PYTHON="${UV_PYTHON:->=3.12,<3.15}" \

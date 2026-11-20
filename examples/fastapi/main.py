@@ -47,10 +47,21 @@ import mock_data
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
 
+vite_port_value = os.environ.get("INERTIA_VITE_PORT", "5173")
+if not (
+    1 <= len(vite_port_value) <= 5
+    and vite_port_value.isascii()
+    and vite_port_value.isdecimal()
+    and 1 <= int(vite_port_value) <= 65535
+):
+    raise ValueError(
+        f"INERTIA_VITE_PORT must be an integer from 1 to 65535 (got {vite_port_value!r})."
+    )
+
 # Vite is started separately for this example, so use its port even if occupied.
 configure_inertia(
     vite_host="127.0.0.1",
-    vite_port=int(os.environ.get("INERTIA_VITE_PORT", "5173")),
+    vite_port=int(vite_port_value),
 )
 
 ONCE_DEMO_REQUEST_COUNT = 0

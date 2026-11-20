@@ -45,7 +45,7 @@ examples/fastapi/
 ## Prerequisites
 
 - `uv` and Python 3.12+
-- Node.js 22+
+- Node.js 22.12+
 - [Bun](https://bun.sh) (for package management and faster installs)
   - Or npm/yarn/pnpm if you prefer
 
@@ -321,14 +321,24 @@ export default function MyPage({ title }) {
 
 ### Change Vite Port
 
-Edit `vite.config.ts`:
+Set `INERTIA_VITE_PORT` so Vite and FastAPI use the same port. The default is `5173`.
 
-```ts
-export default defineConfig({
-  server: {
-    port: 3000,  // Change from 5173
-  },
-})
+```bash
+# From the repository root
+INERTIA_VITE_PORT=3000 just demo-fastapi
+
+# From examples/fastapi
+INERTIA_VITE_PORT=3000 ./run-dev.sh
+```
+
+If you start the servers manually, set the same value in both terminals.
+
+```bash
+# Terminal 1
+INERTIA_VITE_PORT=3000 bun run dev
+
+# Terminal 2
+INERTIA_VITE_PORT=3000 uv run fastapi dev main.py
 ```
 
 ### Change Backend Port
