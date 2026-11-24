@@ -33,7 +33,7 @@ from ._page import (
     is_prefetch_request_headers,
     render_inertia_body,
 )
-from ._props import always, defer, once, optional
+from ._props import always, broadcast_props, defer, live, once, optional
 from ._ssr import VITE_DEV_SSR_ENDPOINT
 from ._types import ValidationErrors
 
@@ -65,7 +65,15 @@ class _DeprecatedViteTags(str):
         return super().__str__()
 
 
-__all__ = ["optional", "always", "defer", "once", "ManifestNotFoundError"]
+__all__ = [
+    "ManifestNotFoundError",
+    "always",
+    "broadcast_props",
+    "defer",
+    "live",
+    "once",
+    "optional",
+]
 
 
 class Inertia:
@@ -189,7 +197,7 @@ class Inertia:
             },
         )
 
-    def encrypt_history(self, encrypt: bool = True) -> "Inertia":
+    def encrypt_history(self, encrypt: bool = True) -> Inertia:
         """
         Enable or disable history encryption for the current page.
 
@@ -228,7 +236,7 @@ class Inertia:
             logger.info("History encryption enabled for this page")
         return self
 
-    def clear_history(self, clear: bool = True) -> "Inertia":
+    def clear_history(self, clear: bool = True) -> Inertia:
         """
         Clear encrypted history state by rotating the encryption key.
 
@@ -262,7 +270,7 @@ class Inertia:
             logger.info("History will be cleared (encryption keys rotated)")
         return self
 
-    def flash(self, key: str, value: Any) -> "Inertia":
+    def flash(self, key: str, value: Any) -> Inertia:
         """
         Set flash data for the current response.
 
@@ -287,7 +295,7 @@ class Inertia:
         self._flash[key] = value
         return self
 
-    def preserve_fragment(self, preserve: bool = True) -> "Inertia":
+    def preserve_fragment(self, preserve: bool = True) -> Inertia:
         """
         Preserve the URL fragment (hash) across the redirect.
 
@@ -372,8 +380,8 @@ class InertiaResponse:
             ssr_enabled if ssr_enabled is not None else config.ssr_enabled
         )
         self.ssr_url = ssr_url or config.ssr_url
-        self._ssr_client: "InertiaSSR | None" = None
-        self._vite_dev_ssr_client: "InertiaSSR | None" = None
+        self._ssr_client: InertiaSSR | None = None
+        self._vite_dev_ssr_client: InertiaSSR | None = None
         if self.ssr_enabled:
             from cross_inertia._ssr import InertiaSSR
 
