@@ -1,6 +1,7 @@
-# Written as an inline table on purpose: Laravel Cloud looks for a
-# `[tool.uv.workspace]` header and then installs the website as a member of
-# this workspace, but the website is a separate project with its own lock.
+# Keep the workspace as an inline table under tool.uv, and don't write its
+# dotted table header anywhere in this file, comments included: Laravel Cloud
+# greps for that header and would then install the website (a separate project
+# with its own lock) as a member of this workspace.
 [tool.uv]
 workspace = { members = ["examples/fastapi"] }
 
