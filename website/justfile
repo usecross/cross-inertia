@@ -24,7 +24,3 @@ build-ssr: build
 install:
     uv sync
     uv run python -m pybun install
-
-# Deploy to production with SSR
-deploy: build-ssr
-    SSR=1 uv run fastapi deploy
